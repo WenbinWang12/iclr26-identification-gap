@@ -1,0 +1,2 @@
+038c238b22615e4fddbc4629feb9c8a9bcc9f70af7a5c0dcb5a6702843d530df *notes/phase2r_sensitivity_protocol.md  # frozen before implementation, 2026-08-31T18:37:31+08:00
+c27091453de2b595b5ab0dc2eaba8694a952abc7b279b468b8996f3e999b10ec *notes/phase2r_sensitivity_protocol.md  # after A1 amendment, 2026-08-31

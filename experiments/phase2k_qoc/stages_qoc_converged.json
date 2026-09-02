@@ -1,0 +1,53 @@
+[
+  {
+    "name": "conv-unit-tests",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m pytest experiments/phase2k_qoc/tests experiments/phase2j_offset_conflict/tests experiments/phase2i_anchored_cvar/tests -q",
+    "gpu_gib": 0,
+    "timeout_seconds": 1800
+  },
+  {
+    "name": "conv-smoke",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 3 --cap-per-class 200 --update-cap-per-class 400 --epochs 3 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2 --seed 1 --out /mnt/data/wenbin/iclr26/runs/phase2k_conv_smoke",
+    "gpu_gib": 3,
+    "timeout_seconds": 7200,
+    "requires": [
+      "conv-unit-tests"
+    ]
+  },
+  {
+    "name": "conv-seed1",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --update-cap-per-class 400 --epochs 3 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 1 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged",
+    "gpu_gib": 3,
+    "timeout_seconds": 43200,
+    "requires": [
+      "conv-smoke"
+    ]
+  },
+  {
+    "name": "conv-seed2",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --update-cap-per-class 400 --epochs 3 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 2 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged",
+    "gpu_gib": 3,
+    "timeout_seconds": 43200,
+    "requires": [
+      "conv-smoke"
+    ]
+  },
+  {
+    "name": "conv-seed3",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --update-cap-per-class 400 --epochs 3 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 3 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged",
+    "gpu_gib": 3,
+    "timeout_seconds": 43200,
+    "requires": [
+      "conv-smoke"
+    ]
+  },
+  {
+    "name": "conv-decide",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.decide --runs /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged --seeds 1,2,3 --m 4 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.report --runs /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged --seeds 1,2,3 --m 4 > /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged/report.txt 2>&1",
+    "gpu_gib": 0,
+    "timeout_seconds": 3600,
+    "requires": [
+      "conv-seed3"
+    ]
+  }
+]

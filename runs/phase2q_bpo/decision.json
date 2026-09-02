@@ -1,0 +1,110 @@
+{
+  "Q1": {
+    "ci": [
+      3.019593253968255,
+      5.777736441798942
+    ],
+    "delta_pp": 4.399698247354497,
+    "pass": true,
+    "spec": "R_bpo - R_shr_global, CI excludes 0 positive"
+  },
+  "Q2": {
+    "ci": [
+      2.9660399098875665,
+      6.535321593915342
+    ],
+    "delta_pp": 4.700004133597883,
+    "pass": true,
+    "per_task_delta_pp": {
+      "AGNews": 5.598958333333333,
+      "BoolQA": 3.3854166666666665,
+      "COPA": 8.59375,
+      "DBpedia": 4.203869047619047,
+      "IMDB": 7.03125,
+      "MNLI": 3.993055555555556,
+      "MultiRC": 2.8645833333333335,
+      "QQP": 10.9375,
+      "RTE": 0.2604166666666667,
+      "SST-2": 5.729166666666667,
+      "WiC": 4.427083333333333,
+      "Yahoo": -0.6249999999999978
+    },
+    "spec": "R_bpo >= R_raw at point est AND no task loses >2pp",
+    "worst_delta_pp": -0.6249999999999978,
+    "worst_task": "Yahoo"
+  },
+  "Q3": {
+    "ci": [
+      -2.4491799975198414,
+      -0.5445989376653437
+    ],
+    "delta_pp": -1.490058697089947,
+    "pass": true,
+    "spec": "R_shr_scoped - R_bpo <= 1pp point est"
+  },
+  "Q4": {
+    "by_ratio": {
+      "0.5": {
+        "bpo_minus_global_pp": 2.9197668650793656,
+        "bpo_minus_raw_pp": 3.230200066137567,
+        "ci": [
+          0.5960286458333333,
+          5.094788566468251
+        ]
+      },
+      "0.7": {
+        "bpo_minus_global_pp": -0.6664967298647846,
+        "bpo_minus_raw_pp": -0.3185855746619632,
+        "ci": [
+          -3.5486909125146964,
+          2.0569472001763676
+        ]
+      },
+      "0.9": {
+        "bpo_minus_global_pp": -1.5264343584656077,
+        "bpo_minus_raw_pp": -0.5777736441798934,
+        "ci": [
+          -7.981264467592593,
+          4.537669994212964
+        ]
+      }
+    },
+    "pass": false,
+    "spec": "imbalanced mixes; only 0.7 is thresholded",
+    "threshold_ratio": "0.7"
+  },
+  "Q5": {
+    "full_batch_pp": 4.399698247354497,
+    "minus_global_pp_by_batch": {
+      "16": 0.6598239013487341,
+      "32": 1.5678425522408033,
+      "64": 2.337608654572941
+    },
+    "spec": "reported, not thresholded"
+  },
+  "Q6": {
+    "field": "R_orc - R_shr_scoped",
+    "n_singleton_obs": 15,
+    "pass": true,
+    "spec": "Delta_id_scoped == 0 exactly on singleton scopes",
+    "violations": []
+  },
+  "gate": {
+    "median_R_raw": 0.73828125,
+    "pass": true
+  },
+  "levels": {
+    "R_bpo": 0.7673807457010581,
+    "R_orc": 0.761594742063492,
+    "R_raw": 0.7203807043650793,
+    "R_shr_global": 0.7233837632275132,
+    "R_shr_scoped": 0.7524801587301586
+  },
+  "n_seeds": 3,
+  "outcome_fired": 3,
+  "runs": [
+    "runs\\phase2q_bpo\\qoc_seed1.json",
+    "runs\\phase2q_bpo\\qoc_seed2.json",
+    "runs\\phase2q_bpo\\qoc_seed3.json"
+  ]
+}

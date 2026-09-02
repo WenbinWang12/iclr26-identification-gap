@@ -1,0 +1,17 @@
+FROZEN coverage (4/12) PSR-LoRA on the OLD BURNED seeds 2027xxxx
+(the worlds where the PRE-coverage method FAILED (b): v2 was 3/5 teachers positive)
+
+  psr_lora tail            0.749
+  psr_no_coverage tail     0.678   (coverage lift +0.070)
+  excess_cvar tail         0.595
+  buffer_rrr_uniform tail  0.664
+
+  (b) psr - excess_cvar: mean +0.1538  wins 20/20  crossed95 [+0.0347,+0.2728] (df=3) -> PASS
+      per-teacher means [0.128 0.294 0.106 0.081 0.16 ]  (all5 positive: True)
+  (c) psr - buffer_rrr_uniform: mean +0.0844  wins 18/20  crossed95 [-0.0096,+0.1784] (df=3) -> FAIL
+      per-teacher means [0.034 0.181 0.111 0.021 0.075]  (all5 positive: True)
+
+READING: (b) flips FAIL->PASS on the SAME burned seeds once coverage is added
+(v2 pre-coverage: 3/5 teachers positive, CI straddled 0).  This isolates the
+coverage MECHANISM from the seed draw.  Note (c) remains draw-sensitive:
+it FAILS here but PASSES on the 2028xxxx held-out set -- report as a limitation.

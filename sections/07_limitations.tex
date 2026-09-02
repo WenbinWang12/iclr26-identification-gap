@@ -1,0 +1,147 @@
+\section{Limitations}
+\label{sec:limitations}
+
+\paragraph{One stream, one order, one model.}
+Every number here comes from a single task order (Order-4) on a single backbone
+(T5-large, LoRA $r{=}8$ on $q/v$) at a single budget ($400$/class, $3$ epochs).
+Order effects in continual learning are large, and we have not measured them. The
+scope structure that drives the whole analysis is a property of \emph{this}
+benchmark: ten of fifteen tasks share output tokens. A stream whose tasks have
+pairwise disjoint verbalizers has $\Delta^{\mathrm{id}}\equiv0$ by
+Proposition~\ref{prop:disjoint}, and on such a stream nothing in this paper
+applies. We regard the direction of that dependence as the honest framing: we
+identify a term that exists when verbalizers are shared, and we say so rather than
+implying generality.
+
+\paragraph{The theory is proved in a special case that happens to cover us.}
+Proposition~\ref{prop:qm} is proved for $d=1$ --- binary shared verbalizers --- and
+for any $m$. The case $m\ge2$ with dimension $\ge2$ is \textbf{open}. It happens
+that every scorable multi-task scope on this stream is binary, so every $q_m$ we
+report is backed by proof; but that is a fact about which tasks survived our
+exclusion rules, not a fact about the theory. A stream with scorable $K_S\ge3$
+shared scopes would take us outside what we have proved.
+
+\paragraph{The accuracy-space bound is weak where it matters.}
+Proposition~\ref{prop:cheb-acc} carries a measured constant
+$\kappa\approx0.018$ (worst task, WiC). At that value the bound is not
+practically informative, and we do not rest any empirical claim on it: the
+unconditional geometric statement does the work, and the accuracy numbers are
+measured. Two conservatisms remain unresolved --- multi-class flip fractions count
+only top-$2$ flips, and these $\kappa$ were estimated from an under-trained run
+rather than re-estimated after convergence.
+
+\paragraph{Three failed interventions are not a proof that none can work.}
+Section~\ref{sec:three-anchors} reports that an orthogonality penalty of O-LoRA's
+form, verbalizer-logit anchoring, and gauge-fixed anchoring all failed to improve
+task-agnostic accuracy, two of them harmfully. The reading we prefer --- that the
+identification gap is not a parameter-space object --- is an inference, not a
+theorem. The alternative reading is that better parameter-space interventions exist
+and we did not find them, and nothing in our evidence excludes it. We also tested
+exactly one $\lambda$ grid per intervention, selected on a $6$-task prefix; in the
+GFA case that gate demonstrably failed to predict $15$-task behaviour, which is a
+weakness of our selection procedure and not only of the method.
+
+\paragraph{Our two sensitivity analyses are underpowered, and we say so with numbers.}
+Section~\ref{sec:sso} reports that neither the scale dependence of
+$\Delta^{\mathrm{id}}$ nor the growth of staleness with stream length is established
+here, and the design explains why. Live scope membership only ever takes the values
+$\{1,2,3,4\}$, and only two scopes ever exceed one member, so task identity and
+membership count cannot be fully separated; membership is also monotone in stage, so
+``more scope-mates'' and ``later in the stream'' are collinear by construction. On
+the staleness side, five scorable singleton tasks are trained at positions
+$4,7,12,13,15$, giving age spans $0..11$, $0..8$, $0..3$, $0..2$ and $0..0$, so every
+observation at age $\ge9$ comes from COPA alone. These are the reasons a failed
+criterion here is weak evidence of absence rather than evidence of no effect, and
+they were written down before the analysis was run.
+
+\paragraph{Two of our four sensitivity arms are the same training trajectory.}
+We had described Phase-2K and Phase-2P as two independent \texttt{none} arms for that
+analysis. They are not: comparing their per-stage records field by field, all $480$
+retention values agree \emph{bit for bit}, with identical gradient-step sequences and
+identical seed, learning rate and epoch settings --- Phase-2P is Phase-2K's trajectory
+with SSO scoring attached and its penalty weights at zero. The arm-invariance check is
+therefore over one \texttt{none} replication (Phase-2Q) plus one different arm
+(Phase-2M at $\lambda_a=0.5$), not three independent draws. The signs do agree across
+all of them, but the check is weaker than we had claimed and we report it at the
+corrected strength.
+
+\paragraph{The enumeration is exhaustive only over its own constraint set.}
+Section~\ref{sec:enumeration} claims exactly two non-vacuous admissible rules, and
+that claim is an exhaustive case split over a table we wrote --- which examples a
+rule may read and which model it may read them under. It is not a theorem about
+task-agnostic inference. Three ways past it that our evidence does not close:
+a rule that changes the training objective (our three anchors are three points in
+that space, not a covering of it); a \emph{per-example} rather than per-task
+router, which Section~\ref{sec:theory} shows can exceed even the per-task oracle
+and whose task-free achievability we do not know; and stored state that is not an
+estimate of a per-task optimum at all, for which our staleness mechanism gives no
+prediction. ``Closed'' throughout this paper should be read as \emph{closed as
+enumerated}, and the enumeration's premises are stated so they can be rejected.
+
+\paragraph{Our O-LoRA arm is a re-implementation.}
+The orthogonality penalty is our implementation of O-LoRA's regulariser inside our
+harness at our budget. It is not the authors' code and not a reproduction of their
+reported numbers. No comparison against their published table is made or implied,
+and the arm exists to test additivity, not to benchmark.
+
+\paragraph{The additivity question is unresolved, by our own criterion.}
+Phase-2L's criterion C --- that the regulariser measurably repair deep forgetting on
+the $>8$~pp stratum --- failed at both $\lambda$ values its gate selected. Our frozen
+protocol says that when C fails, the additivity criteria A and B are
+\emph{uninterpretable}. So we do not know whether an output-layer fix is additive
+on top of a working representation-level method; we know only that it survived
+alongside a penalty that did not measurably work. This is the single largest gap in
+the paper's argument and we prefer to state it as such.
+
+\paragraph{No comparison against published continual-PEFT methods.}
+We did not run E$^2$-LoRA, NSR, LiteLoRA, SLICE, or ProCL. Every comparison here is
+internal: arms differing in one component under an identical budget, identical
+splits, and identical seeds. A claim that our approach outperforms published methods
+would require running them, and we make no such claim.
+
+\paragraph{Held-out data discipline costs us a number.}
+The official test files are never opened. Everything is measured on \texttt{audit}
+splits carved from training files, with offsets fit on disjoint \texttt{risk}
+splits. This keeps the test sets clean for future work but means our absolute
+accuracies are not comparable to published leaderboard numbers, and we do not place
+them in such tables.
+
+\paragraph{Our evaluation splits are class-balanced, and we measured what that buys
+only once.}
+Every \texttt{audit} split is $64$/class. Section~\ref{sec:bpo} shows this is not a
+neutral choice: a rule that equalises predicted class frequencies gains $+4.40$~pp
+on such a split and $-0.67$~pp at a $70{:}30$ mix. We pre-registered that control
+for the query-batch rule because that rule's mechanism made the confound obvious.
+\textbf{We did not run the equivalent control on anything else.} In particular the
+$+1.51$~pp per-scope offset gain --- the paper's central measurement --- is a
+balanced-split number, and while a per-scope offset fitted on labelled data has no
+comparable reason to depend on query balance, we have not measured that it does not.
+A reader should treat every accuracy in this paper as conditional on balanced
+evaluation, and the one place we probed that condition, it mattered enough to change
+a sign.
+
+\paragraph{One frozen criterion could not be evaluated as written.}
+Phase-2Q's protocol named a quantity its harness never recorded, so the criterion
+guarding Proposition~\ref{prop:disjoint}'s wiring was unevaluable as frozen and we
+reconstructed it --- correctly, and matching a formula already committed in an
+earlier phase's decision script, but \emph{after} the phase's primary number was
+known. We record it as unevaluable rather than passed, and the underlying prediction
+is separately confirmed at $0/87$ by two other phases' checks. The general lesson is
+against us: a pre-registration is only as strong as the harness that has to feed it,
+and one of ours had a criterion that could never have fired. Our released notes
+carry this and three other corrections to claims of our own, unedited beside the
+appends that supersede them.
+
+\paragraph{Excluded tasks.}
+Three of fifteen tasks are excluded from scored means --- CB (rarest class $16$
+examples, below the $40$ a $64$/class risk-plus-audit split needs), Yelp and Amazon
+(five-way verbalizers sharing first sub-word pieces). The exclusions were fixed
+before scoring and are the same in every arm, but they remove exactly the
+higher-$K_S$ scopes, which is also where the open part of
+Proposition~\ref{prop:qm} lives. A reader should treat our evidence as concerning
+binary shared verbalizers.
+
+\paragraph{Router state is not free, and we do not fold it into our headline cost.}
+The $m{=}1$ table costs $13$ floats. Any $m>1$ variant additionally needs a
+task-free router with per-task state that this figure does not cover; we report
+that separately and never inside the same number.

@@ -1,0 +1,174 @@
+\section{Experimental Protocol in Full}
+\label{app:experiments}
+
+This appendix gives the details a reader would need to re-run what we ran. It also
+lists the exclusions and the frozen protocols by name, since several of our
+reported failures are only interpretable against the criterion they failed.
+
+\subsection{Stream}
+\label{app:stream}
+
+The Order-4 sequence of $15$ tasks, in presentation order: MNLI, CB, WiC, COPA,
+QQP, BoolQA, RTE, IMDB, Yelp, Amazon, SST-2, DBpedia, AGNews, MultiRC, Yahoo. Each
+task is rendered as a prompt containing an explicit option list, and the target is
+a verbalizer token. The option list is readable at inference; the task index is
+not, and no arm in this paper receives one except the oracle rung, which exists
+only as an upper bound.
+
+Scope structure follows directly from the verbalizer sets and is given in
+Section~\ref{sec:setup}: four multi-task scopes and five singletons, with ten of
+the fifteen tasks sharing output tokens with at least one other task.
+Table~\ref{tab:scope-dims} in Appendix~\ref{app:proof-qm} records the gauge
+dimension $d=K_S-1$ of each multi-task scope, which is what decides whether our
+$q_m$ results are covered by proof.
+
+\subsection{Model, budget, and optimisation}
+\label{app:model}
+
+T5-large with LoRA rank $8$ on the $q$ and $v$ projections of every attention
+block: $2{,}359{,}296$ trainable scalars. The count is identical in every arm and
+is asserted at run time per arm rather than assumed. The backbone and the
+unembedding are frozen throughout; no arm trains an output head, and the
+verbalizer rows $\bu_y$ are never updated.
+
+Per task: $400$ examples per class, $3$ epochs, effective batch $64$. On the
+$15$-task stream this is $813$ gradient steps per seed. Three seeds throughout,
+and every reported level is a mean or median over seeds as stated at the point of
+use.
+
+\paragraph{A parameter that was dead, and the regression test that pins it.}
+An earlier version of the harness passed the epoch count through a path that did
+not reach the trainer, so the full $15$-task stream ran on $74$ gradient steps in
+total. Every level measured under that configuration is uninterpretable as a
+statement about a trained model, and the phase that depended on it failed its
+second criterion for that reason. The parameter is fixed, and a regression test
+asserts the realised step count against the configured one so the failure mode
+cannot recur silently. We mention it here because it is the kind of defect that is
+invisible in a results table.
+
+\subsection{Splits}
+\label{app:splits}
+
+Each task's training file is partitioned into three disjoint sets:
+\begin{itemize}
+  \item \texttt{update} --- training, capped at $400$/class;
+  \item \texttt{risk} --- $64$/class, used to \emph{fit} offsets;
+  \item \texttt{audit} --- $64$/class, used to \emph{score} them.
+\end{itemize}
+Offsets are fit on \texttt{risk} and scored on \texttt{audit}, and \texttt{risk} is
+never reported as a level. \textbf{The official test files are never opened at any
+point in this paper.} The $64$/class audit split is balanced by construction, which
+is a confound for any method whose behaviour depends on the label mix of the batch
+it sees; where that applies we say so and test it directly rather than leaving it
+to the reader.
+
+\subsection{Exclusions, and why each one is not a choice we made after seeing scores}
+\label{app:exclusions}
+
+Three tasks are excluded from scored means. In each case the reason is a property
+of the task's verbalizer or its class counts, checkable before any model is trained:
+
+\begin{itemize}
+  \item \textbf{Yelp} and \textbf{Amazon}: their five-way verbalizers violate the
+    distinct-first-piece precondition. Under T5's sentencepiece tokenizer
+    \texttt{very negative} and \texttt{very positive} share their first piece
+    (id $182$), so a first-step restricted argmax cannot separate them, and the
+    quantity we would be scoring is not the quantity we define.
+  \item \textbf{CB}: its rarest class (\texttt{neutral}) has $16$ examples, below
+    the $40$ that a $64$/class risk-plus-audit split requires. The frozen protocol
+    specifies $64$/class, so CB cannot supply one. The cost of this exclusion is
+    real and we state it: the NLI group reduces to MNLI and RTE.
+\end{itemize}
+
+Twelve of fifteen tasks remain scorable. Excluded tasks are still \emph{trained
+on}, and they still compete for the shared offset --- omitting them from conflict
+statistics would understate the conflict --- so they appear in $q_m$ and in the
+scope tables while being absent from accuracy means.
+
+\subsection{Metrics}
+\label{app:metrics}
+
+All accuracies are \textbf{balanced accuracy} under the restricted argmax of
+\eqref{eq:raw-decode}, i.e.\ the mean of per-class recalls over the task's
+verbalizer set. Balanced accuracy is used because the exclusion rules leave tasks
+with unequal class counts and because a shared offset moves predicted class
+proportions, which unweighted accuracy would partly hide.
+
+The three retentions $R^{\mathrm{raw}}$, $R^{\mathrm{orc}}$, $R^{\mathrm{shr}}$ are
+defined in \eqref{eq:orc}--\eqref{eq:shr}, the identification gap in
+\eqref{eq:delta-id}, and the ladder rungs in Section~\ref{sec:ladder}. Offsets are
+gauge-fixed to zero mean on their scope before being stored, applied, or compared,
+per Appendix~\ref{app:gauge}.
+
+\subsection{Statistics}
+\label{app:stats}
+
+All intervals are cluster bootstrap with \textbf{tasks as clusters}, $10{,}000$
+draws. Tasks are the clusters because the same task measured at different stream
+positions shares both its data and the model state that produced it; resampling
+examples would treat those observations as independent and understate variance.
+Where a comparison is paired by construction --- two inference rules evaluated on
+the same task at the same stage --- the bootstrap resamples the paired differences.
+
+Point estimates are medians unless stated otherwise. We report the interval
+whenever we report the point, including for criteria that failed, and we do not
+convert a failed criterion into a tie.
+
+\subsection{The unconditional training gate}
+\label{app:gate}
+
+Every arm reports median post-training $R^{\mathrm{raw}}$, and the gate is
+$>0.60$. The gate is unconditional: it is reported whatever its value, and it is
+reported before the arm's forgetting numbers. Below the gate an arm has not learned
+the stream and nothing about its forgetting is interpretable --- an arm that fails
+the gate and shows little forgetting has shown nothing. Every arm in this paper
+passes.
+
+\subsection{Frozen protocols}
+\label{app:protocols}
+
+Each phase has a protocol file written before the run it governs, containing the
+method, the criteria with numeric thresholds, and a set of predeclared outcomes
+mapping possible results to conclusions. The file's SHA-256 is recorded on disk at
+freeze time. Amendments are \emph{appended} with their own date and a new hash;
+nothing is edited in place, so a criterion cannot be restated after its result is
+known.
+
+Two properties of this scheme are worth naming because they bound what it
+guarantees. First, the hashes pin the artefact, and the ordering of freeze and run
+rests on the committed source and the appended amendment record rather than on a
+timestamped external registry; we say so rather than implying a stronger form of
+pre-registration than we have. Second, the decision scripts are themselves frozen
+before results land, with thresholds as module-level constants and a constructed
+failure case per criterion in their test suites, so the mapping from numbers to
+verdicts is fixed before the numbers exist.
+
+\paragraph{Where the scheme left a gap, in the phase that tested our own predictions.}
+The sensitivity analysis of Section~\ref{sec:sso} was frozen with six criteria and
+five predeclared outcomes, and \emph{none of the five fired verbatim}: every outcome
+that mentioned the staleness criterion presupposed it passing, and it failed. The
+decision script emits a null outcome and reports each criterion under its own name,
+which is what the protocol's general rule requires; we record the gap rather than
+adding a sixth branch after the fact. Two further disclosures belong with it. The
+handling of degenerate bootstrap resamples --- draws whose pooled regressor has no
+variation, so the slope is undefined --- was \emph{not} in the frozen text; we drop
+such draws and report their fraction (between $0.01\%$ and $0.20\%$ here) rather than
+scoring them as zero slope, which would disguise ``undefined'' as ``no effect'', and
+that choice post-dates seeing the first point estimates. And one arm showed a
+significant scale dependence that we then traced to a mechanical artefact: at a
+single-member scope the scoped gap is zero \emph{by Proposition~\ref{prop:disjoint}}
+rather than by measurement, so including those points anchors any regression on
+membership count at zero. Restricting to multi-member scopes removes the significance
+in every arm. That diagnosis is post hoc, so we use it only to decline a finding,
+never to rescue one.
+
+\subsection{What was run on what}
+\label{app:compute}
+
+All runs are on a single A100-80GB per seed, three seeds in parallel on separate
+cards of a shared host. The backbone is loaded in bf16 with gradient checkpointing,
+which is what makes a T5-large LoRA run fit alongside other tenants; the practical
+per-card headroom on the shared host was between $3.5$ and $6$~GB, and the
+configuration above was sized to that rather than to an empty machine. A full
+$15$-task seed takes roughly one hour, with later stages slower than earlier ones
+because every stage re-evaluates every task seen so far.

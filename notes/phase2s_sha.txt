@@ -1,0 +1,56 @@
+Phase-2S — SIO (Separation-gated Invariant Offset)
+
+notes/phase2s_sio_protocol.md
+  sha256 21e8963e3ca774f93cc13bf51b438027ec9f9cf7b30f0d23869f2a1cbe52e604
+  frozen 2026-08-31T20:51:18+08:00
+  proof of freeze-before-run: 0 dirs matching experiments/*phase2s* and no
+  experiments/phase2s_sio/ existed at the moment of hashing; the multi-seed
+  generalisation check was already running and its result is declared in
+  protocol §3 as development evidence to be reported whatever it shows.
+
+after §A1 (zero-GPU branch retracted; blocked on cards, not design)
+  sha256 79c14b35991bbd50a0d6de4d4437a7b799b98fe24e5d66a918acd39e68205700
+  appended 2026-08-31T20:54:58+08:00
+
+after §A2 (multi-seed overturns the 90:10 headline; S3 and S5 found defective,
+           S3b/S5b added binding only the real-data run)
+  sha256 458ca2d2dfec2468bc7d2ee33692c203accefe5f7529a3751c24dc902b21fe5b
+  appended 2026-08-31T21:01:27+08:00
+
+after §A2.6-A2.7 (slope sign convention corrected; implementation + 21 tests landed)
+  sha256 63015b1e4c7e290e51071b84a6b7196baae082ec578f099368d9ddee04b90d5d
+  appended 2026-08-31T21:09:13+08:00
+  code: experiments/phase2s_sio/sio.py 7186a68441b3ca5b
+        tests/test_sio.py             ace2346993ec61a1
+
+after §A3 (moved to BABEL; deps aligned; data re-downloaded; epochs-4 arm declared;
+           decide_2s.py + 18 tests committed pre-result; MID-raw control positive)
+  sha256 16a06a29856a08b12cae3be3a21cc7c4c1e72e4d3bfcdb4e82498b6602a4aa35
+  appended 2026-09-01T01:03:00+08:00
+  decide_2s.py 19844cdfeab982e7
+
+after §A4 (REAL-DATA VERDICT: SIO fails all of S1-S5b; mechanism refuted by S5b
+           slope CI [-1.90,-0.066]; BC's defect CONFIRMED on real logits;
+           synthetic development set retracted as circular)
+  sha256 4eea10b7940ede032c9fd5324a0c04e0134334b797c8c416bbd0dd6cddcd98e9
+  appended 2026-09-01T01:22:08+08:00
+
+# Phase-2T (VGC: variance-gated Batch Calibration)
+7697291743d6a64be7dcef29a70f3d2adcf8d102e6bc004628510a08bb87a849  notes/phase2t_vgc_protocol.md   frozen 2026-08-31T17:32:39Z; 0 dirs match experiments/*phase2t*; seeds 2/3 still RUNNING at freeze time (task 15/15), so TAU_SD=0.50 was chosen on seed 1 alone
+
+# Phase-2T implementation, hashed before any held-out (seed 2/3) logit was scored
+9268661646230e5d5c6bcbfdff82a6597f33abce5dd391924a07023cecd673d6 *experiments/phase2t_vgc/vgc.py   frozen 2026-08-31T17:40:08Z
+36976c7046d09ea83067e2ab89df0e21d9b8985c945eb7543a233832315b0b8a *experiments/phase2t_vgc/decide_2t.py   frozen 2026-08-31T17:40:08Z
+1ca27f4388ecbc2f4f08bd0eb1e30544399a53cdabc50ed23eac22765ddd0152 *experiments/phase2t_vgc/tests/test_vgc.py   frozen 2026-08-31T17:40:08Z
+e131c3aa79caf536d35bf0163096194bde90d17eedcca82ca00df31d307735d6 *experiments/phase2t_vgc/tests/test_decide_2t.py   frozen 2026-08-31T17:40:08Z
+# 46/46 unit tests pass (22 vgc + 24 decide_2t); decide() branches to all five outcomes plus PROTOCOL_GAP
+8ce5d83d17082224ca50faf5fe14d6807e0c0e4c9689c53c2107c9d667d02829  notes/phase2t_vgc_protocol.md   +A1 held-out verdict OUTCOME_5 (sd gate fails T1/T2/T5 on seeds 2-3); appended 2026-08-31T18:01:22Z; seeds 11-15 launched as fresh held-out (job 10273784) before any successor threshold chosen
+
+# Phase-2U (SCG: gate BC on its own correction magnitude |mean(s)|)
+892ef1a8bb68bf1d044da031ae092fca73122c8c7ba77d2c8bd79486669e4426  notes/phase2u_scg_protocol.md   frozen 2026-08-31T18:03:14Z; 0 dirs match experiments/*phase2u*; TAU_M=1.4 chosen on dev seeds 1-3 (210 batches); held-out seeds 11-15 = job 10273784 submitted BEFORE this freeze
+# Phase-2U implementation, hashed before any seed 11-15 logit was scored (2026-08-31T18:12:50Z); 44/44 tests pass
+1c68da8fc70216a9c8fdb5956ac9cc260ed8d8b02fd84ffe666ddd1a24217d3e *experiments/phase2u_scg/scg.py
+39dd665c5fea4f8f767a5c79c76768f46c34b4b24fe3ba88fe70a9cd2bd3c86a *experiments/phase2u_scg/decide_2u.py
+7dcc763b1e59b27fb1c30f2d1dbb100d24b7a6720abe1d634a3b702f9b9212f8 *experiments/phase2u_scg/tests/test_scg.py
+d98f9c1923c81fbc73f8e6bb9516333df6a2009bf3942d0f0489e52eaa9fc450 *experiments/phase2u_scg/tests/test_decide_2u.py
+11c00e50c424bb7ac10b95f55de9fa15b5be76be2eeb1ed657960d837776ed83  notes/phase2u_scg_protocol.md   +A1 held-out verdict OUTCOME_4 on 350 batches / 5 seeds (11-15): U1 FAIL (worst -2.34 vs -1.0), U3 FAIL, U2/U4/U5 PASS; U5 mechanism CONFIRMED rho median +0.719 8/8 tasks; appended 2026-08-31T19:04:08Z

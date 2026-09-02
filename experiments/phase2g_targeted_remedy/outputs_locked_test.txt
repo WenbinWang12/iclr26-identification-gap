@@ -1,0 +1,27 @@
+Phase-2G locked exploratory test
+method: groups=6, rounds=24, eta=0.7, mean_margin=0.01
+learner seeds: 7,17,29; 5 teacher x 4 stream worlds
+
+summary after within-world learner-seed averaging
+gcdr : mean 0.9680 +/- 0.0098; tail 0.6707 +/- 0.1958
+psr  : mean 0.9722 +/- 0.0103; tail 0.7148 +/- 0.1677
+cvar : mean 0.9688 +/- 0.0110; tail 0.6271 +/- 0.1643
+
+(a) mean non-inferiority GCDR - PSR: PASS
+paired mean -0.0042; wins 2/20
+crossed random-effects 95% CI [-0.0067,-0.0017]
+
+(b) tail superiority GCDR - PSR: FAIL
+paired mean -0.0441; wins 4/20
+crossed random-effects 95% CI [-0.1422,+0.0541]
+
+(c) tail superiority GCDR - excess-CVaR: FAIL
+paired mean +0.0436; wins 15/20
+crossed random-effects 95% CI [-0.0764,+0.1636]
+
+VERDICT: FAIL targeted remedy.
+
+Interpretation recorded immediately after the run: clustering only the final
+phase-2f working set cannot recover rare examples that buffer selection has
+already discarded.  The next design must discover groups during the stream and
+reserve fixed per-group capacity; this test panel is now burned for development.

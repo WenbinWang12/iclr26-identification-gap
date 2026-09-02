@@ -1,0 +1,702 @@
+{
+  "dataset_id": "McAuley-Lab/Amazon-Reviews-2023",
+  "category_dir": "raw/review_categories",
+  "split_salt": "phase2h::split::v1",
+  "example_id_salt": "phase2h::example_id::v1",
+  "split_fracs": {
+    "train": 0.8,
+    "validation": 0.1,
+    "test": 0.1
+  },
+  "eligibility": {
+    "min_train_per_polarity": 512,
+    "min_eval_per_polarity": 32,
+    "n_sources": 6,
+    "scan_cap": 20000
+  },
+  "polarity_map": {
+    "positive": [
+      4,
+      5
+    ],
+    "negative": [
+      1,
+      2
+    ],
+    "excluded": [
+      3
+    ]
+  },
+  "dedup": {
+    "within_category_dup": 7778,
+    "polarity_conflict": 195,
+    "cross_category_dup": 20006
+  },
+  "n_categories_scanned": 34,
+  "n_eligible": 34,
+  "enough_sources": true,
+  "per_category": [
+    {
+      "category": "All_Beauty",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        2458,
+        11820
+      ],
+      "validation": [
+        325,
+        1441
+      ],
+      "test": [
+        315,
+        1445
+      ],
+      "min_train_polarity": 2458,
+      "eligible": true
+    },
+    {
+      "category": "Amazon_Fashion",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        2225,
+        11748
+      ],
+      "validation": [
+        253,
+        1404
+      ],
+      "test": [
+        296,
+        1528
+      ],
+      "min_train_polarity": 2225,
+      "eligible": true
+    },
+    {
+      "category": "Appliances",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1675,
+        12854
+      ],
+      "validation": [
+        207,
+        1667
+      ],
+      "test": [
+        216,
+        1621
+      ],
+      "min_train_polarity": 1675,
+      "eligible": true
+    },
+    {
+      "category": "Arts_Crafts_and_Sewing",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1240,
+        13129
+      ],
+      "validation": [
+        166,
+        1663
+      ],
+      "test": [
+        153,
+        1640
+      ],
+      "min_train_polarity": 1240,
+      "eligible": true
+    },
+    {
+      "category": "Automotive",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1846,
+        12213
+      ],
+      "validation": [
+        210,
+        1568
+      ],
+      "test": [
+        264,
+        1508
+      ],
+      "min_train_polarity": 1846,
+      "eligible": true
+    },
+    {
+      "category": "Baby_Products",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1345,
+        13056
+      ],
+      "validation": [
+        151,
+        1587
+      ],
+      "test": [
+        171,
+        1697
+      ],
+      "min_train_polarity": 1345,
+      "eligible": true
+    },
+    {
+      "category": "Beauty_and_Personal_Care",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1642,
+        12389
+      ],
+      "validation": [
+        212,
+        1557
+      ],
+      "test": [
+        200,
+        1532
+      ],
+      "min_train_polarity": 1642,
+      "eligible": true
+    },
+    {
+      "category": "Books",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        928,
+        12959
+      ],
+      "validation": [
+        132,
+        1652
+      ],
+      "test": [
+        114,
+        1618
+      ],
+      "min_train_polarity": 928,
+      "eligible": true
+    },
+    {
+      "category": "CDs_and_Vinyl",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        689,
+        13361
+      ],
+      "validation": [
+        85,
+        1730
+      ],
+      "test": [
+        83,
+        1694
+      ],
+      "min_train_polarity": 689,
+      "eligible": true
+    },
+    {
+      "category": "Cell_Phones_and_Accessories",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        2302,
+        11761
+      ],
+      "validation": [
+        276,
+        1516
+      ],
+      "test": [
+        287,
+        1530
+      ],
+      "min_train_polarity": 2302,
+      "eligible": true
+    },
+    {
+      "category": "Clothing_Shoes_and_Jewelry",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1298,
+        13068
+      ],
+      "validation": [
+        183,
+        1645
+      ],
+      "test": [
+        163,
+        1573
+      ],
+      "min_train_polarity": 1298,
+      "eligible": true
+    },
+    {
+      "category": "Digital_Music",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        986,
+        13179
+      ],
+      "validation": [
+        122,
+        1657
+      ],
+      "test": [
+        122,
+        1745
+      ],
+      "min_train_polarity": 986,
+      "eligible": true
+    },
+    {
+      "category": "Electronics",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1757,
+        12580
+      ],
+      "validation": [
+        218,
+        1581
+      ],
+      "test": [
+        211,
+        1542
+      ],
+      "min_train_polarity": 1757,
+      "eligible": true
+    },
+    {
+      "category": "Gift_Cards",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        747,
+        13301
+      ],
+      "validation": [
+        89,
+        1647
+      ],
+      "test": [
+        80,
+        1596
+      ],
+      "min_train_polarity": 747,
+      "eligible": true
+    },
+    {
+      "category": "Grocery_and_Gourmet_Food",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1858,
+        12383
+      ],
+      "validation": [
+        249,
+        1538
+      ],
+      "test": [
+        217,
+        1537
+      ],
+      "min_train_polarity": 1858,
+      "eligible": true
+    },
+    {
+      "category": "Handmade_Products",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1116,
+        13681
+      ],
+      "validation": [
+        139,
+        1669
+      ],
+      "test": [
+        141,
+        1692
+      ],
+      "min_train_polarity": 1116,
+      "eligible": true
+    },
+    {
+      "category": "Health_and_Household",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1530,
+        12542
+      ],
+      "validation": [
+        187,
+        1497
+      ],
+      "test": [
+        187,
+        1568
+      ],
+      "min_train_polarity": 1530,
+      "eligible": true
+    },
+    {
+      "category": "Health_and_Personal_Care",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        2392,
+        11646
+      ],
+      "validation": [
+        271,
+        1477
+      ],
+      "test": [
+        301,
+        1423
+      ],
+      "min_train_polarity": 2392,
+      "eligible": true
+    },
+    {
+      "category": "Home_and_Kitchen",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1409,
+        12946
+      ],
+      "validation": [
+        162,
+        1633
+      ],
+      "test": [
+        154,
+        1668
+      ],
+      "min_train_polarity": 1409,
+      "eligible": true
+    },
+    {
+      "category": "Industrial_and_Scientific",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1473,
+        12849
+      ],
+      "validation": [
+        172,
+        1577
+      ],
+      "test": [
+        168,
+        1588
+      ],
+      "min_train_polarity": 1473,
+      "eligible": true
+    },
+    {
+      "category": "Kindle_Store",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1033,
+        13043
+      ],
+      "validation": [
+        114,
+        1620
+      ],
+      "test": [
+        156,
+        1605
+      ],
+      "min_train_polarity": 1033,
+      "eligible": true
+    },
+    {
+      "category": "Magazine_Subscriptions",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        2395,
+        11385
+      ],
+      "validation": [
+        292,
+        1447
+      ],
+      "test": [
+        305,
+        1417
+      ],
+      "min_train_polarity": 2395,
+      "eligible": true
+    },
+    {
+      "category": "Movies_and_TV",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1607,
+        11916
+      ],
+      "validation": [
+        192,
+        1561
+      ],
+      "test": [
+        199,
+        1530
+      ],
+      "min_train_polarity": 1607,
+      "eligible": true
+    },
+    {
+      "category": "Musical_Instruments",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1433,
+        12984
+      ],
+      "validation": [
+        168,
+        1635
+      ],
+      "test": [
+        169,
+        1665
+      ],
+      "min_train_polarity": 1433,
+      "eligible": true
+    },
+    {
+      "category": "Office_Products",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1230,
+        13223
+      ],
+      "validation": [
+        155,
+        1636
+      ],
+      "test": [
+        147,
+        1693
+      ],
+      "min_train_polarity": 1230,
+      "eligible": true
+    },
+    {
+      "category": "Patio_Lawn_and_Garden",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1888,
+        12491
+      ],
+      "validation": [
+        242,
+        1657
+      ],
+      "test": [
+        256,
+        1513
+      ],
+      "min_train_polarity": 1888,
+      "eligible": true
+    },
+    {
+      "category": "Pet_Supplies",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1881,
+        11902
+      ],
+      "validation": [
+        266,
+        1417
+      ],
+      "test": [
+        214,
+        1539
+      ],
+      "min_train_polarity": 1881,
+      "eligible": true
+    },
+    {
+      "category": "Software",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        3115,
+        9661
+      ],
+      "validation": [
+        401,
+        1205
+      ],
+      "test": [
+        394,
+        1250
+      ],
+      "min_train_polarity": 3115,
+      "eligible": true
+    },
+    {
+      "category": "Sports_and_Outdoors",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1371,
+        12823
+      ],
+      "validation": [
+        172,
+        1540
+      ],
+      "test": [
+        182,
+        1694
+      ],
+      "min_train_polarity": 1371,
+      "eligible": true
+    },
+    {
+      "category": "Subscription_Boxes",
+      "scanned": 16216,
+      "hit_cap": false,
+      "train": [
+        3240,
+        8159
+      ],
+      "validation": [
+        386,
+        1025
+      ],
+      "test": [
+        378,
+        979
+      ],
+      "min_train_polarity": 3240,
+      "eligible": true
+    },
+    {
+      "category": "Tools_and_Home_Improvement",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1456,
+        12830
+      ],
+      "validation": [
+        185,
+        1615
+      ],
+      "test": [
+        164,
+        1623
+      ],
+      "min_train_polarity": 1456,
+      "eligible": true
+    },
+    {
+      "category": "Toys_and_Games",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        945,
+        13465
+      ],
+      "validation": [
+        117,
+        1679
+      ],
+      "test": [
+        111,
+        1700
+      ],
+      "min_train_polarity": 945,
+      "eligible": true
+    },
+    {
+      "category": "Unknown",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1763,
+        12323
+      ],
+      "validation": [
+        220,
+        1475
+      ],
+      "test": [
+        200,
+        1526
+      ],
+      "min_train_polarity": 1763,
+      "eligible": true
+    },
+    {
+      "category": "Video_Games",
+      "scanned": 20000,
+      "hit_cap": true,
+      "train": [
+        1992,
+        11718
+      ],
+      "validation": [
+        249,
+        1481
+      ],
+      "test": [
+        264,
+        1467
+      ],
+      "min_train_polarity": 1992,
+      "eligible": true
+    }
+  ],
+  "ordered_sources": [
+    "Subscription_Boxes",
+    "Software",
+    "All_Beauty",
+    "Magazine_Subscriptions",
+    "Health_and_Personal_Care",
+    "Cell_Phones_and_Accessories"
+  ],
+  "ordered_source_min_train_polarity": [
+    3240,
+    3115,
+    2458,
+    2395,
+    2392,
+    2302
+  ]
+}

@@ -1,0 +1,530 @@
+\section{Proofs and Mathematical Audit}
+\label{app:proofs}
+
+For any positive-semidefinite matrix $\bH$, write
+$\norm{\bm{v}}_{\bH}^2=\bm{v}^\top\bH\bm{v}$.
+
+\subsection{Proof of Lemma~\ref{lem:local-forgetting}}
+
+\begin{proof}
+Let $\bm{d}=\bx_t-\bx_s$. Taylor's theorem with integral remainder gives
+\begin{align}
+\cL_s(\bx_s+\bm{d})
+&=\cL_s(\bx_s)+\nabla\cL_s(\bx_s)^\top\bm{d}
++\frac12\bm{d}^\top\nabla^2\cL_s(\bx_s)\bm{d}+r_{s,t},
+\end{align}
+where
+\begin{equation}
+r_{s,t}=\int_0^1(1-\tau)\bm{d}^\top
+\left[\nabla^2\cL_s(\bx_s+\tau\bm{d})-\bH_s\right]
+\bm{d}\,d\tau.
+\end{equation}
+Hessian Lipschitzness implies
+\begin{align}
+|r_{s,t}|
+&\leq \rho_s\norm{\bm{d}}_2^3
+\int_0^1\tau(1-\tau)\,d\tau
+=\frac{\rho_s}{6}\norm{\bm{d}}_2^3.
+\end{align}
+Finally, $\bg_s^\top\bm{d}=0$ for every $\bm{d}\in\cU$ if and only if
+$\bg_s\in\cU^\perp$, equivalently $\Pi_{\cU}\bg_s=\bm{0}$.
+\end{proof}
+
+For a nonquadratic old loss, the one-step change has the remainder difference
+\begin{equation}
+\cF_{s\to t}-\cF_{s\to t-1}
+=\bg_s^\top\bh_t
++(\bx_{t-1}-\bx_s)^\top\bH_s\bh_t
++\frac12\bh_t^\top\bH_s\bh_t+\Delta r_{s,t},
+\end{equation}
+with the direct bound
+\begin{equation}
+|\Delta r_{s,t}|
+\leq\frac{\rho_s}{6}
+\left(\norm{\bx_t-\bx_s}_2^3
++\norm{\bx_{t-1}-\bx_s}_2^3\right).
+\end{equation}
+Consequently, the quadratic increment is informative only when this remainder
+is controlled relative to the leading terms.
+
+\subsection{Proof of Sequential Accumulation Results}
+
+\begin{proof}[Proof of Theorem~\ref{thm:sequential-accumulation}]
+The telescoping identity
+$\bx_t-\bx_s=\sum_{u=s+1}^{t}\bh_u$ substituted into
+Eq.~\eqref{eq:quadratic-old-loss} gives
+Eq.~\eqref{eq:path-forgetting}. Since
+$\bx_t-\bx_s=(\bx_{t-1}-\bx_s)+\bh_t$, expanding the squared seminorm gives
+Eq.~\eqref{eq:forgetting-increment}. Taking expectations, applying
+Eq.~\eqref{eq:noncancellation}, and summing from $s+1$ to $T$ yields
+\begin{align}
+\E\cF_{s\to T}
+&\geq\sum_{t=s+1}^{T}
+\left(\frac12\E\norm{\bh_t}_{\bH_s}^2-\beta_t\right).
+\end{align}
+The stated special case follows from $\beta_t=0$ and the lower bounds
+$\nu_t^2$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:independent-innovations}]
+Let $\bm{S}=\sum_{u=s+1}^{T}\bh_u$. Independence gives
+$\E\bm{S}=\sum_u\bm{\mu}_u$ and
+$\operatorname{Cov}(\bm{S})=\sum_u\bSigma_u$. For any random vector with a
+finite second moment,
+\begin{equation}
+\E[\bm{S}^\top\bH_s\bm{S}]
+=(\E\bm{S})^\top\bH_s(\E\bm{S})
++\tr(\bH_s\operatorname{Cov}(\bm{S})).
+\end{equation}
+Multiplying by $1/2$ and invoking Eq.~\eqref{eq:path-forgetting} proves the
+claim.
+\end{proof}
+
+\begin{proof}[Proof of Proposition~\ref{prop:mixture-bridge}]
+Completing the square in the mixture risk gives
+\begin{equation}
+\cL_t(\bx)=\kappa_t'
++\frac12\norm{\bx-\bm{m}_t}_{\bH}^2,
+\end{equation}
+where $\kappa_t'$ is independent of $\bx$. The constrained minimizer is therefore
+$P_{\cU}^{\bH}\bm{m}_t$. Let
+$\bm{d}=P_{\cU}^{\bH}(\bm{m}_t-\bm{m}_s)\in\cU$. Because
+$\bx_s-\bm{m}_s=-(\bI-P_{\cU}^{\bH})\bm{m}_s$ is $\bH$-orthogonal to
+$\cU$,
+\begin{align}
+\cL_s(\bx_t)-\cL_s(\bx_s)
+&=\frac12\norm{(\bx_s-\bm{m}_s)+\bm{d}}_{\bH}^2
+-\frac12\norm{\bx_s-\bm{m}_s}_{\bH}^2\\
+&=\frac12\norm{\bm{d}}_{\bH}^2.
+\end{align}
+Finally,
+$\bm{m}_t-\bm{m}_s=\bM\sum_{u=s+1}^{t}\Delta\bm{\pi}_u$, which yields the
+increment formula.
+\end{proof}
+
+\begin{remark}[Cancellation counterexample]
+Let $p=1$, $H_s=1$, $h_{s+1}=1$, and $h_{s+2}=-1$. Then
+$\cF_{s\to s+1}=1/2$ but $\cF_{s\to s+2}=0$. The cross term at the second
+step equals $-1$ and dominates the new quadratic energy $1/2$. Thus no theorem
+can infer monotone forgetting solely from sequential ordering.
+\end{remark}
+
+\subsection{Proof of the Three-Way Decomposition}
+
+\begin{proof}[Proof of Proposition~\ref{prop:error-decomposition}]
+Add and subtract $\overline{\cL}_T(\bX^\star)$ and
+$\overline{\cL}_T(\bX_R^\star)$ from the left-hand side. This gives
+Eq.~\eqref{eq:three-way-decomposition} algebraically. For nonnegativity of the
+conflict term,
+\begin{equation}
+\min_{\bX}\sum_s w_s\cL_s(\bX)
+\geq \sum_s w_s\min_{\bX}\cL_s(\bX).
+\end{equation}
+The capacity term is nonnegative because $\cC_R$ is contained in the full
+update space. The online term is nonnegative because $\bX_R^\star$ globally
+minimizes $\overline{\cL}_T$ over $\cC_R$ and
+$\widehat{\bX}_T\in\cC_R$.
+\end{proof}
+
+\begin{remark}[Conflict survives unlimited rank]
+For equal weights and
+$\cL_1(x)=\frac12(x-1)^2$, $\cL_2(x)=\frac12(x+1)^2$, the individual minima
+have zero loss, while the shared optimum $x^\star=0$ has average loss $1/2$.
+The capacity and online terms can both be zero. Hence the retention gap is not,
+in general, entirely a capacity-allocation problem.
+\end{remark}
+
+\subsection{Proof of the Spectral Capacity Formula}
+
+\begin{proof}[Proof of Theorem~\ref{thm:spectral-capacity}]
+Define the invertible change of variables
+\begin{equation}
+\bY=\bC_{\mathrm{out}}^{1/2}\bX\bC_{\mathrm{in}}^{1/2}.
+\end{equation}
+Multiplication by invertible matrices preserves rank, so the constrained
+capacity problem is equivalent to
+\begin{equation}
+\min_{\rank(\bY)\leq R}\frac12\norm{\bY-\bY^\star}_F^2.
+\end{equation}
+The Eckart--Young--Mirsky theorem gives $[\bY^\star]_R$ as a minimizer and
+$\frac12\sum_{j>R}\sigma_j^2(\bY^\star)$ as its residual. Applying the inverse
+change of variables gives the stated $\bX_R^\star$.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:capacity-lower-bound}]
+At least $m-R$ singular values occur in the tail after rank $R$, and each has
+squared magnitude at least $\alpha^2$. Substitution into
+Eq.~\eqref{eq:spectral-capacity} proves the bound. The sequential statement
+additionally assumes that the modes persist rather than cancel or lose energy.
+\end{proof}
+
+\begin{proof}[Proof of Corollary~\ref{cor:global-layer-allocation}]
+For each layer, apply the invertible whitening transformation from
+Theorem~\ref{thm:spectral-capacity}. If layer $\ell$ receives integer rank
+$R_\ell$, Eckart--Young--Mirsky gives residual
+$\frac12\sum_{j>R_\ell}\sigma_j^2(\bY_\ell^\star)$. Because every retained
+singular component consumes one unit of the global budget and removes exactly
+one nonnegative squared singular value from the residual, minimizing the sum
+under $\sum_\ell R_\ell\leq R$ is achieved by retaining the $R$ largest values
+across all layers. Ties may produce multiple optimal allocations.
+\end{proof}
+
+\begin{corollary}[Locally optimal rank-constrained consolidation]
+\label{cor:merge-consolidation}
+Under Eq.~\eqref{eq:kronecker-quadratic}, replacing an unconstrained accumulated
+update $\bX^\star$ by Eq.~\eqref{eq:weighted-svd} minimizes historical mixture
+loss among all aligned rank-$R$ updates. If
+$\sigma_R(\bY^\star)>\sigma_{R+1}(\bY^\star)$, the whitened rank-$R$ subspace is
+unique.
+\end{corollary}
+
+The corollary is a local statement in a shared parameter basis. It does not
+cover independently trained models that require representation alignment, nor
+does it control the Taylor remainder after a large merge. Applied to an
+arbitrary $\bX\neq\bX^\star$, Eq.~\eqref{eq:weighted-svd} minimizes weighted
+reconstruction error to $\bX$, not historical mixture loss itself.
+
+\subsection{Proof of Safe-Space Contraction}
+
+\begin{proof}[Proof of Theorem~\ref{thm:safe-subspace}]
+For any ambient displacement $\bm{v}$,
+\begin{equation}
+\bm{v}^\top\bA_t^{\mathrm{amb}}\bm{v}
+=\sum_{s=1}^{t}\omega_s\bm{v}^\top\bK_s\bm{v}.
+\end{equation}
+Every summand is nonnegative. The sum is zero if and only if every summand is
+zero. For a positive-semidefinite matrix,
+$\bm{v}^\top\bK_s\bm{v}=0$ if and only if
+$\bm{v}\in\ker(\bK_s)$. This proves the ambient kernel identity and nesting.
+
+For the approximate construction,
+$\cN_t^{\mathrm{amb},(\tau)}=
+\cN_{t-1}^{\mathrm{amb},(\tau)}\cap
+\cS_t^{\mathrm{amb}}(\tau)^\perp$, so nesting follows directly. Replacing any
+nonzero $\bK_s$ by $c\bK_s$ for $c>0$ scales both its eigenvalues and
+$\norm{\bK_s}_{\mathrm{op}}$ by $c$ and therefore leaves
+$\cS_s^{\mathrm{amb}}(\tau)$ unchanged. The zero-matrix convention is unchanged
+as well.
+
+Finally, for fixed $\bB$,
+\begin{equation}
+\ba^\top\bA_t^{\bB}\ba
+=(\bB\ba)^\top\bA_t^{\mathrm{amb}}(\bB\ba).
+\end{equation}
+This quantity is zero if and only if
+$\bB\ba\in\ker(\bA_t^{\mathrm{amb}})$. Applying the same positive-semidefinite
+sum argument to $\bG_s=\bB^\top\bK_s\bB$ proves the remaining identities and
+nesting in Eq.~\eqref{eq:coefficient-safe-kernel}.
+\end{proof}
+
+The exact remaining coefficient dimension within a fixed dictionary can also
+be written as
+\begin{equation}
+\operatorname{dim}(\cN_t^{\bB})
+=m-\rank\begin{bmatrix}
+\sqrt{\omega_1}\bG_1^{1/2}\\
+\vdots\\
+\sqrt{\omega_t}\bG_t^{1/2}
+\end{bmatrix}.
+\label{eq:safe-dimension}
+\end{equation}
+Under the explicit general-position condition that the stacked rank equals
+$\min\{m,\sum_{s\leq t}\rank(\bG_s)\}$,
+\begin{equation}
+\operatorname{dim}(\cN_t^{\bB})
+=\max\{0,m-\sum_{s\leq t}\rank(\bG_s)\}.
+\end{equation}
+This dimension-exhaustion rate is conditional on general position; the kernel
+nesting itself is unconditional for additive positive-semidefinite terms.
+
+\begin{proof}[Proof of Proposition~\ref{prop:price-useful-update}]
+Let $\bz_0=\Pi_{\ker(\bA)}\bz$. If $\bz_0\neq0$, choose
+$\ba=\gamma\bz_0/\norm{\bz_0}_2^2$. Then
+$\bz^\top\ba=\gamma$ and $\ba^\top\bA\ba=0$, proving the first case.
+
+Otherwise $\bz\perp\ker(\bA)$, hence $\bz\in\range(\bA)$ for symmetric
+$\bA$. Generalized Cauchy--Schwarz gives
+\begin{equation}
+(\bz^\top\ba)^2
+\leq(\bz^\top\bA^\dagger\bz)(\ba^\top\bA\ba).
+\end{equation}
+Any feasible point therefore has cost at least
+$\gamma^2/(2\bz^\top\bA^\dagger\bz)$. The displayed $\ba^\star$ in
+Eq.~\eqref{eq:price-solution} is feasible and attains equality.
+\end{proof}
+
+\subsection{Proof of the Top-$k$ Allocation Rule}
+
+\begin{proof}[Proof of Theorem~\ref{thm:topk-allocation}]
+For a fixed support $\cS$, generalized Cauchy--Schwarz yields
+\begin{equation}
+G(\ba)^2
+\leq\left(\sum_{j\in\cS}\bz_j^\top
+\widetilde{\bA}_j^{-1}\bz_j\right)
+\left(\sum_{j\in\cS}\ba_j^\top
+\widetilde{\bA}_j\ba_j\right).
+\end{equation}
+Thus any update achieving gain $\gamma$ has cost at least
+$\gamma^2/(2\sum_{j\in\cS}q_j)$. The coefficient vector in
+Eq.~\eqref{eq:topk-solution} attains equality. Minimizing cost over supports of
+size at most $k$ is consequently equivalent to maximizing
+$\sum_{j\in\cS}q_j$, achieved by the $k$ largest positive scores.
+\end{proof}
+
+\begin{corollary}[Robustness to cross-block curvature]
+\label{cor:approx-block-allocation}
+Let $\bD=\operatorname{blkdiag}(\widetilde{\bA}_1,\ldots,
+\widetilde{\bA}_M)$ and suppose the true positive-definite screening curvature
+satisfies
+\begin{equation}
+(1-\delta)\bD\preceq\widetilde{\bA}\preceq(1+\delta)\bD,
+\qquad 0\leq\delta<1.
+\end{equation}
+Let $\widehat{\cS}$ be the top-$k$ support under $\bD$ and $\cS^\star$ the
+optimal support under $\widetilde{\bA}$. Write
+$Q_{\widetilde{\bA}}(\cS)$ for the minimum true
+historical cost at a fixed target gain on support $\cS$. Then
+\begin{equation}
+Q_{\widetilde{\bA}}(\widehat{\cS})
+\leq\frac{1+\delta}{1-\delta}
+Q_{\widetilde{\bA}}(\cS^\star).
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+For each support $\cS$, restriction of the spectral sandwich to that support
+and inversion imply
+\begin{equation}
+\frac{1}{1+\delta}\bz_{\cS}^\top\bD_{\cS}^{-1}\bz_{\cS}
+\leq
+\bz_{\cS}^\top\widetilde{\bA}_{\cS}^{-1}\bz_{\cS}
+\leq
+\frac{1}{1-\delta}\bz_{\cS}^\top\bD_{\cS}^{-1}\bz_{\cS}.
+\end{equation}
+The top-$k$ support maximizes the utility surrogate under $\bD$. Combining the
+two inequalities for $\widehat{\cS}$ and $\cS^\star$, then using minimum cost
+$\gamma^2/(2\,\text{utility})$, gives the factor.
+\end{proof}
+
+\begin{remark}[Top-$k$ can fail with strong cross-block terms]
+Take
+\begin{equation}
+\widetilde{\bA}=\begin{bmatrix}1&0.9&0\\0.9&1&0\\0&0&1\end{bmatrix},
+\qquad \bz=(1,1,0.9)^\top,\qquad k=2.
+\end{equation}
+Diagonal scores select $\{1,2\}$, whose true utility
+$\bz_{\cS}^\top\widetilde{\bA}_{\cS}^{-1}\bz_{\cS}$ is approximately $1.0526$.
+Support $\{1,3\}$ has utility $1.81$ and therefore lower cost for the same
+gain. A block-diagonal or controlled-coherence assumption is necessary.
+\end{remark}
+
+\subsection{Expressive Capacity on a Curvature-Weighted Manifold}
+\label{app:expressivity}
+
+This subsection makes the ``how much of the update space is occupied, and
+relative to which historical demand'' of Section~\ref{sec:expressivity}
+precise, and shows that the rank-$R$ capacity statement
+(Theorem~\ref{thm:spectral-capacity}) is the rank-$R$ reduction of a
+curvature-weighted Grassmann construction. The safe-space contraction
+(Theorem~\ref{thm:safe-subspace}) is stated at the ambient kernel and is
+\emph{not} carried onto this manifold: with damping $\lambda>0$ the whitening
+operator is strictly positive definite, so it has no kernel to identify with the
+safe space (Remark~\ref{rem:safe-space-kernel-only}). Throughout, damping
+$\lambda>0$ makes every whitening operator invertible so that the embedding is
+well defined on all of $\R^p$; the $\lambda\to0$ limit is a separate limiting
+statement, not used in the proofs.
+
+\begin{definition}[Curvature-whitened embedding and occupied subspace]
+\label{def:whitening-embedding}
+Let $\bA_t^{\mathrm{amb}}=\sum_{s\le t}\omega_s\bK_s$ be the accumulated
+historical curvature from Eq.~\eqref{eq:additive-safe-curvature}, and let
+$\bW_t=(\bA_t^{\mathrm{amb}}+\lambda\bI)^{1/2}\succ0$ for $\lambda>0$. For an
+occupied update subspace $\cU\subseteq\R^p$ with orthonormal basis matrix
+$\bB_\cU\in\R^{p\times r}$, $\dim(\cU)=r$, the curvature-whitened image is
+$\phi_t(\cU)=\range(\bW_t\bB_\cU)\in\mathrm{Gr}(r,p)$, a point of the Grassmann
+manifold of $r$-planes in $\R^p$.
+\end{definition}
+
+The choice of orthonormal basis $\bB_\cU$ does not affect
+$\range(\bW_t\bB_\cU)$, so $\phi_t$ is well defined on subspaces rather than on
+bases. A LoRA pool and a full fine-tuning update supply their occupied subspace
+$\cU$ differently (architecturally fixed $r=R$ versus optimization-determined
+$r=r_{\mathrm{eff}}$); feeding both through $\phi_t$ is an \emph{empirical}
+comparison at matched effective rank, not a claim that the rank-$R$ matrix class
+(a nonlinear variety) is itself an $r$-plane. We use it only to compare
+already-obtained updates, never to identify the two training regimes.
+
+\begin{proposition}[Expressive-equivalence metric]
+\label{prop:expressivity-metric}
+For $r$-dimensional $\cU,\cV\subseteq\R^p$ with principal angles
+$0\le\theta_1\le\cdots\le\theta_r\le\pi/2$ between $\phi_t(\cU)$ and
+$\phi_t(\cV)$, define
+\begin{equation}
+  d_t(\cU,\cV)=\Big(\textstyle\sum_{i=1}^{r}\sin^2\theta_i\Big)^{1/2}.
+  \label{eq:app-expressivity-distance}
+\end{equation}
+Then $d_t$ is a metric on $\mathrm{Gr}(r,p)$, and in particular
+$d_t(\cU,\cV)=0$ if and only if $\phi_t(\cU)=\phi_t(\cV)$. Since $\bW_t\succ0$ is
+invertible for $\lambda>0$, $\phi_t$ is a linear isomorphism and
+$\phi_t(\cU)=\phi_t(\cV)$ holds if and only if $\cU=\cV$; the whitening
+therefore does \emph{not} create any new stream-relative collapse of distinct
+subspaces at $\lambda>0$. Its role is quantitative, not to enlarge the
+equivalence classes: it reweights the principal angles by accumulated historical
+curvature, so that for $\cU\neq\cV$ the value $d_t$ orders subspace pairs by
+curvature-weighted overlap rather than by raw overlap. Any collapse of distinct
+subspaces to $d_t=0$ is a property of the undamped $\lambda\to0$ limit only,
+where $\bW_t$ becomes singular on $\ker(\bA_t^{\mathrm{amb}})$; that limit is a
+separate statement we do not use in the results below.
+\end{proposition}
+
+\begin{proof}
+The chordal distance $\big(\sum_i\sin^2\theta_i\big)^{1/2}$ is the standard
+Grassmann metric on $\mathrm{Gr}(r,p)$; nonnegativity, symmetry, the triangle
+inequality, and the identity of indiscernibles are standard properties of
+principal-angle geometry. The principal angles between two $r$-planes with
+orthonormal basis matrices $\bQ_{\cU},\bQ_{\cV}$ are
+$\arccos\sigma_i(\bQ_{\cU}^\top\bQ_{\cV})$, so $d_t=0$ iff all principal angles are
+zero iff $\range(\bQ_{\cU})=\range(\bQ_{\cV})$, which here is
+$\range(\bW_t\bB_{\cU})=\range(\bW_t\bB_{\cV})$ since $\bW_t$ is invertible and
+preserves dimension; invertibility further forces $\cU=\cV$, giving the stated
+identity of indiscernibles at $\lambda>0$. The metric axioms
+(nonnegativity, symmetry, triangle inequality) and this identity are therefore
+unconditional for every $\lambda>0$. The undamped limit is genuinely different:
+as $\lambda\to0$, $\bW_t$ becomes singular on $\ker(\bA_t^{\mathrm{amb}})$, at
+which point replacing $\bK_s$ by $c\bK_s$ ($c>0$) leaves the set of directions
+with nonzero whitened image unchanged, so a positive rescaling of a single
+curvature summand does not move the whitened planes. We record this only as a
+property of the limit and do not invoke it in any downstream result, all of
+which are stated at fixed $\lambda>0$.
+\end{proof}
+
+\begin{remark}[Expressive equivalence is not output-function equivalence]
+\label{rem:expressivity-not-function}
+$d_t(\cU,\cV)=0$ records that two adapters occupy the same
+historically-whitened subspace; it does not constrain the coefficients placed
+on that subspace. Two adapters may share $\phi_t(\cU)$ and still realize
+different output functions. Expressive equivalence is therefore strictly
+weaker than function equivalence and is stated only relative to the
+accumulated historical curvature $\bA_t^{\mathrm{amb}}$.
+\end{remark}
+
+\begin{proposition}[Effective capacity as a curvature-whitened tail]
+\label{prop:effective-capacity}
+Let the historical mixture risk satisfy the Kronecker quadratic
+Eq.~\eqref{eq:kronecker-quadratic} with local optimum $\bX^\star$, and let
+$\cU=\range(\bX-\bX_R^\star)$ collapse to the rank-$R$ class $\cC_R$. Then the
+effective capacity in Eq.~\eqref{eq:effective-capacity} satisfies
+\begin{equation}
+  \kappa_t(\cC_R)
+  =\frac12\sum_{j>R}\sigma_j^2(\bY^\star),
+  \qquad
+  \bY^\star=\bC_{\mathrm{out}}^{1/2}\bX^\star\bC_{\mathrm{in}}^{1/2},
+  \label{eq:effective-capacity-reduces}
+\end{equation}
+which is exactly $\mathsf{Capacity}_{R,T}$ in
+Eq.~\eqref{eq:spectral-capacity}. Thus
+Proposition~\ref{prop:effective-capacity} reduces to
+Theorem~\ref{thm:spectral-capacity} when the occupied subspace is the
+rank-$R$ class and the whitening curvature is the Kronecker curvature.
+\end{proposition}
+
+\begin{proof}
+Under Eq.~\eqref{eq:kronecker-quadratic}, the curvature-whitening operator
+of Eq.~\eqref{eq:effective-capacity} is, up to the $\bC_{\mathrm{out}},
+\bC_{\mathrm{in}}$ factors, the change of variables
+$\bY=\bC_{\mathrm{out}}^{1/2}\bX\bC_{\mathrm{in}}^{1/2}$ used in the proof of
+Theorem~\ref{thm:spectral-capacity}. The tail of the local optimum orthogonal
+to the rank-$R$ occupied class is, by the Eckart--Young--Mirsky theorem, exactly
+the squared singular values of $\bY^\star$ beyond index $R$. Substitution
+reproduces Eq.~\eqref{eq:spectral-capacity}, which proves the claimed reduction.
+\end{proof}
+
+\begin{remark}[The reduction is to the \emph{optimal} rank-$R$ class, not to an
+arbitrary occupied subspace]
+\label{rem:effective-capacity-optimal-only}
+Proposition~\ref{prop:effective-capacity} is stated and proved only for
+$\cU=\cC_R$, the rank-$R$ class that Eckart--Young--Mirsky selects as the best
+rank-$R$ approximant. It does \emph{not} generalize to an arbitrary fixed
+occupied subspace $\cU$ of dimension $r$. Eckart--Young gives a
+\emph{minimum}, not an identity: for a general $\cU$ the whitened residual obeys
+\begin{equation}
+  \kappa_t(\cU)\;\ge\;\tfrac12\sum_{j>r}\sigma_j^2(\bY^\star),
+  \label{eq:effective-capacity-lower-bound}
+\end{equation}
+with equality \emph{iff} $\cU$ coincides with the top-$r$ left/right singular
+subspaces of $\bY^\star$. A concrete gap: with $\bY^\star=\operatorname{diag}(2,1)$
+and $\cU=\operatorname{span}(E_{22})$ (a one-dimensional occupied class,
+$r=1$, where $E_{22}$ is the matrix unit in coordinate $(2,2)$), projecting
+$\bY^\star$ off $\cU$ removes the smaller component and leaves $2E_{11}$, giving
+whitened residual $\tfrac12\cdot 2^2=2$, whereas the optimal rank-$1$ tail is
+$\tfrac12\sigma_2^2(\bY^\star)=\tfrac12$. Hence $\kappa_t(\cU)=2\neq\tfrac12$; the
+tail formula is recovered only at the optimal $\cC_R$. We therefore use Eq.~\eqref{eq:effective-capacity-reduces} exclusively
+as the value at the optimal rank-$R$ class and treat
+Eq.~\eqref{eq:effective-capacity-lower-bound} as the correct statement for a
+generic occupied subspace. The method does not rely on the equality for any
+$\cU\neq\cC_R$.
+\end{remark}
+
+\begin{remark}[Full fine-tuning is not the $R=\infty$ collapse]
+\label{rem:full-ft-not-infinity}
+A full fine-tuning update lives in all of $\R^p$ only nominally; its effective
+occupied subspace $\cU$ has dimension $r_{\mathrm{eff}}=\dim(\cU)<p$ whenever the
+optimization trajectory concentrates energy on fewer than $p$ whitened
+directions. Under Definition~\ref{def:whitening-embedding}, full fine-tuning is
+therefore located at effective dimension $r=r_{\mathrm{eff}}$ on the same
+curvature-weighted Grassmann axis as a rank-$R$ LoRA pool at $r=R$, not at the
+$R\to\infty$ limit in which $\kappa_t$ vanishes by construction. We only claim
+the placement of the effective \emph{dimension}, not an equality of capacity
+values: because full fine-tuning need not occupy the top-$r_{\mathrm{eff}}$
+whitened singular subspace, its capacity obeys the lower bound
+Eq.~\eqref{eq:effective-capacity-lower-bound} rather than the optimal tail
+identity Eq.~\eqref{eq:effective-capacity-reduces} (cf.\
+Remark~\ref{rem:effective-capacity-optimal-only}). Whether $r_{\mathrm{eff}}$ is
+in fact below $p$ is an empirical property of the stream and the optimizer, not
+an assumption of the equivalence above.
+\end{remark}
+
+\begin{remark}[Safe-space contraction is stated at the ambient kernel, not via whitening]
+\label{rem:safe-space-kernel-only}
+One might hope to restate the safe-space contraction of
+Theorem~\ref{thm:safe-subspace} as a statement about the curvature-whitened
+operator $\bW_t=(\bA_t^{\mathrm{amb}}+\lambda\bI)^{1/2}$, identifying the safe
+space with the zero-whitened-norm directions $\{\bm v:\norm{\bW_t\bm v}_2=0\}$.
+This identification is only valid in the undamped limit $\lambda\to0$: for every
+$\lambda>0$ the operator $\bW_t\succ0$ is strictly positive definite, so its only
+zero-norm direction is $\bm v=0$ and the ambient safe space
+$\cN_t^{\mathrm{amb}}=\ker(\bA_t^{\mathrm{amb}})$ is \emph{not} recovered from
+$\bW_t$. We therefore state the contraction only at the ambient kernel level
+(Theorem~\ref{thm:safe-subspace}), where it is exact, and do not carry it onto
+the whitened Grassmann manifold, whose embedding $\phi_t$ is defined with
+$\lambda>0$ precisely so that it is invertible. The realized $\kappa_t$ is
+moreover not asserted monotone in $t$: a newly occupied direction may align with
+an existing one and transfer rather than consume capacity, exactly as the
+non-cancellation counterexample after
+Theorem~\ref{thm:sequential-accumulation} shows for forgetting.
+\end{remark}
+
+\subsection{Claim-Status Ledger}
+
+\begin{table}[h]
+\caption{Mathematical status of the paper's claims.}
+\label{tab:claim-status}
+\centering
+\small
+\begin{tabularx}{\linewidth}{lX}
+\toprule
+Status & Claims \\
+\midrule
+Exact & Taylor identity with bounded remainder; three-way decomposition. \\
+Exact under an explicit surrogate & Sequential path identity under a
+quadratic old loss; spectral tail under Kronecker quadratic curvature;
+safe-space contraction under additive PSD curvature. \\
+Conditional & Expected accumulation under non-cancellation; top-$k$ optimality
+under fixed candidates and block-diagonal curvature; approximation factor under
+a spectral cross-block bound. \\
+Not claimed & Unconditional monotone forgetting; all forgetting is capacity;
+global validity for nonlinear transformers; optimality for unrestricted LoRA
+factor training; a solution to general model merging. \\
+\bottomrule
+\end{tabularx}
+\end{table}

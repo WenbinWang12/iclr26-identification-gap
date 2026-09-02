@@ -1,0 +1,3 @@
+52b85c5c0464e1ad21982bde48b4c698689aa9d5883f1e620e37839909da73a6 *notes/phase2q_batch_prior_offset_protocol.md  # frozen before implementation, 2026-08-31
+946b4d4477b94eef6ef6887e4ea6223d079e43fa58e513120156e57ac5cce3b7  notes/phase2q_batch_prior_offset_protocol.md  (after A1, 2026-08-31)
+601d580b809a217e869d80572011b4f7547bb332359b1476cf2d9ced2aaa0d80  notes/phase2q_batch_prior_offset_protocol.md  (after A1.6, 2026-08-31)

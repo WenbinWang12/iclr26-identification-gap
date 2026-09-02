@@ -1,0 +1,445 @@
+\section{When Does Fixed Capacity Cause Forgetting?}
+\label{sec:theory}
+
+We use one adapted matrix when discussing rank and a vector $\bx$ for local
+optimization geometry. Proofs are in Appendix~\ref{app:proofs}. All claims are
+conditional on their stated smoothness, stationarity, curvature, and
+block-structure assumptions.
+
+\subsection{The Linear Term Disappears Only at the Right Stationary Point}
+
+\begin{lemma}[Local expansion of signed forgetting]
+\label{lem:local-forgetting}
+Fix $s<t$ and let $\bm{d}_{s,t}:=\bx_t-\bx_s$. Suppose $\cL_s$ is twice
+continuously differentiable and its Hessian is $\rho_s$-Lipschitz on the line
+segment joining $\bx_s$ and $\bx_t$. With
+$\bg_s=\nabla\cL_s(\bx_s)$ and $\bH_s=\nabla^2\cL_s(\bx_s)$,
+\begin{equation}
+  \cF_{s\to t}
+  =\bg_s^\top\bm{d}_{s,t}
+  +\frac12\bm{d}_{s,t}^\top\bH_s\bm{d}_{s,t}+r_{s,t},
+  \qquad
+  |r_{s,t}|\leq\frac{\rho_s}{6}\norm{\bm{d}_{s,t}}_2^3.
+  \label{eq:forgetting-expansion}
+\end{equation}
+For a linear feasible update space $\cU$, the linear term vanishes for every
+$\bm{d}_{s,t}\in\cU$ if and only if
+$\Pi_{\cU}\bg_s=\bm{0}$.
+\end{lemma}
+
+Thus the boss-level observation that ``the linear term disappears and the
+quadratic remains'' is correct only at projected stationarity for the same old
+risk being evaluated. It does not hold automatically at an intermediate
+checkpoint or for a shifted evaluation distribution. The quadratic term is a
+nonnegative forgetting cost only when $\bH_s\succeq0$ on the relevant
+directions.
+
+\subsection{Sequential Updates Accumulate Only under Non-Cancellation}
+
+Let $\bh_t:=\bx_t-\bx_{t-1}$.
+
+\begin{theorem}[Conditional accumulation of sequential forgetting]
+\label{thm:sequential-accumulation}
+Fix a past window $s$ and suppose that along the later optimization path
+\begin{equation}
+  \cL_s(\bx)=\cL_s(\bx_s)
+  +\frac12\norm{\bx-\bx_s}_{\bH_s}^2,
+  \qquad \bH_s\succeq\bm{0}.
+  \label{eq:quadratic-old-loss}
+\end{equation}
+Then
+\begin{align}
+  \cF_{s\to t}
+  &=\frac12\norm{\sum_{u=s+1}^{t}\bh_u}_{\bH_s}^2,
+  \label{eq:path-forgetting}\\
+  \cF_{s\to t}-\cF_{s\to t-1}
+  &=(\bx_{t-1}-\bx_s)^\top\bH_s\bh_t
+  +\frac12\norm{\bh_t}_{\bH_s}^2.
+  \label{eq:forgetting-increment}
+\end{align}
+If
+\begin{equation}
+  \E[(\bx_{t-1}-\bx_s)^\top\bH_s\bh_t]\geq-\beta_t,
+  \label{eq:noncancellation}
+\end{equation}
+then
+\begin{equation}
+  \E[\cF_{s\to t}-\cF_{s\to t-1}]
+  \geq\frac12\E\norm{\bh_t}_{\bH_s}^2-\beta_t.
+  \label{eq:expected-increment}
+\end{equation}
+In particular, if $\beta_t=0$ and
+$\E\norm{\bh_t}_{\bH_s}^2\geq\nu_t^2$, then
+$\E\cF_{s\to T}\geq\frac12\sum_{t=s+1}^{T}\nu_t^2$.
+\end{theorem}
+
+The theorem formalizes gradual forgetting under a falsifiable drift condition.
+It does not derive monotonicity from sequential training alone. For $p=1$,
+$H_s=1$, $h_{s+1}=1$, and $h_{s+2}=-1$, forgetting rises to $1/2$ and returns
+to zero. Under independent innovations, the expected behavior is more explicit.
+
+\begin{corollary}[Independent innovations]
+\label{cor:independent-innovations}
+Under Theorem~\ref{thm:sequential-accumulation}, suppose
+$\{\bh_u\}_{u>s}$ are independent with means $\bm{\mu}_u$ and covariances
+$\bSigma_u$. Then
+\begin{equation}
+  \E\cF_{s\to T}
+  =\frac12\norm{\sum_{u=s+1}^{T}\bm{\mu}_u}_{\bH_s}^2
+  +\frac12\sum_{u=s+1}^{T}\tr(\bH_s\bSigma_u).
+  \label{eq:innovation-accumulation}
+\end{equation}
+Zero-mean innovation energy accumulates additively in expectation. It grows
+linearly in the number of windows only when the per-window trace contribution
+has a uniform positive lower bound. In contrast,
+coherently aligned mean drift can yield quadratic growth.
+\end{corollary}
+
+\begin{proposition}[A quadratic bridge from mixture drift to forgetting]
+\label{prop:mixture-bridge}
+Let component risks share curvature $\bH\succ0$:
+\begin{equation}
+  \cL_c(\bx)=\kappa_c+\frac12\norm{\bx-\bm{m}_c}_{\bH}^2,
+  \qquad
+  \cL_t=\sum_c\pi_{t,c}\cL_c.
+  \label{eq:component-quadratic}
+\end{equation}
+Let $\bm{m}_t=\sum_c\pi_{t,c}\bm{m}_c$, let $\cU$ be a fixed linear PEFT
+space, and suppose sequential training reaches the exact constrained optimum
+$\bx_t=P_{\cU}^{\bH}\bm{m}_t$, where $P_{\cU}^{\bH}$ is the
+$\bH$-orthogonal projector. Then
+\begin{equation}
+  \cF_{s\to t}
+  =\frac12\norm{P_{\cU}^{\bH}(\bm{m}_t-\bm{m}_s)}_{\bH}^2.
+  \label{eq:mixture-forgetting}
+\end{equation}
+Equivalently, with $\bM=[\bm{m}_1,\ldots,\bm{m}_C]$ and
+$\Delta\bm{\pi}_u=\bm{\pi}_u-\bm{\pi}_{u-1}$, the sequential increments are
+$\bh_u=P_{\cU}^{\bH}\bM\Delta\bm{\pi}_u$. Hence independent zero-mean
+mixture innovations accumulate according to
+Corollary~\ref{cor:independent-innovations}, while cancelling mixture motion can
+restore earlier performance.
+\end{proposition}
+
+This proposition derives the drift condition in a stylized shared-Hessian
+model; it does not claim that arbitrary mixture drift or nonlinear training
+must forget. In particular, drift outside $\cU$ produces acquisition error but
+does not move the adapter, separating lack of plasticity from forgetting.
+
+\subsection{Conflict, Fixed-Rank Capacity, and Online Error}
+
+Let $w_s>0$ with $\sum_s w_s=1$ and
+$\overline{\cL}_T(\bX)=\sum_s w_s\cL_s(\bX)$. Let $\bX_s^\star$ minimize
+the individual risk, $\bX^\star$ minimize the historical mixture risk over the
+full update space, $\bX_R^\star$ minimize it over the rank-$R$ class $\cC_R$,
+and $\widehat{\bX}_T\in\cC_R$ be the online learner's result.
+Define the aggregate per-window-oracle gap
+\begin{equation}
+  \mathcal{R}_T(\widehat{\bX}_T)
+  :=\sum_s w_s[\cL_s(\widehat{\bX}_T)-\cL_s(\bX_s^\star)].
+  \label{eq:oracle-retention-gap}
+\end{equation}
+Unlike Eq.~\eqref{eq:signed-forgetting}, this is a final shared-model gap to
+separate per-window global oracles, not checkpoint-based continual-learning
+forgetting.
+
+\begin{proposition}[Exact retention-gap decomposition]
+\label{prop:error-decomposition}
+If the stated global minimizers exist, then
+\begin{align}
+&\mathcal{R}_T(\widehat{\bX}_T)
+  \notag\\
+&=\underbrace{\overline{\cL}_T(\bX^\star)
+  -\sum_s w_s\cL_s(\bX_s^\star)}_{\mathsf{Conflict}_T}
+  +\underbrace{\overline{\cL}_T(\bX_R^\star)
+  -\overline{\cL}_T(\bX^\star)}_{\mathsf{Capacity}_{R,T}}
+  \notag\\
+&\quad+\underbrace{\overline{\cL}_T(\widehat{\bX}_T)
+  -\overline{\cL}_T(\bX_R^\star)}_{\mathsf{Online}_{R,T}}.
+  \label{eq:three-way-decomposition}
+\end{align}
+All three terms are nonnegative.
+\end{proposition}
+
+The online term includes incomplete history, estimation, allocation, and
+optimization error. The capacity term has an exact form in a tractable geometry.
+
+\begin{theorem}[Spectral characterization of rank capacity]
+\label{thm:spectral-capacity}
+Let $\cC_R=\{\bX:\rank(\bX)\leq R\}$ and suppose
+\begin{equation}
+  \overline{\cL}_T(\bX)
+  =\overline{\cL}_T(\bX^\star)
+  +\frac12\norm{
+  \bC_{\mathrm{out}}^{1/2}(\bX-\bX^\star)
+  \bC_{\mathrm{in}}^{1/2}}_F^2,
+  \label{eq:kronecker-quadratic}
+\end{equation}
+where $\bC_{\mathrm{out}}\succ\bm{0}$ and
+$\bC_{\mathrm{in}}\succ\bm{0}$. Defining
+$\bY^\star=\bC_{\mathrm{out}}^{1/2}\bX^\star
+\bC_{\mathrm{in}}^{1/2}$ gives
+\begin{equation}
+  \mathsf{Capacity}_{R,T}
+  =\frac12\sum_{j>R}\sigma_j^2(\bY^\star),
+  \qquad
+  \bX_R^\star=\bC_{\mathrm{out}}^{-1/2}
+  [\bY^\star]_R\bC_{\mathrm{in}}^{-1/2}.
+  \label{eq:spectral-capacity}
+\end{equation}
+\end{theorem}
+
+\begin{corollary}[Global allocation across separable layers]
+\label{cor:global-layer-allocation}
+Suppose the local historical loss separates over $L$ adapted matrices as
+\begin{equation}
+  \overline{\cL}_T(\{\bX_\ell\})
+  =\overline{\cL}_T(\{\bX_\ell^\star\})
+  +\frac12\sum_{\ell=1}^{L}
+  \norm{\bC_{\mathrm{out},\ell}^{1/2}
+  (\bX_\ell-\bX_\ell^\star)
+  \bC_{\mathrm{in},\ell}^{1/2}}_F^2,
+  \label{eq:layer-separable-quadratic}
+\end{equation}
+with positive-definite factors. Under the global budget
+$\sum_\ell\rank(\bX_\ell)\leq R$, an optimum retains the $R$ largest values
+in the multiset of all whitened singular values
+$\{\sigma_j(\bY_\ell^\star)\}_{\ell,j}$, where
+$\bY_\ell^\star=\bC_{\mathrm{out},\ell}^{1/2}
+\bX_\ell^\star\bC_{\mathrm{in},\ell}^{1/2}$. Its capacity error is one half
+the sum of squares of the unselected values.
+\end{corollary}
+
+\begin{corollary}[Finite-budget capacity lower bound]
+\label{cor:capacity-lower-bound}
+Under Theorem~\ref{thm:spectral-capacity}, suppose $\bY^\star$ has $m$
+singular values at least $\alpha>0$. Every rank-$R$ adapter with $R<m$ then
+incurs
+\begin{equation}
+  \mathsf{Capacity}_{R,T}\geq\frac12(m-R)\alpha^2.
+  \label{eq:capacity-lower-bound}
+\end{equation}
+For a time-indexed optimum, define
+$m_T(\alpha):=\#\{j:\sigma_j(\bY_T^\star)\geq\alpha\}$. At any time $T$, the
+capacity lower bound is
+$\frac12\max\{m_T(\alpha)-R,0\}\alpha^2$. This bound grows
+linearly in $m_T(\alpha)-R$; the realized capacity error need not be monotone
+in time because modes may cancel or lose energy.
+\end{corollary}
+
+This is the precise capacity result: if independent curvature-weighted modes
+continue to enter $\bY^\star$, a fixed $R$ leaves a growing spectral tail. It
+also proves that the curvature-whitened truncated SVD in
+Eq.~\eqref{eq:weighted-svd}---the per-window solve \method{} runs---is the
+locally optimal rank-$R$ operator under the same assumptions, and hence a locally
+optimal merge. It does not establish optimality for general nonlinear model
+merging.
+
+Capacity is not the whole story. With
+$\cL_1(x)=\frac12(x-1)^2$ and
+$\cL_2(x)=\frac12(x+1)^2$, the shared optimum $x=0$ has positive conflict even
+though a one-dimensional model has no capacity error. Increasing rank cannot
+make one unconditional scalar output equal both $1$ and $-1$.
+
+\subsection{The Locally Safe Space Contracts}
+
+Let $\bK_s\succeq0$ be a Gauss--Newton or Fisher sensitivity surrogate in
+fixed ambient adapter coordinates, and define
+\begin{equation}
+  \bA_0^{\mathrm{amb}}=\bm{0},
+  \qquad
+  \bA_t^{\mathrm{amb}}=\sum_{s=1}^{t}\omega_s\bK_s,
+  \qquad \omega_s>0.
+  \label{eq:additive-safe-curvature}
+\end{equation}
+For a scale-invariant approximate diagnostic and $0\leq\tau<1$, let
+$\cS_s^{\mathrm{amb}}(\tau)$ be the span of eigenvectors of $\bK_s$ whose
+eigenvalues exceed $\tau\norm{\bK_s}_{\mathrm{op}}$, taking this span to be
+$\{0\}$ when $\bK_s=0$.
+
+\begin{theorem}[Contraction of the second-order safe subspace]
+\label{thm:safe-subspace}
+Let $\cN_0^{\mathrm{amb}}=\R^p$,
+$\cN_t^{\mathrm{amb}}=\ker(\bA_t^{\mathrm{amb}})$, and
+$\cN_t^{\mathrm{amb},(\tau)}=\cap_{s=1}^{t}
+\cS_s^{\mathrm{amb}}(\tau)^\perp$. Then
+\begin{equation}
+  \cN_t^{\mathrm{amb}}=\bigcap_{s=1}^{t}\ker(\bK_s)
+  \subseteq\cN_{t-1}^{\mathrm{amb}},
+  \qquad
+  \cN_t^{\mathrm{amb},(\tau)}
+  \subseteq\cN_{t-1}^{\mathrm{amb},(\tau)}.
+  \label{eq:safe-kernel}
+\end{equation}
+The approximate construction is invariant to a positive rescaling of any
+single $\bK_s$. Moreover, within an allocation epoch let the fixed dictionary
+$\bB\in\R^{p\times m}$ have full column rank, define
+$\bG_s=\bB^\top\bK_s\bB$ and
+$\bA_t^{\bB}=\bB^\top\bA_t^{\mathrm{amb}}\bB$. Its coefficient-space safe set
+satisfies
+\begin{equation}
+  \cN_t^{\bB}:=\ker(\bA_t^{\bB})
+  =\{\ba:\bB\ba\in\cN_t^{\mathrm{amb}}\}
+  =\bigcap_{s=1}^{t}\ker(\bG_s)
+  \subseteq\cN_{t-1}^{\bB}.
+  \label{eq:coefficient-safe-kernel}
+\end{equation}
+\end{theorem}
+
+This proves a global contraction statement in fixed ambient local coordinates
+and, within a fixed dictionary, in atom coefficients. As independent
+historical sensitivity directions accumulate, neither the exact nullspace nor
+the conservative thresholded safe space can expand. Repeating the same
+sensitive subspace does not reduce either dimension merely by increasing its
+curvature scale.
+
+The coefficient result compares times only while $\bB$ is fixed. An invertible basis change
+$\bB'=\bB\bT$ requires the congruence transport
+$\bA_t^{\bB'}=\bT^\top\bA_t^{\bB}\bT$; a rank-reducing re-solve is not invertible.
+\method{} sidesteps this by never carrying coefficient state across windows: each
+window re-solves Eq.~\eqref{eq:weighted-svd} afresh from the bounded buffer, so
+the relevant contraction is the ambient one of Eq.~\eqref{eq:safe-kernel}, which
+remains well defined. The coefficient theorem is used only within a single
+solve.
+
+The next result connects safe-space exhaustion to plasticity.
+
+\begin{proposition}[Price of a useful update]
+\label{prop:price-useful-update}
+Let $\bA\succeq0$ be accumulated historical curvature, let $\bz\neq0$ be a
+current linearized gain direction, and let $\gamma>0$. For
+\begin{equation}
+  \inf_{\ba}\frac12\ba^\top\bA\ba
+  \quad\text{s.t.}\quad \bz^\top\ba\geq\gamma,
+  \label{eq:price-problem}
+\end{equation}
+the minimum is zero if
+$\Pi_{\ker(\bA)}\bz\neq0$. If
+$\bz\in\range(\bA)\setminus\{0\}$, it equals
+\begin{equation}
+  \frac{\gamma^2}{2\bz^\top\bA^\dagger\bz},
+  \quad\text{attained at}\quad
+  \ba^\star=\frac{\gamma\bA^\dagger\bz}
+  {\bz^\top\bA^\dagger\bz}.
+  \label{eq:price-solution}
+\end{equation}
+\end{proposition}
+
+Thus a new window can obtain locally free gain while its descent direction has
+a component in the historical nullspace. Once that component disappears, any
+fixed gain incurs positive predicted old loss. If the nullspace projection is
+arbitrarily small, however, the zero-cost construction can require a large
+step outside the local neighborhood; a practical trust-region radius must then
+be imposed.
+
+\subsection{Optimal Partial-Rank Allocation in a Block Geometry}
+
+\begin{theorem}[Optimal top-$k$ screening for a stationary block surrogate]
+\label{thm:topk-allocation}
+Partition coefficients into $M$ fixed atom blocks, let $1\leq k\leq M$, and
+define the damped block curvature
+$\widetilde{\bA}_j=\bA_j+\lambda\bI\succ0$. Suppose the screening cost and
+linearized current gain are
+\begin{equation}
+  \widetilde Q(\ba)=\frac12\sum_{j=1}^{M}
+  \ba_j^\top\widetilde{\bA}_j\ba_j,
+  \qquad
+  G(\ba)=\sum_{j=1}^{M}\bz_j^\top\ba_j.
+  \label{eq:block-problem}
+\end{equation}
+Let $q_j=\bz_j^\top\widetilde{\bA}_j^{-1}\bz_j$. This subproblem assumes that any
+historical linear term has vanished at projected stationarity or is enforced
+separately. Let $\cS_k$ contain up to $k$ blocks with the largest strictly
+positive scores and assume $\sum_{j\in\cS_k}q_j>0$. Among updates using at most
+$k$ blocks and satisfying $G(\ba)\geq\gamma>0$, $\cS_k$ is optimal, with
+\begin{equation}
+  \widetilde Q_{\min}=\frac{\gamma^2}{2\sum_{j\in\cS_k}q_j},
+  \qquad
+  \ba_j^\star=\frac{\gamma\widetilde{\bA}_j^{-1}\bz_j}
+  {\sum_{\ell\in\cS_k}q_\ell}.
+  \label{eq:topk-solution}
+\end{equation}
+\end{theorem}
+
+If the true positive-definite screening curvature $\widetilde{\bA}$ is
+spectrally close to
+$\bD=\operatorname{blkdiag}(\widetilde{\bA}_1,\ldots,
+\widetilde{\bA}_M)$, namely
+$(1-\delta)\bD\preceq\widetilde{\bA}\preceq
+(1+\delta)\bD$ with $\delta<1$, the selected
+support is within a factor $(1+\delta)/(1-\delta)$ of the true minimum
+historical cost (Corollary~\ref{cor:approx-block-allocation}). Without such a
+cross-block condition, the top-$k$ rule need not be optimal. This theorem
+characterizes optimal partial-rank \emph{screening} for a stationary linear-gain
+surrogate; it is the discrete counterpart of the continuous rank-$R$ solve
+$\method{}$ performs in Eq.~\eqref{eq:weighted-svd}, where the retained rank is
+chosen by truncated SVD rather than block selection. We do not claim the score is
+globally optimal beyond this surrogate or for joint LoRA-factor training.
+
+\subsection{Expressive Capacity on a Curvature-Weighted Manifold}
+\label{sec:expressivity}
+
+The preceding results measure capacity by rank and by the dimension of a
+contracting nullspace. Two adapters with equal rank or equal safe dimension need
+not be expressively equivalent: the rank scalar drops the direction of the
+attained subspace. We now make ``how much of the update space is actually
+occupied, and relative to which historical demand'' into a single geometric
+object. A fixed-rank LoRA atom pool and a full fine-tuning update can then be
+placed on the same curvature-weighted axis as an \emph{empirical} comparison
+through their effective ranks; we treat this correspondence as a comparator, not
+as a theorem that unifies the two training regimes.
+
+Let $\bA_t^{\mathrm{amb}}=\sum_{s\le t}\omega_s\bK_s$ be the accumulated
+historical curvature from Eq.~\eqref{eq:additive-safe-curvature} and let
+$\cU\subseteq\R^p$ be the subspace spanned by the currently active update
+directions of either a rank-$R$ LoRA pool or a full fine-tuning update with an
+effective rank $r_{\mathrm{eff}}=\dim(\cU)$. The curvature-whitened embedding
+$\phi_t(\cU)=(\bA_t^{\mathrm{amb}}+\lambda\bI)^{1/2}\cU$ sends each occupied
+subspace to a point of the Grassmann manifold, and the principal-angle distance
+\begin{equation}
+  d_t(\cU,\cV)
+  =\Big(\sum_i\sin^2\theta_i\big(\phi_t(\cU),\phi_t(\cV)\big)\Big)^{1/2}
+  \label{eq:expressivity-distance}
+\end{equation}
+is a metric on $\mathrm{Gr}(r,p)$ with $d_t(\cU,\cV)=0$ iff the whitened
+subspaces coincide (Proposition~\ref{prop:expressivity-metric}). We are careful
+about what the whitening does: for $\lambda>0$ the operator is invertible, so
+$d_t=0$ holds iff $\cU=\cV$ and the whitening creates no new stream-relative
+collapse of distinct subspaces. Its role is quantitative---it reweights the
+principal angles between \emph{distinct} subspaces by accumulated historical
+curvature, so $d_t$ orders adapters by curvature-weighted overlap. Rank equality
+remains necessary but not sufficient for $d_t=0$, which is what lets a
+curvature-weighted distance separate equal-rank adapters that a rank scalar
+cannot.
+The associated effective capacity
+\begin{equation}
+  \kappa_t(\cU)
+  =\frac12\sum_{j>\dim(\cU)}\sigma_j^2
+  \big((\bA_t^{\mathrm{amb}}+\lambda\bI)^{1/2}\bX^\star_{\cU^\perp}\big)
+  \label{eq:effective-capacity}
+\end{equation}
+is the curvature-whitened spectral tail of the part of the local optimum
+orthogonal to the occupied subspace. Under the Kronecker quadratic model of
+Theorem~\ref{thm:spectral-capacity} and \emph{at the optimal rank-$R$ class}
+$\cU=\cC_R$, it reduces to the discrete spectral tail
+$\frac12\sum_{j>R}\sigma_j^2(\bY^\star)$, recovering
+Theorem~\ref{thm:spectral-capacity}. For a generic occupied subspace
+$\cU\neq\cC_R$, $\kappa_t(\cU)$ is the residual off $\cU$ and only \emph{lower
+bounded} by that optimal tail (Eckart--Young gives a minimum, not an identity;
+see Remark~\ref{rem:effective-capacity-optimal-only}); it is not equal to it. We
+therefore use the tail identity only at $\cC_R$ and never assert it for an
+arbitrary fixed subspace.
+
+This separates two questions the rank scalar conflates: whether two occupied
+subspaces are expressively equivalent ($d_t=0$), and how much unoccupied
+curvature-weighted capacity remains ($\kappa_t$). As an empirical comparator,
+full fine-tuning enters through its effective rank $r_{\mathrm{eff}}<p$ rather
+than as $R=\infty$; its expressive capacity is then the tail left by its
+effective, not nominal, rank. We do not claim this places full fine-tuning and a
+LoRA pool on one axis as a theorem---the rank-$R$ matrix class is a nonlinear
+variety, not an $R$-plane, and the two regimes differ in how $\cU$ is
+determined---only that the effective-rank comparison is a well-defined empirical
+diagnostic. Nor do we claim $d_t=0$ implies output-function equivalence: two
+adapters may share a whitened subspace yet place different coefficients on it.
+Proofs and the degeneration to Theorem~\ref{thm:spectral-capacity} are in
+Appendix~\ref{app:expressivity}.

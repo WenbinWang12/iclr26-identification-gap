@@ -1,0 +1,27 @@
+[
+  {
+    "name": "probe-seed1",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.run_probe --n-tasks 15 --cap-per-class 200 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --free-gen-stages last --seed 1 --out /mnt/data/wenbin/iclr26/runs/phase2j_probe_full",
+    "gpu_gib": 3,
+    "timeout_seconds": 28800
+  },
+  {
+    "name": "probe-seed2",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.run_probe --n-tasks 15 --cap-per-class 200 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --free-gen-stages last --seed 2 --out /mnt/data/wenbin/iclr26/runs/phase2j_probe_full",
+    "gpu_gib": 3,
+    "timeout_seconds": 28800
+  },
+  {
+    "name": "probe-seed3",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.run_probe --n-tasks 15 --cap-per-class 200 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --free-gen-stages last --seed 3 --out /mnt/data/wenbin/iclr26/runs/phase2j_probe_full",
+    "gpu_gib": 3,
+    "timeout_seconds": 28800
+  },
+  {
+    "name": "decide",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.decide --runs /mnt/data/wenbin/iclr26/runs/phase2j_probe_full/probe_seed1.json /mnt/data/wenbin/iclr26/runs/phase2j_probe_full/probe_seed2.json /mnt/data/wenbin/iclr26/runs/phase2j_probe_full/probe_seed3.json --out /mnt/data/wenbin/iclr26/runs/phase2j_probe_full/verdict.json",
+    "gpu_gib": 0,
+    "requires": ["probe-seed1", "probe-seed2", "probe-seed3"],
+    "timeout_seconds": 3600
+  }
+]

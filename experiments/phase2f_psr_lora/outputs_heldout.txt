@@ -1,0 +1,56 @@
+  world t20280001/s8001: psr tail 0.805  nocov tail 0.739  cvar tail 0.739  unif-rrr tail 0.756  offline 0.822
+  world t20280001/s8002: psr tail 0.751  nocov tail 0.709  cvar tail 0.748  unif-rrr tail 0.570  offline 0.830
+  world t20280001/s8003: psr tail 0.767  nocov tail 0.758  cvar tail 0.521  unif-rrr tail 0.611  offline 0.822
+  world t20280001/s8004: psr tail 0.784  nocov tail 0.724  cvar tail 0.490  unif-rrr tail 0.770  offline 0.841
+  world t20280002/s8001: psr tail 0.702  nocov tail 0.499  cvar tail 0.513  unif-rrr tail 0.581  offline 0.817
+  world t20280002/s8002: psr tail 0.662  nocov tail 0.460  cvar tail 0.492  unif-rrr tail 0.512  offline 0.810
+  world t20280002/s8003: psr tail 0.729  nocov tail 0.635  cvar tail 0.496  unif-rrr tail 0.629  offline 0.803
+  world t20280002/s8004: psr tail 0.676  nocov tail 0.624  cvar tail 0.458  unif-rrr tail 0.559  offline 0.827
+  world t20280003/s8001: psr tail 0.825  nocov tail 0.704  cvar tail 0.551  unif-rrr tail 0.733  offline 0.838
+  world t20280003/s8002: psr tail 0.827  nocov tail 0.666  cvar tail 0.694  unif-rrr tail 0.676  offline 0.850
+  world t20280003/s8003: psr tail 0.754  nocov tail 0.777  cvar tail 0.711  unif-rrr tail 0.726  offline 0.861
+  world t20280003/s8004: psr tail 0.832  nocov tail 0.729  cvar tail 0.613  unif-rrr tail 0.722  offline 0.855
+  world t20280004/s8001: psr tail 0.853  nocov tail 0.650  cvar tail 0.706  unif-rrr tail 0.651  offline 0.831
+  world t20280004/s8002: psr tail 0.844  nocov tail 0.667  cvar tail 0.532  unif-rrr tail 0.733  offline 0.819
+  world t20280004/s8003: psr tail 0.835  nocov tail 0.724  cvar tail 0.628  unif-rrr tail 0.745  offline 0.831
+  world t20280004/s8004: psr tail 0.785  nocov tail 0.716  cvar tail 0.432  unif-rrr tail 0.730  offline 0.824
+  world t20280005/s8001: psr tail 0.825  nocov tail 0.742  cvar tail 0.833  unif-rrr tail 0.818  offline 0.876
+  world t20280005/s8002: psr tail 0.853  nocov tail 0.759  cvar tail 0.787  unif-rrr tail 0.815  offline 0.884
+  world t20280005/s8003: psr tail 0.877  nocov tail 0.867  cvar tail 0.741  unif-rrr tail 0.787  offline 0.883
+  world t20280005/s8004: psr tail 0.863  nocov tail 0.863  cvar tail 0.598  unif-rrr tail 0.835  offline 0.862
+
+================ per-arm summary (mean +/- sd over 20 worlds) ================
+  psr_lora             mean 0.970+-0.005   tail 0.792+-0.062   (tail/offline 0.94)
+  psr_no_coverage      mean 0.970+-0.005   tail 0.701+-0.096   (tail/offline 0.83)
+  buffer_rrr_uniform   mean 0.973+-0.006   tail 0.698+-0.092   (tail/offline 0.83)
+  psr_grad_defensive   mean 0.968+-0.008   tail 0.630+-0.148   (tail/offline 0.75)
+  excess_cvar          mean 0.968+-0.007   tail 0.614+-0.119   (tail/offline 0.73)
+  agem                 mean 0.967+-0.007   tail 0.600+-0.150   (tail/offline 0.71)
+  ewc_lora             mean 0.965+-0.009   tail 0.596+-0.163   (tail/offline 0.71)
+  sequential           mean 0.966+-0.008   tail 0.594+-0.179   (tail/offline 0.71)
+  mir_replay           mean 0.960+-0.010   tail 0.589+-0.137   (tail/offline 0.70)
+  gss_replay           mean 0.966+-0.007   tail 0.585+-0.152   (tail/offline 0.70)
+  uniform_replay       mean 0.965+-0.008   tail 0.577+-0.152   (tail/offline 0.69)
+  OFFLINE oracle       tail 0.839 (reachable best)
+
+================ PRE-REGISTERED KILL CRITERION (frozen coverage method) ================
+(decision uses the CLUSTER-ROBUST two-way crossed CI from compare._paired_ci_crossed;
+ df = min(n_teachers,n_streams) - 1 = 3, the conservative crossed df -- NOT the IID n-1;
+ here BOTH teacher and stream variance components are non-zero, so the two-way
+ crossed model is the honest choice and df=3 is conservative vs teacher-only df=4)
+(a) NON-INFERIOR MEAN vs excess_cvar (margin -0.01) -> PASS
+      paired mean +0.0027;  wins 13/20
+      IID 95%CI      [+0.0002,+0.0051]   (n=20, NOT used for decision)
+      cluster 95%CI  [-0.0026,+0.0079]   (t_df=3, se=0.0017; var comps teacher/stream/resid 0.00e+00/4.87e-06/3.02e-05)
+(b) STRICTLY BETTER TAIL vs excess_cvar -> PASS
+      paired mean +0.1782;  wins 19/20
+      IID 95%CI      [+0.1328,+0.2236]   (n=20, NOT used for decision)
+      cluster 95%CI  [+0.0696,+0.2869]   (t_df=3, se=0.0341; var comps teacher/stream/resid 7.72e-04/2.41e-03/8.19e-03)
+(c) REWEIGHTING CONTRIBUTES (given coverage) vs buffer_rrr_uniform -> PASS
+      paired mean +0.0945;  wins 20/20
+      IID 95%CI      [+0.0698,+0.1192]   (n=20, NOT used for decision)
+      cluster 95%CI  [+0.0477,+0.1413]   (t_df=3, se=0.0147; var comps teacher/stream/resid 2.90e-04/5.51e-05/2.89e-03)
+[info] COVERAGE contribution vs psr_no_coverage (single reservoir, same budget):
+       paired mean +0.0918; wins 18/20; cluster 95%CI [-0.0085,+0.1922] (t_df=3)
+
+VERDICT: CONFIRM the frozen coverage method (all three pass)

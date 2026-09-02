@@ -1,0 +1,143 @@
+\section{Problem Setup}
+\label{sec:setup}
+
+\subsection{Task-agnostic inference over a shared vocabulary}
+
+A frozen backbone with adapter parameters $\theta$ maps an input $\bx$ to a
+hidden state $\bh_\theta(\bx)\in\R^d$. Decoding uses a frozen unembedding
+$\bU\in\R^{V\times d}$ over the shared vocabulary. A classification-style task
+$g$ is specified by a \emph{verbalizer} set $Y_g\subset[V]$ --- the tokens that
+name its labels --- and its prediction is the restricted argmax
+\begin{equation}
+  \hat y_g(\bx)\;=\;\arg\max_{y\in Y_g}\; \bu_y^\top \bh_\theta(\bx).
+  \label{eq:raw-decode}
+\end{equation}
+Tasks $g=1,\dots,T$ arrive in a stream; $\theta_g^{\mathrm{post}}$ denotes the
+parameters just after task $g$ finishes training and $\theta_t$ the parameters at
+a later time $t>g$. Nothing in \eqref{eq:raw-decode} is conditioned on $g$: at
+inference the system sees $\bx$ and the option list, not the task index.
+
+This is generative continual learning with a single decoder head, and it differs
+from the vision continual-learning setting in one structural way that drives
+everything below. There, each task owns a private classifier head, so re-fitting
+that head is a per-task operation. Here there is one output space, and tasks
+\emph{share tokens} inside it.
+
+\subsection{Two capacity constraints, not one}
+
+The literature budgets one resource: trainable parameters. A rank-$8$ LoRA bank
+on T5-large $q/v$ costs $2.36$M scalars, and every method we compare against
+spends its budget there. We separate a second resource.
+
+For task $g$ at time $t$ define three retentions, all under the restricted argmax
+of \eqref{eq:raw-decode}:
+\begin{align}
+  R_g^{\mathrm{raw}}(t) &= \mathrm{acc}_g\big(\theta_t,\ \text{no offset}\big),\\
+  R_g^{\mathrm{orc}}(t) &= \max_{\bb_g\in\R^{|Y_g|}}
+      \mathrm{acc}_g\big(\theta_t,\ \bb_g\big), \label{eq:orc}\\
+  R_g^{\mathrm{shr}}(t) &= \mathrm{acc}_g\big(\theta_t,\ \bb^\star\big),
+      \qquad \bb^\star \text{ one vector shared by all tasks}. \label{eq:shr}
+\end{align}
+An \emph{offset} is a vector $\bb\in\R^V$ added to the logits before the argmax,
+$\hat y_g^{\,\bb}(\bx)=\arg\max_{y\in Y_g}(\bu_y^\top\bh_\theta(\bx)+\bb_y)$.
+Equation~\eqref{eq:orc} allows a separate offset per task and therefore
+\emph{requires task identity}; it is the generative analogue of the vision-CL
+``re-fit the head'' quantity. Equation~\eqref{eq:shr} allows one offset for the
+whole stream and requires nothing. By construction
+$R_g^{\mathrm{raw}}\le R_g^{\mathrm{shr}}\le R_g^{\mathrm{orc}}$.
+
+Work on shallow versus deep forgetting studies the outer gap
+$R_g^{\mathrm{orc}}-R_g^{\mathrm{raw}}$ and, finding it large, declares it cheap:
+a linear probe recovers it. We study the inner gap
+\begin{equation}
+  \Delta_g^{\mathrm{id}}(t)\;=\;R_g^{\mathrm{orc}}(t)-R_g^{\mathrm{shr}}(t)\;\ge\;0,
+  \label{eq:delta-id}
+\end{equation}
+the \emph{identification gap}: the part of shallow forgetting that is not
+recoverable without knowing which task a query came from. In the vision-CL
+framing $\Delta^{\mathrm{id}}$ is zero by assumption, because a private head per
+task \emph{is} a per-task offset. Under task-agnostic generative inference it is
+not zero, and it is not addressed by spending more parameters.
+
+\paragraph{Why parameter count is the wrong budget for this term.}
+An offset supported on the union of all verbalizers costs
+$|\bigcup_g Y_g|$ scalars --- at most $210$ on the $15$-task stream of
+Section~\ref{sec:experiments}, against $2.36$M for the adapter bank, i.e.\
+under $0.01\%$. The offset is parametrically negligible. The content of this
+paper is that being parametrically negligible does not make it free: the binding
+constraint on $\Delta^{\mathrm{id}}$ is not parameter count but
+\emph{identifiability} --- how many distinct offsets a task-free inference rule
+can select between, and how well those selections match what each task wanted.
+
+\subsection{Scopes: the structure that makes the gap nonzero}
+
+Call two tasks \emph{scope-mates} when they present the same label option set,
+and let the \emph{scope} $S$ of a task be that set. A scope is exactly what an
+inference-time rule can read off a prompt without a task index. Write $K_S$ for
+the number of labels in $S$ and $\mathrm{mem}(S)$ for its member tasks.
+
+\begin{proposition}[Disjoint verbalizers give a zero gap]
+\label{prop:disjoint}
+If the sets $Y_g$ are pairwise disjoint then a single shared $\bb$ realises every
+per-task optimum simultaneously, so $\Delta_g^{\mathrm{id}}(t)=0$ for all $g,t$.
+\end{proposition}
+
+\noindent We state Proposition~\ref{prop:disjoint} first because it is the honest
+boundary of the whole phenomenon: the identification gap requires tasks that
+\emph{reuse output tokens}. It is also a falsifiable wiring check --- on any
+singleton scope the measured $\Delta^{\mathrm{id}}$ must be exactly zero --- and we
+report it as such in every experiment below.
+
+The precondition is a property of the benchmark, not an assumption. On the
+$15$-task stream we use, the shared-verbalizer groups are
+\begin{center}
+\small
+\begin{tabular}{llc}
+\toprule
+label set & member tasks & $K_S$ \\
+\midrule
+\texttt{\{bad, good\}}                 & IMDB, SST-2 & 2 \\
+\texttt{\{false, true\}}               & WiC, QQP, BoolQA, MultiRC & 2 \\
+\texttt{\{contradiction, entailment, neutral\}} & MNLI, CB & 3 \\
+\texttt{\{very negative, \ldots, very positive\}} & Yelp, Amazon & 5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+plus five singleton scopes. Ten of the fifteen tasks share output tokens with at
+least one other task, so $\Delta^{\mathrm{id}}$ is a live quantity on this stream
+rather than a hypothetical one.
+
+\subsection{The identification ladder}
+\label{sec:ladder}
+
+Between the extremes of \eqref{eq:orc} and \eqref{eq:shr} sits a ladder a
+task-free system can actually climb. Let $\bb_g^\star$ be an optimal per-task
+offset, gauge-fixed to zero mean on its own scope --- adding a constant to every
+logit of a scope leaves the restricted argmax unchanged, so only the zero-mean
+part of an offset is identified. Four rungs, in increasing order of what they
+require at inference time:
+\begin{enumerate}
+  \item $R^{\mathrm{raw}}$: no offset.
+  \item $R^{\mathrm{shr}}$: one offset for the entire stream. Requires nothing.
+  \item $R^{\mathrm{shr}}_{\mathrm{scope}}$: one offset per scope, selected by
+        reading the option list. Requires no task index.
+  \item $R^{\mathrm{orc}}$: one offset per task. Requires the task index and is
+        therefore an upper bound, never a deployable method.
+\end{enumerate}
+Rung 3 is the interesting one, and Proposition~\ref{prop:disjoint} tells us why:
+on a singleton scope it coincides with rung 4, so any gap it leaves lives
+entirely on multi-task scopes, where scope-mates disagree about which direction
+their verbalizer logits should move. A finer rung interpolates 3 and 4: allow
+$m$ offsets per scope and select among them by a task-free rule, giving
+$R^{\mathrm{book}}(m)$ with $R^{\mathrm{shr}}_{\mathrm{scope}}=R^{\mathrm{book}}(1)$.
+The quantization radius of that $m$-centre codebook, $q_m(S)$, is the object our
+theory bounds and our experiments measure.
+
+\paragraph{Budget accounting we hold ourselves to.}
+Three resources, reported for every arm, because a comparison is capacity-matched
+only if all three match: (i) trainable parameters deployed; (ii) stored state at
+inference, counted in scalars, including anything an offset table holds; and
+(iii) whether any old-task example is re-read at any point. Item (iii) is not a
+footnote. A per-scope offset refit at each stage from all seen tasks' data is
+rehearsal, and comparing it against a rehearsal-free method as though both were
+deployable is the error this paper's experimental section is organised to avoid.

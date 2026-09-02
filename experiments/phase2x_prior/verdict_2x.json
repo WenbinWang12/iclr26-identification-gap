@@ -1,0 +1,13 @@
+{
+  "facts": {
+    "R_bpo_full": null,
+    "R_bpo_full_advantage_pp": null,
+    "R_orc": 0.7425478463955026,
+    "batch_128_prior_0.5_beats_oracle_frac": 0.022222222222222223,
+    "batch_128_prior_0.5_vs_oracle_pp": -4.034195188492063,
+    "crossover_prior_at_batch_128": 0.85
+  },
+  "interpretation": "BPO stops beating no-offset at prior=0.85 (batch=128). The advantage seen in Phase-2Q Q1 is an artefact of the balanced audit split. \u0394_id stands: identification gap exists and is not recoverable by batch statistics alone.",
+  "outcome": "BPO_COLLAPSES_UNDER_SKEW",
+  "publication_impact": "PAPER_SAFE: continue with identification-gap thesis and multi-task scope \u0394_id (+1.10pp)"
+}

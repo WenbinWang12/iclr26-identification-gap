@@ -1,0 +1,26 @@
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+main.pdf
+__pycache__/
+.pytest_cache/
+experiments/**/outputs/
+
+# Intermediate Phase-2X scoring outputs (the final result_2x.json is tracked)
+experiments/phase2x_prior/result_2x_quick.json
+experiments/phase2x_prior/result_2x_draws1.json
+
+# Local tool state and historical working copies
+.claude/*.lock
+_backup_*/
+_tex_backup_*/
+experiments/_phase2h_backup_*/
+
+# Downloaded third-party paper source archives
+ref/*.tar.gz

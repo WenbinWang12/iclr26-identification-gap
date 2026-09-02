@@ -1,0 +1,124 @@
+{
+  "W1": {
+    "baseline_ci": [
+      0.78,
+      3.65
+    ],
+    "baseline_provenance": "runs/phase2q_bpo, this scorer, row median",
+    "criterion": "W1",
+    "delta_id_at_r8": 0.78125,
+    "pass": true
+  },
+  "W2": {
+    "ci_excludes_zero": false,
+    "criterion": "W2",
+    "hypothesis": "H_flat",
+    "median_rho": -0.2,
+    "rho_per_seed": [
+      -0.2,
+      -0.14712247158412492,
+      -0.35309393180189985
+    ]
+  },
+  "W3": {
+    "criterion": "W3",
+    "hi": 0.8333333333333346,
+    "hi_rank": 32,
+    "lo": -0.7021949404761912,
+    "lo_rank": 1,
+    "n_tasks": 12,
+    "point": 0.11541193181818171
+  },
+  "W4": {
+    "criterion": "W4",
+    "delta_id_falls": true,
+    "share_by_rank": {
+      "1": 0.6499999999999995,
+      "16": 0.7333333333333333,
+      "2": 0.8181818181818182,
+      "32": 0.7142857142857143,
+      "4": 0.6309523809523809,
+      "8": 0.7
+    },
+    "share_falls": false,
+    "shrink_claimable": false
+  },
+  "W5": {
+    "criterion": "W5",
+    "note": "headline is the trend over all ranks; no rank selected post hoc",
+    "ranks_reported": [
+      1,
+      2,
+      4,
+      8,
+      16,
+      32
+    ]
+  },
+  "W6": {
+    "criterion": "W6",
+    "ran": false
+  },
+  "curve": {
+    "1": {
+      "R_raw": 0.6794974878392216,
+      "delta_id": 1.5625,
+      "delta_id_global": 2.34375,
+      "hi": 3.125,
+      "lo": 0.0,
+      "n_rows": 279,
+      "share": 0.6499999999999995
+    },
+    "16": {
+      "R_raw": 0.6939126770779996,
+      "delta_id": 2.083333333333337,
+      "delta_id_global": 3.125,
+      "hi": 3.90625,
+      "lo": 0.78125,
+      "n_rows": 279,
+      "share": 0.7333333333333333
+    },
+    "2": {
+      "R_raw": 0.6777152404420549,
+      "delta_id": 1.5625,
+      "delta_id_global": 2.34375,
+      "hi": 3.125,
+      "lo": 0.33482142857143016,
+      "n_rows": 279,
+      "share": 0.8181818181818182
+    },
+    "32": {
+      "R_raw": 0.6903205805171531,
+      "delta_id": 0.78125,
+      "delta_id_global": 2.34375,
+      "hi": 2.34375,
+      "lo": 0.16741071428570953,
+      "n_rows": 279,
+      "share": 0.7142857142857143
+    },
+    "4": {
+      "R_raw": 0.6758485876429424,
+      "delta_id": 1.5625,
+      "delta_id_global": 2.734375,
+      "hi": 2.3995535714285756,
+      "lo": 0.5691964285714279,
+      "n_rows": 279,
+      "share": 0.6309523809523809
+    },
+    "8": {
+      "R_raw": 0.6944225763782216,
+      "delta_id": 0.78125,
+      "delta_id_global": 2.34375,
+      "hi": 2.34375,
+      "lo": 0.0,
+      "n_rows": 279,
+      "share": 0.7
+    }
+  },
+  "outcome": "OUTCOME_1_rank_invariant_18_floats_never_substitutable_by_budget",
+  "seeds": [
+    1,
+    2,
+    3
+  ]
+}

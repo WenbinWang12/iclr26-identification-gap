@@ -1,0 +1,27 @@
+notes/phase2w_rank_exchange_protocol.md                  f1652afd2dafb809a38c0822a53dae9bc15bf42e760f5a570dd2886dabb4ace8
+experiments/phase2w_rank/score_2w.py                     8b6073067b95b76f1e510fd16cc26dc4cab8dd8930ca6d19c5bb6192164a02a9
+experiments/phase2w_rank/sweep_rank.sh                   b0d8c9f81ae7b3a8fa53fc31181721f2de4ebfaf9261d649cbfd13e017a13fd7
+experiments/phase2w_rank/tests/test_score_2w.py          214fe27e5268602f4361f0a36fa97c7635f38d1521601b6c67bc4bdc27617aa3
+
+# --- state AFTER the sweep, appended 2026-09-01. The four lines above are the freeze
+# and are never edited. Three of these four differ from it; each difference is a
+# documented, decision-neutral edit, listed here so the divergence is not silent.
+#
+# sweep_rank.sh          UNCHANGED (b0d8c9f8...) - the thing that produced the data.
+# score_2w.py            CHANGED - the single post-freeze edit described in results
+#                        section 6: seeds parsed from the run directory name instead of
+#                        by enumeration order, made while runs were in flight and
+#                        before any result was read. No decision logic touched.
+# test_score_2w.py       CHANGED - gained test_seed_parsed_from_dir_name_not_enumeration
+#                        for the above. 14 -> 15 tests, all passing.
+# protocol .md           CHANGED - Amendments 1 and 2 appended below the rule. Amendment
+#                        1 predates any non-r8 run; Amendment 2 was written while jobs
+#                        10277484_[0-17] were running and no result was visible.
+notes/phase2w_rank_exchange_protocol.md                  251dc79e3a2ced56d011e30ab66491d2ea81b4c263105e30573ec16393064ff9
+experiments/phase2w_rank/score_2w.py                     e9d2e865142643929d82ea71ad58814bacf2e943d1f3015ae9b3cc4611a4104e
+experiments/phase2w_rank/sweep_rank.sh                   b0d8c9f81ae7b3a8fa53fc31181721f2de4ebfaf9261d649cbfd13e017a13fd7
+experiments/phase2w_rank/tests/test_score_2w.py          45c3d6f9ad893abf2f5f6625eff6e6c8bb3f1003975d061af960a1feda24dd22
+
+# Outputs (not freezable - they are the result).
+notes/phase2w_rank_results.md                            06d61a3e8041e19c27b83d692de1e0bd842a86034f8aaf63e6deba004bfd10f8
+runs/phase2w_rank/decision_2w_full.json                  262a1788ec203d9a1192399bd6eee8134e0b576d20e5c8ec6eef0eee05b046c8

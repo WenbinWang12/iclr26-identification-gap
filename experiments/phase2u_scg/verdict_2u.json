@@ -1,0 +1,162 @@
+{
+  "U1": {
+    "criterion": "U1",
+    "harmful_bc": 39,
+    "harmful_scg": 2,
+    "n": 350,
+    "pass": false,
+    "threshold": -1.0,
+    "worst_bc": -11.71875,
+    "worst_by_seed": {
+      "11": 0.0,
+      "12": -0.78125,
+      "13": -2.34375,
+      "14": 0.0,
+      "15": -1.5625
+    },
+    "worst_scg": -2.34375
+  },
+  "U2": {
+    "batch_mean": 3.5714285714285716,
+    "criterion": "U2",
+    "hi": 5.9249357017397095,
+    "lo": 1.7608136432926829,
+    "pass": true,
+    "point": 3.5714285714285716,
+    "threshold": 2.0
+  },
+  "U3": {
+    "criterion": "U3",
+    "hi": -2.249979440789474,
+    "lo": -5.981514084507042,
+    "pass": false,
+    "point": -3.830357142857143,
+    "threshold": -3.5
+  },
+  "U4": {
+    "apply_rate": 0.2714285714285714,
+    "band": [
+      0.1,
+      0.6
+    ],
+    "criterion": "U4",
+    "pass": true
+  },
+  "U5": {
+    "criterion": "U5",
+    "median": 0.7192385730744932,
+    "median_threshold": 0.25,
+    "min_positive": 4,
+    "n_positive": 8,
+    "n_tasks": 8,
+    "pass": true,
+    "per_task": {
+      "BoolQA": 0.9206955547981652,
+      "COPA": 2.7880165737620423e-05,
+      "IMDB": 0.748967683382805,
+      "MultiRC": 0.790277206784084,
+      "QQP": 0.06767115241135944,
+      "RTE": 0.8684819068682186,
+      "SST-2": 0.6895094627661816,
+      "WiC": 0.14501290550366105
+    }
+  },
+  "U6": {
+    "criterion": "U6",
+    "dev_best_absm": {
+      "apply_rate": 0.23809523809523808,
+      "harmful": 0,
+      "mean": 3.2514880952380953,
+      "tau": 1.4,
+      "worst": 0.0
+    },
+    "dev_best_norm": null,
+    "heldout_best_absm": {
+      "apply_rate": 0.07714285714285714,
+      "harmful": 0,
+      "mean": 1.375,
+      "tau": 2.2,
+      "worst": -0.78125
+    },
+    "heldout_best_norm": null
+  },
+  "U7": {
+    "apply_rate_by_task": {
+      "BoolQA": 0.16,
+      "COPA": 0.11666666666666667,
+      "IMDB": 0.275,
+      "MultiRC": 0.4,
+      "QQP": 0.09090909090909091,
+      "RTE": 0.28888888888888886,
+      "SST-2": 0.36,
+      "WiC": 0.5846153846153846
+    },
+    "criterion": "U7",
+    "is_task_filter": false,
+    "n_all_or_nothing": 0,
+    "n_tasks": 8
+  },
+  "dev_summary": {
+    "U1": {
+      "criterion": "U1",
+      "harmful_bc": 35,
+      "harmful_scg": 0,
+      "n": 210,
+      "pass": true,
+      "threshold": -1.0,
+      "worst_bc": -14.84375,
+      "worst_by_seed": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0
+      },
+      "worst_scg": 0.0
+    },
+    "U4": {
+      "apply_rate": 0.23809523809523808,
+      "band": [
+        0.1,
+        0.6
+      ],
+      "criterion": "U4",
+      "pass": true
+    },
+    "U5": {
+      "criterion": "U5",
+      "median": 0.7900256524834881,
+      "median_threshold": 0.25,
+      "min_positive": 4,
+      "n_positive": 7,
+      "n_tasks": 8,
+      "pass": true,
+      "per_task": {
+        "BoolQA": 0.8582253906533991,
+        "COPA": 0.25858631737497284,
+        "IMDB": 0.7518171715712441,
+        "MultiRC": 0.9276336570439175,
+        "QQP": -0.5288465073925352,
+        "RTE": 0.8282341333957323,
+        "SST-2": 0.8739949870644277,
+        "WiC": 0.22663233370638422
+      }
+    }
+  },
+  "heldout_means": {
+    "bc": 7.401785714285714,
+    "oracle": 10.658482142857142,
+    "scg": 3.5714285714285716
+  },
+  "heldout_seeds": [
+    "11",
+    "12",
+    "13",
+    "14",
+    "15"
+  ],
+  "n_dev": 210,
+  "n_heldout": 350,
+  "outcome": "OUTCOME_4_threshold_did_not_transfer_stop_pursuing_gated_bc",
+  "protocol": "notes/phase2u_scg_protocol.md",
+  "protocol_sha": "892ef1a8bb68bf1d044da031ae092fca73122c8c7ba77d2c8bd79486669e4426",
+  "tau_m": 1.4
+}

@@ -1,0 +1,144 @@
+\section{Introduction}
+\label{sec:introduction}
+
+Parameter-efficient fine-tuning (PEFT) is a practical mechanism for adapting
+large language models without updating the pretrained backbone
+\citep{hu2022lora,houlsby2019adapter}. Its continual use, however, creates a
+resource question that is absent from one-shot fine-tuning: how should a fixed
+low-dimensional update space accommodate a potentially unbounded stream of new
+data? Reusing one adapter can overwrite previously useful behavior, whereas
+storing one adapter per stage makes memory and deployment complexity grow with
+the stream.
+
+Much of continual-PEFT evaluation presents semantically distinct tasks one at a
+time and either stores task-specific modules or assumes that a task identity is
+available at inference. This abstraction is useful for diagnosis but is not the
+only deployment pattern. A production model may instead receive successive
+batches of documents, demonstrations, or feedback drawn from an evolving
+mixture of sources. The prediction interface and loss remain unchanged, source
+boundaries can be unknown, and only one adapter is deployed. We call this the
+\emph{task-identity-free, clocked temporal-mixture} setting. A deployment clock
+or fixed minibatch schedule determines when an update is attempted, but no
+semantic task or source identity is supplied. This setting includes gradual
+domain drift, abrupt and recurrent mixtures, expanding support, and
+chronological knowledge updates; it is not the stronger boundary-free setting
+in which the learner must also decide when a distribution change occurred.
+
+Recent analysis of scale sharpens why this setting is hard. \citet{huang2026larger}
+show that larger models retain rare and complex tasks through \emph{reduced
+interference}: once enough capacity is devoted to common tasks, the common-task
+gradients weaken and stop overwriting the slowly accumulating features of rare
+tasks. Their mechanism identifies retention with capacity, and their remedy is
+scale---train a wider model. Continual PEFT is precisely the regime in which
+that remedy is unavailable: the backbone is frozen, one adapter is deployed, and
+the total rank budget is fixed and does not grow with the stream. The binding
+constraint here is not parameter count---full fine-tuning also keeps its
+parameter count fixed---but the \emph{effective update dimension relative to the
+diversity of tasks the stream demands}. Low-rank adaptation makes this dimension
+an explicit, tunable budget $R$; full fine-tuning is the slack limit in which
+that budget is large enough that the capacity term stops binding and forgetting
+reduces to conflict and online error. Our effective-capacity construction
+(Proposition~\ref{prop:effective-capacity}) lets us compare the two empirically
+at matched effective rank; we treat this as a comparator, not as a theorem
+unifying the two training regimes.
+Freezing the backbone is what keeps this analysis clean: historical curvature
+then accumulates in stable ambient coordinates, whereas full fine-tuning rotates
+the representation itself and moves those coordinates. This motivates
+our central question. We do \emph{not} claim that allocation can manufacture the
+capacity that scale buys: a fixed budget carries an unavoidable spectral-tail
+capacity floor (Theorem~\ref{thm:spectral-capacity}), and no allocation rule can
+remove it. The question is instead where the remaining, avoidable loss lives:
+\emph{under a fixed budget, can explicit risk-reweighted reallocation reduce the
+avoidable online allocation error and shift the retention--plasticity trade-off
+so that the worst-served source---the one scale would have protected---is
+retained, at a controlled cost to frequent-task retention?} We give controlled evidence that
+under a fixed budget the scale-driven protection of the worst-served source does
+not appear on its own---every allocator that spends the budget \emph{implicitly}
+charges the aggregate capacity floor to the worst-served source, so their
+worst-group retention clusters at a common low value---and that an
+\emph{explicit} risk-reweighted re-solve \emph{redistributes} the same fixed
+budget across sources, raising worst-group retention at a matched
+frequency-weighted mean rather than lowering the aggregate floor or reducing
+forgetting uniformly.
+
+Answering this requires treating continual forgetting, in part, as a
+capacity-allocation problem in a shared low-dimensional update space. The word
+``partly'' is essential. Rank cannot explain incompatible target behavior: a
+single unconditional model may be unable to satisfy two contradictory
+distributions even with unlimited adapter rank. Nor does sequential training
+always produce monotone forgetting, because later updates can cancel earlier
+ones or produce positive backward transfer. A defensible capacity claim must
+therefore separate three effects: irreducible conflict among distributions,
+approximation error of the fixed-rank model class, and error from allocating and
+optimizing that class online.
+
+We develop this separation under a local second-order model. A Taylor expansion
+shows precisely when the linear term in old loss disappears: the earlier
+checkpoint must be stationary for the same historical risk in the feasible
+update directions. Under a quadratic old loss, forgetting is the curvature
+energy of the sum of subsequent updates. This yields accumulation in
+expectation under a stated non-cancellation or stochastic-innovation condition,
+but also exposes simple cancellation counterexamples. At the representation
+level, an exact telescoping identity decomposes the historical retention gap
+into conflict, fixed-rank capacity, and online error. For a Kronecker-factored
+quadratic loss, the capacity term is exactly a curvature-whitened spectral tail.
+Finally, as positive-semidefinite historical curvature is accumulated, its
+nullspace---the exact second-order zero-interference space---can only contract.
+
+The analysis suggests a solution other than continually increasing rank.
+\method{} (Pareto-Safe Rank Reallocation) keeps a single fixed-rank-$R$ adapter
+and, at each window, re-solves a risk-reweighted reduced-rank regression from a
+bounded replay buffer. The distinction our evidence turns on is
+\emph{implicit} versus \emph{explicit} allocation. Dense updating, replay, and
+gradient-projection defenses allocate the $R$ retained directions implicitly:
+the subspace they keep is whatever the accumulated gradient mass spans, which the
+frequent sources dominate, so the worst-served source is left in the spectral
+tail. \method{} instead spends the fixed memory budget on \emph{coverage}, keeping a
+small dual buffer whose diverse part retains rare input directions that a single
+uniform reservoir under-samples, and then runs a minimax multiplicative-weights
+loop that moves the weight onto the worst-served buffered windows and re-solves
+the closed-form weighted rank-$R$ problem, driving the $R$-th direction toward
+that source; it keeps the iterate with the smallest buffered worst-window loss,
+so the update is never worse than the uniform solve \emph{on that buffered
+worst window} by construction, with no rollback or trust region required; the
+name's ``safe'' denotes exactly this buffer-level property, not a held-out or
+Pareto guarantee. The coverage buffer is an empirically
+motivated remedy for rare-source under-coverage, not a consequence of the
+capacity theorem; the weighted re-solve it feeds is the theorem-tied step. The
+learner reads only the window data---no source label, task identifier, generator
+oracle, or router---and the deployed rank never grows.
+
+Our contributions are:
+\begin{itemize}
+  \item We formulate task-identity-free, clocked temporal-mixture continual
+  PEFT with one deployed adapter, a fixed total rank budget, a smaller
+  per-window active-rank budget, and bounded historical memory.
+  \item We give a conditional theorem chain that (i) expands signed forgetting,
+  (ii) characterizes sequential accumulation and its cancellation failure mode,
+  (iii) exactly separates conflict, capacity, and online error, and (iv) proves
+  contraction of the locally safe update space.
+  \item We turn the exact rank-capacity characterization into an online method,
+  \method{}: a bounded-buffer, minimax risk-reweighted reduced-rank regression
+  whose per-window solve is the curvature-whitened truncated SVD of
+  Theorem~\ref{thm:spectral-capacity}, and which is safe against the uniform
+  solve on the buffered worst window by construction (a buffer-level property,
+  not a held-out guarantee). The same spectral result gives a precise but limited
+  connection to curvature-aware model merging.
+  \item We recast the reduced-interference mechanism of \citet{huang2026larger}
+  as an allocation question under a fixed budget, and give controlled evidence,
+  under an internally pre-specified, hash-recorded held-out test on a crossed
+  design of held-out geometries and stream draws, that implicit allocators (dense
+  updating, reservoir/GSS/MIR replay, gradient projection, and the uniform-weight
+  solve) all charge the aggregate spectral-tail floor to the worst-served source,
+  clustering at a common worst-group retention, whereas coverage-aware explicit
+  minimax reallocation \emph{redistributes} the fixed budget to raise worst-group
+  retention at a matched frequency-weighted mean---a paired-average gain with
+  cluster-robust confidence intervals excluding zero, not uniform dominance and
+  not a lowering of the aggregate floor.
+  \item We specify controlled mixture-drift and chronological experiments that
+  test whether spectral tails and safe-space contraction predict forgetting,
+  with total rank, active rank, replay, and optimizer-state budgets held equal
+  across arms and compute reported per arm rather than matched---the method
+  deliberately trades extra compute (repeated closed-form re-solves) for tail
+  retention, which we disclose in a resource ledger rather than hide.
+\end{itemize}

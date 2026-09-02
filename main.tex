@@ -1,0 +1,164 @@
+\documentclass{article}
+
+\usepackage{iclr2026_conference,times}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+\usepackage{mathtools}
+\usepackage{bm}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{xspace}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{microtype}
+\usepackage{url}
+\usepackage{hyperref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\input{paper_macros}
+
+\title{The Identification Gap: A Second Capacity Constraint\\
+in Task-Agnostic Continual PEFT}
+
+\author{Anonymous Authors}
+
+% Uncomment only for the camera-ready version.
+% \iclrfinalcopy
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Continual parameter-efficient fine-tuning is budgeted almost entirely in
+trainable parameters. We identify a second constraint that a parameter budget
+does not buy. When a generative model serves a stream of tasks without task
+identity, tasks that reuse output tokens must share one decision rule over those
+tokens, and the accuracy this costs is invisible to rank-based analyses. We
+define the \emph{identification gap} $\Delta^{\mathrm{id}}$ --- the part of
+recoverable forgetting that requires knowing which task a query came from --- and
+separate it from representation drift. Two results are unconditional: the gap is
+\emph{exactly} zero when verbalizer sets are pairwise disjoint, which makes the
+term falsifiable rather than merely definable, and the best shared offset on a
+group of tasks reusing the same tokens is the Chebyshev centre of their
+individual optima, so the unavoidable worst-case error is that set's Chebyshev
+radius. The budgeted extension to $m$ stored offsets is proved for binary shared
+verbalizers and is open beyond them; we state which reported numbers rest on
+which. On a $15$-task T5-large LoRA stream the gap is $3.13$~pp against a single
+global offset and $0.00$~pp against one offset per token-group, so a rule reading
+only the prompt's option list closes it. Task identity adds $+1.10$~pp, CI
+$[+0.40,+1.83]$, on top when restricted to multi-task scopes where the comparison
+is measurable; the pooled $+0.02$~pp averages over rows our implementation forces
+to zero by construction and licenses nothing (Section~\ref{sec:gap-real},
+disclosure~(iii)). The constraint does not live in parameter space: three frozen
+protocols spending the same $2.36$M scalars differently all fail to touch the
+gap, and at the strengths their own prefix gates selected the one derived from the
+correct symmetry argument does the most damage,
+with its own preregistered mechanism check refuting our proposed mechanism. Nor
+is it removed by storing the offsets: a streamed per-group table is $5.08$~pp
+\emph{worse} than storing nothing, and because a single-member group's Chebyshev
+centre is provably that member, singleton groups isolate the cause as staleness
+with aggregation, routing, and gauge ruled out by construction. The one
+rehearsal-free route left --- computing the offset from the unlabelled query batch,
+storing nothing --- gains $4.40$~pp on our class-balanced audit split and inverts to
+$-0.67$~pp once the query mix is skewed to $70{:}30$, failing a control we
+pre-registered to catch precisely that; we report it as an artefact of our
+evaluation protocol and not as a method. Those two are the only non-vacuous rules
+our constraints admit --- one keeps the past examples and lets the model go stale,
+the other keeps the model and gives up the examples, and keeping both is
+rehearsal by definition. What the paper delivers is therefore a
+constraint and a design space closed as enumerated, rather than a technique. Every phase was frozen
+with criteria, thresholds, and predeclared outcomes before implementation and
+SHA-pinned; we report the criteria that failed beside those that passed,
+including six amendments that correct or retract earlier claims of our own. All comparisons
+are internal at matched budget and the official test files are never opened, so
+our accuracies are not leaderboard-comparable and we do not present them as such.
+\end{abstract}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_problem_setup}
+\input{sections/04_method}
+\input{sections/05_theory}
+\input{sections/06_experiments}
+\input{sections/07_limitations}
+\input{sections/08_conclusion}
+
+\section*{Reproducibility Statement}
+We have tried to make every reported number retraceable to a frozen artefact
+rather than to a description. The full protocol --- stream, splits, exclusion
+rules, metrics, statistics, and the unconditional training gate --- is in
+Appendix~\ref{app:experiments}, and the proofs with their exact hypotheses are in
+Appendix~\ref{app:proofs}. The reference implementation, the harness, and the
+decision scripts are released with the paper.
+
+Each phase has a protocol file written before the run it governs, stating the
+method, the criteria with numeric thresholds, and a set of predeclared outcomes
+mapping possible results to conclusions; its SHA-256 is recorded on disk at freeze
+time. Amendments are appended with their own date and hash, never edited in, so a
+criterion cannot be restated once its result is known. The decision scripts are
+frozen the same way, with thresholds as module-level constants and a constructed
+failure case per criterion in their tests, so the map from numbers to verdicts
+exists before the numbers do.
+
+We state the limit of that scheme rather than implying a stronger form of
+pre-registration than we have: the hashes pin the artefacts, and the ordering of
+freeze and run rests on the committed source and the appended amendment record,
+not on a timestamped external registry. No pre-run hash log survives for the
+earliest phase, and we corrected an earlier sentence of ours that claimed
+otherwise.
+
+Six amendments in our record correct or retract claims of our own: a scope-class
+split that did not survive bootstrapping; a headline result that an oracle-free
+rerun collapsed; a $-5.66$~pp single-seed effect that vanished to $+0.28$~pp once
+the remaining two seeds landed, which forced a wording change in
+Section~\ref{sec:three-anchors}; a sentence asserting a state of our own code
+that was not true when written, retracted the same day with the code then made to
+match; an unmeasured claim that staleness grows with stream length, which we then
+measured and could not establish, so the sentence was demoted in
+Section~\ref{sec:sso}; and a description of two of our arms as independent
+replications when a field-by-field comparison shows they are the same training
+trajectory. All six remain in the released notes, unedited, beside the appends that
+supersede them. Where a criterion failed we
+report it under its own name, including one we had predicted would fail and one
+that refuted our own proposed mechanism. All comparisons are internal: arms
+differing in one component at identical budget, splits, and seeds. We run no
+published continual-PEFT baseline and make no claim against one, and the official
+test files are never opened, so our absolute accuracies are not comparable to
+leaderboard numbers.
+
+\section*{Large Language Model Usage Disclosure}
+Large language model based agents were used extensively throughout this project,
+well beyond copy-editing. Their contributions include: implementing and debugging
+the experimental code and statistical harness; proposing and iterating on method
+design, including the streamed offset table and the label-free inference rule;
+proving and, in two cases, correctly narrowing the propositions of
+Appendix~\ref{app:proofs};
+running and interpreting the diagnostic and ablation analyses; drafting the
+statistical procedure; and drafting, revising, and copy-editing the manuscript,
+appendix, and protocol notes. The research direction, the honesty constraints, the
+final scientific claims, and all go/no-go decisions were set and adjudicated by the
+human authors. Every theoretical statement, every reported number, and every cited
+reference was re-derived or re-checked against the underlying proofs, the frozen run
+outputs, and the primary sources; the authors take full responsibility for all
+content, including any errors introduced with model assistance. We flag this level
+of assistance explicitly so that reviewers can weight the provenance of the design
+and analysis accordingly.
+
+\bibliography{references}
+\bibliographystyle{iclr2026_conference}
+
+\appendix
+\input{appendix/proofs}
+\input{appendix/experimental_details}
+
+\end{document}

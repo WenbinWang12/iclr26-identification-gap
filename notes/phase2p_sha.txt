@@ -1,0 +1,2 @@
+ae59bcd5d370271e64bef8b49b90d6150bfb16ac1fc6a4f170c53f40d9afac1e *notes/phase2p_streaming_scope_offset_protocol.md  # frozen before implementation, 2026-08-31
+after A1 (2026-08-31): 2d2a4db8516b85a0d866d9c6680babac6b65293b49fad99aea098bd4f347b95b

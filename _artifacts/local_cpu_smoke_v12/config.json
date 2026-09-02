@@ -1,0 +1,109 @@
+{
+  "device": "cpu",
+  "frozen": {
+    "T": 12,
+    "adamw": {
+      "amsgrad": false,
+      "capturable": false,
+      "differentiable": false,
+      "foreach": false,
+      "fused": false,
+      "maximize": false
+    },
+    "base_child_names": [
+      "W0",
+      "compatible_U",
+      "compatible_V",
+      "stress_U",
+      "stress_V"
+    ],
+    "base_seed": [
+      20260723,
+      0
+    ],
+    "batch_size": 128,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "bootstrap_draws": 10000,
+    "bootstrap_seed": [
+      90920260723,
+      0
+    ],
+    "calibration_seeds": [
+      11,
+      23,
+      37
+    ],
+    "d_in": 32,
+    "d_out": 32,
+    "eps": 1e-08,
+    "grad_clip": 5.0,
+    "hash_serialization": {
+      "arrays": "little-endian contiguous C",
+      "json": "sorted UTF-8"
+    },
+    "lr": 0.03,
+    "n_eval": 2048,
+    "n_train": 1024,
+    "primary_seeds": [
+      53,
+      71,
+      89,
+      107,
+      131,
+      149,
+      167,
+      191,
+      211,
+      233,
+      257,
+      277,
+      307,
+      331,
+      353,
+      379,
+      401,
+      431,
+      457,
+      487
+    ],
+    "protocol_sha256": "99893D34AB9B47057906B499843C4236A146242FCDAECBA5A019B12CCE06B55E",
+    "ranks": [
+      2,
+      4,
+      8
+    ],
+    "replay_batch": 64,
+    "replay_capacity": 352,
+    "rng": {
+      "bit_generator": "PCG64",
+      "normal_order": "C",
+      "uniform_dtype": "<f8"
+    },
+    "sanity_step_size": 0.5,
+    "sanity_steps": 512,
+    "stream_child_names": [
+      "train_signs",
+      "eval_signs",
+      "train_permutations",
+      "eval_permutations",
+      "clock_insert",
+      "reservoir_priority",
+      "clock_replay_draws",
+      "reservoir_replay_draws",
+      "factor_init"
+    ],
+    "stream_seed": 20260723,
+    "updates_per_window": 100,
+    "weight_decay": 0.0
+  },
+  "kind": "phase2_frozen_experiment_config",
+  "protocol_path": "notes/phase2_gpu_bridge_protocol.md",
+  "protocol_sha256": "99893D34AB9B47057906B499843C4236A146242FCDAECBA5A019B12CCE06B55E",
+  "schema_version": 1,
+  "seeds": [
+    11
+  ]
+}

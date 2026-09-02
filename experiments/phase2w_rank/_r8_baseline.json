@@ -1,0 +1,60 @@
+{
+  "W1": {
+    "criterion": "W1",
+    "delta_id_at_r8": 2.083333333333326,
+    "pass": true,
+    "published_ci": [
+      0.43,
+      2.74
+    ]
+  },
+  "W2": {
+    "ci_excludes_zero": false,
+    "criterion": "W2",
+    "hypothesis": "H_flat",
+    "median_rho": NaN,
+    "rho_per_seed": []
+  },
+  "W3": {
+    "criterion": "W3",
+    "hi_rank": 8,
+    "lo_rank": 8
+  },
+  "W4": {
+    "criterion": "W4",
+    "delta_id_falls": false,
+    "share_by_rank": {
+      "8": 0.7321428571428572
+    },
+    "share_falls": false,
+    "shrink_claimable": false
+  },
+  "W5": {
+    "criterion": "W5",
+    "note": "headline is the trend over all ranks; no rank selected post hoc",
+    "ranks_reported": [
+      8
+    ]
+  },
+  "W6": {
+    "criterion": "W6",
+    "ran": false
+  },
+  "curve": {
+    "8": {
+      "R_raw": 0.6944895139955624,
+      "delta_id": 2.083333333333326,
+      "delta_id_global": 2.34375,
+      "hi": 3.6458333333333313,
+      "lo": 0.78125,
+      "n_rows": 279,
+      "share": 0.7321428571428572
+    }
+  },
+  "outcome": "OUTCOME_1_rank_invariant_18_floats_never_substitutable_by_budget",
+  "seeds": [
+    0,
+    1,
+    2
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "protocol_sha": "038c238b22615e4fddbc4629feb9c8a9bcc9f70af7a5c0dcb5a6702843d530df",
+  "label": "phase2k",
+  "runs": [
+    "runs/phase2k_qoc_converged/qoc_seed1.json",
+    "runs/phase2k_qoc_converged/qoc_seed2.json",
+    "runs/phase2k_qoc_converged/qoc_seed3.json"
+  ],
+  "n_obs": 279,
+  "design": {
+    "singleton_obs_by_age": {},
+    "singleton_tasks": [],
+    "train_position": {
+      "MNLI": 1,
+      "WiC": 3,
+      "COPA": 4,
+      "QQP": 5,
+      "BoolQA": 6,
+      "RTE": 7,
+      "IMDB": 8,
+      "SST-2": 11,
+      "DBpedia": 12,
+      "AGNews": 13,
+      "MultiRC": 14,
+      "Yahoo": 15
+    },
+    "m_live_values_by_multi_scope": {
+      "contradiction|entailment|neutral": [
+        1
+      ],
+      "False|True": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "Bad|Good": [
+        1,
+        2
+      ]
+    }
+  },
+  "R5": {
+    "n_singleton_obs": 87,
+    "violations": [],
+    "pass": true,
+    "field": "R_orc - R_shr_scoped",
+    "spec": "Delta_id_scoped == 0 exactly on singleton scopes"
+  },
+  "R1": {
+    "slope_pp_per_unit": -0.27815113500597377,
+    "n_clusters": 7,
+    "n_obs": 192,
+    "ci": [
+      -1.7207563548218034,
+      1.017211294416243
+    ],
+    "n_degenerate_draws": 1,
+    "frac_degenerate": 0.0001,
+    "n_valid_draws": 9999,
+    "ci_usable": true,
+    "ci_note": "degenerate draws (pooled x had no variation) dropped, not counted as slope 0; decision post-dates first run",
+    "pass": false,
+    "spec": "Delta_id_global vs m_live on multi-task scopes; pass = slope CI excludes 0 on the positive side"
+  },
+  "R2": {
+    "slope_pp_per_unit": 0.40112567204301075,
+    "n_clusters": 7,
+    "n_obs": 192,
+    "ci": [
+      -0.5422507788161994,
+      0.9450794506020798
+    ],
+    "n_degenerate_draws": 1,
+    "frac_degenerate": 0.0001,
+    "n_valid_draws": 9999,
+    "ci_usable": true,
+    "ci_note": "degenerate draws (pooled x had no variation) dropped, not counted as slope 0; decision post-dates first run",
+    "significant": false,
+    "spec": "Delta_id_scoped vs m_live; predeclared expectation: not significant"
+  },
+  "R3": {
+    "slope_pp_per_unit": NaN,
+    "n_clusters": 0,
+    "n_obs": 0,
+    "ci": [
+      NaN,
+      NaN
+    ],
+    "n_degenerate_draws": 0,
+    "frac_degenerate": NaN,
+    "ci_usable": false,
+    "ci_note": "fewer than 2 clusters; a cluster bootstrap CI is undefined",
+    "pass": false,
+    "spec": "|R_sso1-R_orc| vs age on singleton scopes; pass = slope CI excludes 0 on the positive side"
+  },
+  "R4": {
+    "slope_pp_per_unit": NaN,
+    "n_clusters": 0,
+    "n_obs": 0,
+    "ci": [
+      NaN,
+      NaN
+    ],
+    "n_degenerate_draws": 0,
+    "frac_degenerate": NaN,
+    "ci_usable": false,
+    "ci_note": "fewer than 2 clusters; a cluster bootstrap CI is undefined",
+    "corr_age_pos": NaN,
+    "pass": true,
+    "spec": "same y vs pos(g); pass = pos slope CI CONTAINS 0"
+  },
+  "outcome": null,
+  "note": "no predeclared outcome fires verbatim; report each criterion under its own name per §3"
+}

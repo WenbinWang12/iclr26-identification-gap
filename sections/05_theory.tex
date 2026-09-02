@@ -1,0 +1,142 @@
+\section{What the Identification Gap Costs}
+\label{sec:theory}
+
+This section states what we can prove about $\Delta^{\mathrm{id}}$ and, equally
+important, where the proofs stop. Every claim carries its status: proved
+unconditionally, proved under a stated and \emph{measured} constant, proved in a
+special case that covers our benchmark, or open. We are explicit because two
+earlier versions of this analysis overstated results of ours, and both corrections
+are recorded below rather than removed.
+
+\subsection{The geometric half, unconditional}
+
+Proposition~\ref{prop:disjoint} of Section~\ref{sec:setup} gives the boundary:
+with pairwise disjoint verbalizers, $\Delta^{\mathrm{id}}\equiv0$. Inside a shared
+scope, Proposition~\ref{prop:cheb} of Section~\ref{sec:method} gives the exact
+minimax quantity --- the Chebyshev radius $r_S$ of the member tasks' gauge-fixed
+optima, attained uniquely at their Chebyshev centre, with
+$r_S\ge\tfrac12\mathrm{diam}$ and $r_S=q_1(S)$. Both are unconditional, and
+Proposition~\ref{prop:disjoint} is falsifiable: it predicts \emph{exactly} zero on
+every singleton scope, and we check it in every run we report ($0$ violations,
+$87$--$144$ observations per arm, worst absolute deviation $0.0$).
+
+\subsection{The accuracy half needs a constant, and that constant is small}
+
+The statement one wants next is that some task must \emph{lose accuracy} in
+proportion to $r_S$. It is false without an assumption, and this is a correction to
+an earlier form of our own claim, which bounded an accuracy difference below by a
+diameter-type quantity. Accuracy differences are at most $1$; diameters are
+unbounded. Concretely: two tasks with verbalizer margins $\pm10$ can be rescaled
+to margins $\pm0.01$, shrinking every logit distance by $1000\times$ while the
+accuracy loss stays exactly $1$. Distance and loss are different quantities, and no
+assumption-free proportionality exists between them.
+
+The repaired statement requires a margin density. Let the per-example verbalizer
+margin have density at least $\kappa$ on $[0,\varepsilon]$.
+
+\begin{proposition}[Accuracy-space minimax, conditional on $\kappa$]
+\label{prop:cheb-acc}
+Under the margin-density assumption, for any shared offset $\bb$ on scope $S$,
+\begin{equation}
+  \max_{g\in\mathrm{mem}(S)}\big[R_g^{\mathrm{orc}}-R_g(\bb)\big]
+  \;\ge\; \kappa\cdot\min(r_S,\,t_0),
+  \label{eq:cheb-acc}
+\end{equation}
+where $t_0$ is the largest shift for which the density bound holds.
+\end{proposition}
+
+We measured $\kappa$ rather than leaving it a symbol. On this stream the
+worst-task value is $\kappa\approx\mathbf{0.0182}$ (WiC); the median over tasks is
+$0.0625$, which \emph{overstates} the usable constant by $3.4\times$, because
+$\kappa$ must hold simultaneously for every task sharing an offset and so the
+smallest-$\kappa$ member sets the bound. Two further conservatisms: multi-class
+flip fractions count only top-$2$ flips, and the estimator must take
+$\min_i N(t_i)/t_{i+1}$ rather than $\min_i N(t_i)/t_i$, since
+Proposition~\ref{prop:cheb-acc} needs the density at all $t$ and not only at grid
+points --- the two differ by up to $2.5\times$ and only the former is a valid lower
+bound.
+
+\paragraph{The honest consequence.}
+At $\kappa\approx0.018$, \eqref{eq:cheb-acc} is a weak bound on this benchmark. We
+therefore do not lean on it: the geometric half carries the load, and every
+accuracy-space number in this paper is \emph{measured} rather than derived from
+\eqref{eq:cheb-acc}.
+
+\subsection{Budgeted offsets: proved for binary shared verbalizers}
+
+With $m$ centres per scope the relevant radius is the minimax $m$-centre covering
+radius $q_m(S)$, and the ladder of Section~\ref{sec:ladder} is monotone in $m$ by
+construction.
+
+\begin{proposition}[Closed form and pigeonhole bound, $d=1$]
+\label{prop:qm}
+Let a scope have $K_S=2$ labels, so each gauge-fixed optimum is a scalar; sort them
+$x_1\le\dots\le x_T$. Then $q_m$ equals the minimum over choices of $m-1$ cut
+points of the largest resulting block half-range; for $m=2$,
+$q_2=\min_j\max\!\big((x_j-x_1)/2,\ (x_T-x_{j+1})/2\big)$. A pigeonhole lower bound
+on $q_m$ holds in every dimension and is \emph{tight} at $d=1$.
+\end{proposition}
+
+\noindent Status, stated precisely: proved for $d=1$ and any $m$; \textbf{open for
+$m\ge2$ together with dimension $\ge2$}. We may write ``proved for binary shared
+verbalizers'', never ``Proposition~\ref{prop:qm} is proved''. The pigeonhole bound
+is strict rather than tight for $d\ge2$: $164$ of $400$ random instances disagree
+with the enumerator, against $0$ of $600$ at $d=1$.
+
+The special case suffices for every number we report, and for a reason that is a
+property of the benchmark rather than a convenience: \emph{every scorable
+multi-task scope on Order-4 has $K_S=2$}. The $K_S=3$ and $K_S=5$ scopes are
+exactly the ones excluded from scoring --- CB's rarest class has $16$ examples, and
+Yelp/Amazon's five-way verbalizers violate the distinct-first-piece precondition.
+So every $q_m$ we report is backed by Proposition~\ref{prop:qm}, and the open case
+is unmeasurable here rather than quietly assumed.
+
+\paragraph{Two negative facts we pin with tests, because they narrow claims.}
+First, the ``points $\cup$ pairwise midpoints'' candidate-centre enumerator is
+exact only at $d=1$ or $n\le2$; at $d\ge2$ it \emph{overestimates} the radius (a
+unit equilateral triangle gives $0.8660$ against the true $1/\sqrt3=0.5774$, a
+factor of $1.5$). The direction favours us --- an overestimated radius inside a
+lower bound means claiming less --- but it may not be called exact. Second, a
+\emph{per-example} router can exceed the single-offset per-task oracle; we
+construct a case going $0.500\to1.000$. So the accuracy-space corollary holds for
+per-task routing only. That fact is also a live method question: whether a
+task-free \emph{per-example} rule is achievable, we do not know.
+
+\subsection{Why a rank budget cannot absorb this term}
+
+Rank-based bounds on forgetting have the schematic form
+\begin{equation}
+  F(\theta)\;\le\;\|\nabla\ell\|\cdot\|\Delta\bW\|+\tfrac{L}{2}\|\Delta\bW\|^2,
+  \qquad \|\Delta\bW\|\le\sqrt{\rho}\,\|\bB\|\|\bA\|,
+  \label{eq:rankbound}
+\end{equation}
+and are the basis on which allocators such as E$^2$-LoRA, AdaLoRA and CoDyRA spend
+rank. We previously asserted a strict impossibility here --- that
+$\Delta^{\mathrm{id}}$ can be made large with $\|\Delta\bW\|$ arbitrarily small ---
+and that is \textbf{not correct as stated}. A small $\|\Delta\bW\|$ does imply a
+small logit perturbation, which does imply a small accuracy change \emph{unless}
+many examples sit within that perturbation of the decision boundary. The correct
+statement is conditional on the same $\kappa$:
+
+\begin{proposition}[Margin-conditional amplification]
+\label{prop:amp}
+With margin density at least $\kappa$ on $[0,\varepsilon]$, a logit shift of size
+$\delta\le\varepsilon$ along the verbalizer-difference direction flips at least
+$\kappa\delta$ mass, and $\delta\le c\,\|\Delta\bW\|\sup_x\|\bh(x)\|$.
+\end{proposition}
+
+So \eqref{eq:rankbound} is loose by the factor $\kappa$: a rank-$1$ update aligned
+with a shared verbalizer-difference direction can satisfy the rank bound and still
+move accuracy by $\kappa\delta$. The claim we are entitled to is therefore weaker
+than impossibility and sharper than vacuity: the rank bound is
+\textbf{uninformative about which of the two terms the damage lands in}, and can be
+satisfied while $\Delta^{\mathrm{id}}$ is large.
+
+That is the operative point for allocators. Output-drift energy, importance scores
+and rank minimisation are all averages over the whole drift; none separates the
+component a zero-rank shared offset could absorb from the component that genuinely
+needs subspace capacity. Under a fixed lifetime budget, rank spent on the former is
+wasted --- and, by Propositions~\ref{prop:cheb} and~\ref{prop:qm}, offset capacity
+spent on conflicting tasks cannot substitute for rank either. Both budgets bind,
+for different reasons, which is the two-constraint picture of
+Section~\ref{sec:setup}.

@@ -1,0 +1,2 @@
+a2d44c3beca742408f43b8090d283cc2a7cb88043dad13e4450dc755dd5002ae *notes/phase2m_vla_protocol.md
+f7f2532849688fe4bda99827bac88ba2be07b021a65f8c3d20eaf9b6a77b4c69  notes/phase2m_vla_protocol.md  (after A2.6, 2026-08-31)

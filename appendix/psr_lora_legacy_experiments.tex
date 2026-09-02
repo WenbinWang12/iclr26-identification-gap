@@ -1,0 +1,367 @@
+\section{Evaluation Plan}
+\label{sec:experiments}
+
+No neural or benchmark empirical result is asserted in this draft. The audited
+Phase-1 NumPy suite and the controlled linear-mixture confirmatory checks in
+Section~\ref{sec:controlled-results} are conditional regression and
+falsification artifacts, not performance results; the remaining experiments
+are designed to falsify or support the theory rather than to fill a benchmark
+table after the fact.
+
+\subsection{Research Questions and Predictions}
+
+\begin{description}
+  \item[RQ1: Does capacity predict forgetting?] Test whether the
+  curvature-whitened spectral tail in Eq.~\eqref{eq:spectral-capacity} and the
+  exact and scale-invariant approximate safe dimensions
+  $\operatorname{dim}(\cN_t^{\mathrm{amb}})$ and
+  $\operatorname{dim}(\cN_t^{\mathrm{amb},(\tau)})$ predict the onset and slope of
+  forgetting as $R$ varies.
+  \item[RQ2: Does allocation matter at fixed capacity?] At a fixed deployed rank
+  $R$, compare \method{} against implicit allocators that hold the same rank and
+  buffer budget---dense sequential updating, reservoir/GSS/MIR replay, a
+  gradient-projection defense, and the uniform-weight reduced-rank solve---and
+  ask whether explicit reweighting changes worst-group retention at matched
+  frequency-weighted mean.
+  \item[RQ3: Is sequential accumulation conditional?] Measure the cross term in
+  Eq.~\eqref{eq:forgetting-increment}. Streams with positive, near-zero, and
+  negative cross terms should respectively show accumulation, diffusive growth,
+  and cancellation or backward transfer.
+  \item[RQ4: Does the local cost predict real loss?] Correlate the predicted
+  historical change
+  $\bq_{t-1}^\top\bh+\frac12\bh^\top\bA_{t-1}\bh$ with the observed replay and
+  held-out historical loss change.
+  \item[RQ5: Does the reweighting, not the buffer, drive any gain?] Ablate the
+  minimax loop by fixing uniform weights (the uniform-weight reduced-rank solve),
+  holding the buffer and closed-form solver identical, and test whether the
+  worst-group gain survives.
+\end{description}
+
+\subsection{Controlled Temporal Mixture Streams}
+
+The first controlled stream uses a single three-way financial-sentiment
+instruction across Financial PhraseBank, FiQA-SA, and Twitter Financial News
+Sentiment. Every window contains examples from multiple sources; only source
+proportions and optional subdomains change. Because these datasets may share a
+predictor, we treat this stream as a low-conflict covariate-shift control, not
+as evidence that finite rank must become saturated. We instantiate four
+schedules:
+\begin{enumerate}
+  \item \textbf{stationary mixture}, a negative control in which all
+  $\pi_{t,c}$ are fixed;
+  \item \textbf{smooth drift}, with slowly varying mixture weights;
+  \item \textbf{abrupt recurrent drift}, in which earlier mixtures return; and
+  \item \textbf{expanding support}, in which new sources or subdomains enter.
+\end{enumerate}
+
+The primary real-data capacity stress test is a mixed-skill instruction stream.
+Each window mixes examples from several source families---for example
+extraction, question answering, summarization, reasoning, and code---under one
+causal-LM or supervised instruction loss. Mixture weights drift and support
+expands, while source metadata is retained only for analysis. Before comparing
+methods, a held-out pilot estimates the curvature-whitened rank of window
+optimum or gradient innovations. We pre-register the diagnostic and report both
+low-innovation and high-innovation streams; datasets are not selected after
+viewing \method{} performance.
+
+A synthetic linearized stream independently controls the rank, energy, and
+mutual alignment of new curvature modes. It is the cleanest test of
+Theorems~\ref{thm:spectral-capacity} and~\ref{thm:safe-subspace}, because the
+ground-truth spectral tail and nullspace dimension are known.
+
+\subsection{Chronological Language-Model Streams}
+
+TemporalWiki and StreamingQA provide timestamped knowledge updates
+\citep{jang2022temporalwiki,liska2022streamingqa}. We use one causal-LM or
+instruction-tuning objective throughout and do not expose timestamps as task
+IDs. Evaluation partitions questions into stable facts, new facts, updated
+facts, and obsolete answers. A successful method should retain stable facts,
+acquire new facts, answer updated facts with their current values, and avoid
+persisting obsolete answers. TRACE or Super-NI sequences are included only as
+supplemental task-incremental comparisons.
+
+Chronological claims require a base model with a documented pretraining cutoff
+before the evaluated stream, or a newly constructed post-cutoff slice. We log
+the unadapted model's closed-book accuracy and answer likelihood as
+contamination probes and report suspected memorized items separately. Fact
+categories are generated from timestamped revision or answer changes and a
+stratified sample is manually audited. Every updated fact receives two labels:
+its value at the historical checkpoint and its current value. Frozen-truth
+retention and current-truth adaptation are reported separately, so a correct
+revision is not counted as forgetting.
+
+\subsection{Baselines and Resource Matching}
+
+\begin{table}[t]
+\caption{Planned comparisons along separate control axes. No single baseline
+can simultaneously match dense rank-$R$ activation and active rank $k<R$.
+Oracles are reported separately and never described as online peers.}
+\label{tab:baseline-plan}
+\centering
+\small
+\begin{tabularx}{\linewidth}{
+  >{\raggedright\arraybackslash}p{0.18\linewidth}
+  X
+  >{\raggedright\arraybackslash}p{0.18\linewidth}}
+\toprule
+Group & Method & Controlled quantity \\
+\midrule
+Capacity-matched & Sequential LoRA; dense rank-$R$ activation & Deployed rank
+$R$, history bytes, tokens \\
+Rank-and-buffer-matched & \method{}; uniform-weight reduced-rank solve;
+reservoir/GSS/MIR replay; gradient projection & Deployed rank $R$, buffer
+capacity $B$, and history bytes \\
+History-memory-matched & Replay-LoRA; gradient projection; \method{} &
+Total replay and curvature-sketch bytes \\
+Mechanism & O-LoRA; SLICE; E$^2$-LoRA; ProCL; NSR; LiteLoRA & Full ledger,
+including banks, routers, retrieval, and extra passes \\
+Consolidation & Euclidean SVD; DELLA; TIES; curvature-weighted SVD & Secondary \\
+Oracles & Offline joint training; growing rank; one adapter per window with
+oracle selection; full fine-tuning & Upper/resource bounds \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+For every method we report total and active trainable parameters, deployed
+adapter bytes, replay or sketch bytes, optimizer-state bytes, wall-clock time,
+training FLOPs, and inference cost. Recent allocation methods can use additional
+retrieval banks or input-conditioned gates, so parameter count alone is not a
+sufficient fairness criterion. Capacity claims use the capacity-matched group;
+allocation-efficiency claims use the rank-and-buffer-matched group; historical
+memory claims use the history-memory-matched group. Full historical evaluation
+sets are read only for reporting. The teacher estimate, the minimax reweighting,
+and the kept-iterate selection may inspect only the bounded buffer already
+counted in the ledger.
+
+\subsection{Metrics, Statistical Protocol, and Diagnostics}
+
+Primary performance metrics are average online performance, final average
+performance, backward transfer, loss-based forgetting, worst-window retention,
+stable-fact retention, updated-fact accuracy, obsolete-answer persistence, and
+general-capability drift. Capacity diagnostics include effective rank,
+curvature-whitened spectral tail,
+$\operatorname{dim}(\cN_t^{\mathrm{amb}})$,
+$\operatorname{dim}(\cN_t^{\mathrm{amb},(\tau)})$, the numerical rank of the
+deployed operator, the minimax weight vector and buffered worst-window loss per
+round, the kept-iterate index, and the distance of each arm's mean--tail point to
+the offline frontier.
+
+We run at least three seeds and target five for principal results. We report
+means, standard deviations, paired bootstrap confidence intervals over matched
+stream realizations, and per-stream win rates. ``Significant'' is reserved for
+a pre-specified test with an uncertainty interval. Rank sweeps use
+$R\in\{8,16,32,64\}$ and $k\in\{2,4,8\}$ where model size permits, together
+with replay-memory sweeps. Exported checkpoints are audited to verify their
+actual matrix rank; requested rank alone is not accepted as evidence.
+
+\paragraph{Failure criteria.}
+The capacity thesis is weakened if spectral tails and safe-space counts do not
+predict forgetting better than update norm or time, if fixed-budget allocation
+does not beat dense/random policies under matched resources, or if curvature
+cost is uncorrelated with observed historical loss. The method claim fails if
+its gains disappear after accounting for replay, optimizer state, or extra
+training compute.
+
+\subsection{Controlled-Mixture Confirmatory Results}
+\label{sec:controlled-results}
+
+The core theory-consistency checks (D1) have been reproduced both locally and on
+the \texttt{alibaba-10} Linux host with matching gates; the rare-task bridge
+(D2-A) and the nonlinear-transfer probe (D2-B) were run locally with
+source-hash-recorded manifests. All are conditional confirmatory artifacts, not
+neural or benchmark results. The \method{} evaluation (D2-C) is a controlled
+linear-factored-proxy performance result under an internally pre-specified,
+hash-recorded held-out kill test, and is explicitly not a real-LoRA,
+language-model, or benchmark claim.
+
+\paragraph{Expressivity predicts forgetting (D1).}
+On a planted linear-LoRA stream with two disjoint window subspaces
+($d=8$, $T=6$, rank $R=2$), the curvature-weighted Grassmann distance
+$d_t$ (Proposition~\ref{prop:expressivity-metric}) is zero on an identical
+occupied subspace and $d_t=\sqrt{2}$ between same-rank adapters aimed at
+disjoint windows, confirming that equal rank does not imply expressive
+equivalence. Early-window adapters retain early windows better and vice versa
+($50.2$ vs.\ $295.2$ forgetting on late windows), so the distance predicts the
+direction of retention. Across the three occupied-rank points probed here, the
+effective capacity $\kappa_t$ (Proposition~\ref{prop:effective-capacity}) is
+rank-correlated with forgetting ($+1$); we note that the effective-rank and
+update-norm baselines are equally perfectly rank-correlated ($-1$) on these
+three points, so this small sweep establishes consistency with the theory, not
+separation from the baselines, which would require a denser sweep. As an empirical comparator, a full fine-tuning reference at its effective rank
+$r_{\mathrm{eff}}=6$ lands at the same $\kappa_t$-forgetting point as the rank-6
+LoRA adapter (forgetting difference $<10^{-14}$); we read this as a diagnostic
+that full fine-tuning behaves like its effective, not nominal, rank on this
+stream, not as a theorem unifying the two training regimes.
+
+\paragraph{Expressivity predicts rare-task retention (D2-A).}
+On the linear mixture of \citet{huang2026larger} ($K=8$ orthogonal tasks,
+spectra $j^{-2}$, frequencies $k^{-1.5}$), the curvature-whitened $N$-th value
+$\mu_N^{\mathcal{F}}$ of the common block reproduces their predicted critical
+width: at $N^{\mathrm{crit}}=12$, $\mu_{12}^{\mathcal{F}}=0.0204\le\pi_r\lambda_r=0.0229$.
+The tail sum $\kappa_t$ decreases with width, the distance from the occupied
+common subspace to the rare direction decreases, and $\kappa_t$ correlates with
+inverse retention (Spearman $0.82$). Crucially, a width-$N$ encoder optimized by
+Adam reproduces the analytic onset: at $N=10<N^{\mathrm{crit}}$ the rare signal
+is $2.5\times10^{-7}$, while at $N=14>N^{\mathrm{crit}}$ it reaches $0.73$. The
+controlled, non-neural optimizer therefore respects the curvature-weighted
+prediction.
+
+\paragraph{The mechanism does not yet transfer to a minimal nonlinear model (D2-B, negative).}
+We ran the same rare-task probe on a minimal nonlinear model---a two-layer ReLU
+MLP with a width-$N$ bottleneck ($d_{\mathrm{in}}{=}32$, $K{=}8$ tasks), not a
+Transformer---trained by Adam, along two capacity axes: a frozen-encoder adapter
+rank sweep and a full-fine-tuning encoder width sweep. The curvature-weighted
+prediction \emph{fails} to transfer: rare-task loss does not decrease
+monotonically with rank ($2/3$ gates fail) or with width ($3/4$ gates fail); at
+high width the rare task is still not learned, and the $\kappa_t$--loss rank
+correlation is only $0.29$ (rank sweep) and $0.5$ (width sweep) rather than the
+$1.0$ seen in the linear reductions. We report this negative result rather than
+suppress it: the curvature-tail account is presently validated only in the
+controlled linear and Kronecker-quadratic settings, and identifying what breaks
+in the nonlinear regime (optimizer path dependence, feature learning, or a
+mis-specified curvature surrogate) is required future work before any real-LoRA
+or LLM claim. An OLMo-scale confirmation is therefore not yet warranted.
+
+\paragraph{Explicit reallocation redistributes the fixed budget across sources (D2-C).}
+The scale-driven mechanism of \citet{huang2026larger} raises capacity to reduce
+interference; we instead hold capacity fixed and ask whether \emph{how} the
+budget is allocated changes worst-group retention. The arena is a single global
+linear teacher $\bT^\star$ in the capacity-limited regime---$K$ sources with
+correlated input directions, so the rank-$R$ tail is redistributable across
+sources rather than zero-sum, and a fixed budget $R{=}4{<}K$---the only one of
+our regimes with a genuine rank-$R$ floor. Every arm is oracle-free (a function
+of $(\bX,\bY)$ only, verified by a label-blindness hash), sees the same clocked
+windows, and holds the same bounded buffer of $B{=}16$ windows, matching the
+replay baselines' budget. Retention is measured on independent held-out batches:
+$\mathrm{mean}$ is frequency-weighted source retention and $\mathrm{tail}$ is
+worst-group retention. The two are distinct functionals: what
+Corollary~\ref{cor:capacity-lower-bound} bounds is the \emph{aggregate}
+frequency-weighted capacity error at rank $R$, which no allocation rule can
+lower; worst-group retention is instead the object that reweighted reallocation
+\emph{redistributes}---it selects which source the fixed aggregate floor is
+charged to, not whether the floor exists. A closed-form weighted reduced-rank
+solve computed offline gives the reachable frontier, whose best tail is $0.839$.
+
+To prevent tuning to the outcome we fixed a kill criterion in committed source
+\emph{before} running the held-out set---the evaluation script states the criterion,
+the worlds, and a ``run once, report whatever comes out'' rule in its header, and
+the method file freezes the exact configuration as its default---and ran it once.
+We release SHA-256 hashes of these artifacts to pin them; the hashes were recorded
+at release time and pin the released code rather than independently timestamping
+that it predated the numbers, which instead rests on the committed script. The coverage split ($B_u{=}4$,
+$B_g{=}12$) and every hyperparameter were selected on a disjoint development
+family of teacher and stream seeds; the test set is twenty held-out worlds---five
+new teacher geometries $\times$ four new stream seeds, a crossed $5\times4$
+design---disjoint from the development family and from an earlier burned test set,
+and never seen during design. The method is kept only if all three hold, paired
+over the twenty worlds: (a)~\textbf{non-inferior mean} within a $0.01$ margin of
+the strongest-mean baseline (excess-CVaR here); (b)~\textbf{strictly higher tail}
+than the strongest risk-aware replay baseline (excess-CVaR), with a paired
+confidence interval excluding zero; and (c)~\textbf{mechanism contribution},
+tail strictly above the uniform-weight solve on the same coverage buffer---the
+ablation that shares the buffer and closed-form solver but drops the
+reweighting---under the same interval test. All decisions use the cluster-robust
+two-way crossed $95\%$ interval for the teacher$\times$stream design (conservative
+$\mathrm{df}=\min(n_t,n_s)-1=3$); the IID interval is reported only for
+transparency and is never the decision object. If (c) fails, the minimax loop
+adds nothing over ``buffer plus closed-form solve'' and the method line stops
+regardless of (a) and (b).
+
+The verdict is KEEP: all three criteria pass on the held-out set
+(Table~\ref{tab:d2c}). \method{} reaches worst-group retention
+$0.792\pm0.062$, the best of any arm and $94\%$ of the offline frontier's
+$0.839$, at frequency-weighted mean $0.970\pm0.005$. The pure implicit
+allocators---dense sequential updating, reservoir/GSS/MIR replay, and an A-GEM
+gradient-projection defense---cluster at tail $\approx0.58$--$0.60$, the
+implicit-allocation floor, while matching \method{} on mean to within $0.005$.
+The three paired tests, all on the cluster-robust crossed interval:
+(a)~mean vs.\ the strongest-mean baseline (excess-CVaR) is $+0.0027$ (cluster
+$95\%$ CI $[-0.0026,+0.0079]$), inside the $-0.01$ margin; (b)~tail vs.\
+excess-CVaR is $+0.1782$ (cluster $95\%$ CI $[+0.0696,+0.2869]$), excluding
+zero; and (c)~tail vs.\ the uniform-weight solve on the same coverage buffer is
+$+0.0945$ (cluster $95\%$ CI $[+0.0477,+0.1413]$), excluding zero.
+
+The tail gain decomposes into two roughly additive mechanisms, each about
+$+0.09$ over the $\approx0.60$ implicit floor. Reweighting alone
+(\texttt{psr\_no\_coverage}: minimax reweighting on a single uniform reservoir at
+the same budget, no coverage) reaches $0.701$, and coverage alone
+(\texttt{buffer\_rrr\_uniform}: the coverage buffer with uniform weights) reaches
+$0.698$; only their combination reaches $0.792$. We are explicit about which increments are
+interval-strict. Criteria (b) and (c) are: reweighting given coverage clears the
+interval (c), and the full method clears it against the replay bar (b). The
+coverage increment on its own is \emph{not}: measured against
+\texttt{psr\_no\_coverage} it is $+0.0918$ but its cluster interval
+$[-0.0085,+0.1922]$ straddles zero (it wins $18$ of $20$ worlds), so we report
+coverage as a jointly-necessary component of the combination (only coverage and
+reweighting together reach $0.792$), not as an independently significant effect,
+and we do not claim a formal super-additivity of the two increments. We are equally explicit that (b) is a paired-average
+superiority, not uniform dominance: \method{} beats excess-CVaR on $19$ of $20$
+worlds; the mechanism ablation (c) is cleaner still, with \method{} above the
+uniform solve on all $20$.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Hash-recorded held-out kill test for \method{} on the capacity-limited
+regime, over twenty held-out worlds (five new teacher geometries $\times$ four new
+stream seeds, a crossed $5\times4$ design; $R{=}4$, buffer $B{=}16$, oracle-free,
+independent held-out retention). Tail is worst-group retention; ``tail/off'' is
+the fraction of the offline weighted-RRR frontier ($0.839$). Arms are sorted by
+tail. The pure implicit allocators (dense sequential, replay variants, A-GEM,
+EWC) sit at the implicit-allocation floor ($\mathrm{tail}\approx0.58$--$0.60$).
+The two ablations isolate the mechanisms: reweighting on a single reservoir
+(reweight only) and uniform weights on the coverage buffer (coverage only) each
+reach $\approx0.70$, and only their combination (\method{}) reaches $0.792$, at
+matched mean. Criteria (a) vs.\ excess-CVaR, (b) vs.\ excess-CVaR, (c) vs.\ the
+coverage-only ablation---all pass on the cluster-robust crossed interval (see
+text).}
+\label{tab:d2c}
+\begin{tabular}{lccc}
+\toprule
+Arm & Mean & Tail (worst-group) & tail/off \\
+\midrule
+\textbf{\method{} (coverage $+$ reweight)} & $\mathbf{0.970\pm0.005}$ & $\mathbf{0.792\pm0.062}$ & $\mathbf{0.94}$ \\
+\;\;reweight only, single reservoir (abl.)  & $0.970\pm0.005$ & $0.701\pm0.096$ & $0.83$ \\
+\;\;coverage only, uniform weights (abl.)   & $0.973\pm0.006$ & $0.698\pm0.092$ & $0.83$ \\
+\midrule
+grad-defensive (neg.\ control)  & $0.968\pm0.008$ & $0.630\pm0.148$ & $0.75$ \\
+excess-CVaR replay              & $0.968\pm0.007$ & $0.614\pm0.119$ & $0.73$ \\
+A-GEM (grad.\ projection)       & $0.967\pm0.007$ & $0.600\pm0.150$ & $0.71$ \\
+EWC-LoRA                        & $0.965\pm0.009$ & $0.596\pm0.163$ & $0.71$ \\
+sequential (dense)              & $0.966\pm0.008$ & $0.594\pm0.179$ & $0.71$ \\
+MIR replay                      & $0.960\pm0.010$ & $0.589\pm0.137$ & $0.70$ \\
+GSS replay                      & $0.966\pm0.007$ & $0.585\pm0.152$ & $0.70$ \\
+uniform replay                  & $0.965\pm0.008$ & $0.577\pm0.152$ & $0.69$ \\
+\midrule
+offline oracle (reachable)      & --- & $0.839$ & $1.00$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Off-floor robustness: no harm and graceful degradation.}
+The redistribution gain should appear only where a rank-$R$ floor exists, and the
+reallocation must not misbehave elsewhere. We therefore ran two off-floor checks
+at the same frozen coverage config (three teachers $\times$ two streams each). On
+the \emph{compressible} regime (no rank-$R$ floor: the teacher fits within the
+budget) all arms are near-perfect and \method{} does no harm
+($\mathrm{mean}/\mathrm{tail}=0.992/0.988$, tying the coverage-only solve's
+$0.992/0.988$ and excess-CVaR's $0.992/0.988$). On the \emph{conflicting} regime
+(an impossibility control where sources demand contradictory targets, so the tail
+is largely unrecoverable in principle) every arm degrades sharply; \method{}
+degrades gracefully, matching the coverage-only solve on mean ($0.530$ vs.\
+$0.531$) and on tail ($0.237$ vs.\ $0.235$), and it does not fall below the
+uniform solve or manufacture a spurious advantage---its small tail edge over
+excess-CVaR ($0.237$ vs.\ $0.189$) is the same order as on the capacity floor and
+is not claimed as a rescue. The reallocation helps at the floor and is inert or
+safe away from it.
+
+\paragraph{Scope of the \method{} result.}
+D2-C is a controlled linear-factored-proxy result. It authorizes no claim about
+real LoRA training, language models, or benchmark performance, and the tail gain
+is a paired-average effect on held-out geometries rather than a per-world
+guarantee. Combined with the negative transfer in D2-B, the honest boundary is
+that explicit reallocation \emph{redistributes} the fixed budget to raise
+worst-group retention at matched frequency-weighted mean---it does not and cannot
+lower the aggregate capacity floor---\emph{in the linear regime where that floor
+is exactly characterized}; a nonlinear and real-LoRA confirmation is required
+future work.

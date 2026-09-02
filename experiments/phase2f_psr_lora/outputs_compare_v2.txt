@@ -1,0 +1,77 @@
+C:\Users\lenovo\Desktop\ICLR_Fixed_Budget_Continual_PEFT\experiments\phase2f_psr_lora\baselines.py:204: RuntimeWarning: overflow encountered in matmul
+  B, A = B - lr * (g @ A.T), A - lr * (B.T @ g)
+C:\Users\lenovo\Desktop\ICLR_Fixed_Budget_Continual_PEFT\experiments\phase2f_psr_lora\baselines.py:202: RuntimeWarning: invalid value encountered in matmul
+  M = B @ A
+  world t20270001/s7001: psr tail 0.827  cvar tail 0.781  unif-rrr tail 0.748  offline 0.862
+  world t20270001/s7002: psr tail 0.823  cvar tail 0.686  unif-rrr tail 0.772  offline 0.862
+  world t20270001/s7003: psr tail 0.808  cvar tail 0.625  unif-rrr tail 0.723  offline 0.862
+  world t20270001/s7004: psr tail 0.839  cvar tail 0.706  unif-rrr tail 0.731  offline 0.857
+  world t20270002/s7001: psr tail 0.616  cvar tail 0.339  unif-rrr tail 0.531  offline 0.845
+  world t20270002/s7002: psr tail 0.671  cvar tail 0.483  unif-rrr tail 0.598  offline 0.837
+  world t20270002/s7003: psr tail 0.595  cvar tail 0.487  unif-rrr tail 0.490  offline 0.838
+  world t20270002/s7004: psr tail 0.819  cvar tail 0.527  unif-rrr tail 0.530  offline 0.818
+  world t20270003/s7001: psr tail 0.545  cvar tail 0.625  unif-rrr tail 0.544  offline 0.756
+  world t20270003/s7002: psr tail 0.487  cvar tail 0.465  unif-rrr tail 0.501  offline 0.783
+  world t20270003/s7003: psr tail 0.527  cvar tail 0.522  unif-rrr tail 0.511  offline 0.752
+  world t20270003/s7004: psr tail 0.574  cvar tail 0.536  unif-rrr tail 0.527  offline 0.763
+  world t20270004/s7001: psr tail 0.851  cvar tail 0.801  unif-rrr tail 0.833  offline 0.908
+  world t20270004/s7002: psr tail 0.734  cvar tail 0.822  unif-rrr tail 0.717  offline 0.914
+  world t20270004/s7003: psr tail 0.730  cvar tail 0.788  unif-rrr tail 0.702  offline 0.903
+  world t20270004/s7004: psr tail 0.846  cvar tail 0.810  unif-rrr tail 0.797  offline 0.911
+  world t20270005/s7001: psr tail 0.629  cvar tail 0.645  unif-rrr tail 0.518  offline 0.830
+  world t20270005/s7002: psr tail 0.686  cvar tail 0.420  unif-rrr tail 0.428  offline 0.830
+  world t20270005/s7003: psr tail 0.442  cvar tail 0.424  unif-rrr tail 0.440  offline 0.830
+  world t20270005/s7004: psr tail 0.516  cvar tail 0.407  unif-rrr tail 0.497  offline 0.823
+
+================ per-arm summary (mean +/- sd over 20 worlds) ================
+  psr_lora             mean 0.971+-0.009   tail 0.678+-0.133   (tail/offline 0.81)
+  psr_grad_defensive   mean 0.970+-0.012   tail 0.634+-0.136   (tail/offline 0.76)
+  agem                 mean 0.969+-0.010   tail 0.608+-0.145   (tail/offline 0.72)
+  sequential           mean 0.969+-0.010   tail 0.608+-0.145   (tail/offline 0.72)
+  buffer_rrr_uniform   mean 0.971+-0.010   tail 0.607+-0.127   (tail/offline 0.72)
+  uniform_replay       mean 0.969+-0.010   tail 0.605+-0.138   (tail/offline 0.72)
+  excess_cvar          mean 0.969+-0.012   tail 0.595+-0.150   (tail/offline 0.71)
+  mir_replay           mean 0.968+-0.010   tail 0.583+-0.152   (tail/offline 0.70)
+  ewc_lora             mean 0.966+-0.011   tail 0.583+-0.167   (tail/offline 0.69)  [diverged 1/20]
+  gss_replay           mean 0.969+-0.010   tail 0.579+-0.139   (tail/offline 0.69)
+  OFFLINE oracle       tail 0.839 (reachable best)
+
+================ PRE-REGISTERED KILL CRITERION ================
+(decision uses the CLUSTER-ROBUST CI for the 5x4 crossed design; the IID
+ CI is shown only to expose how much clustering widens the interval)
+(a) NON-INFERIOR MEAN vs agem (margin -0.01) -> PASS
+      paired mean +0.0023;  wins 14/20
+      IID 95%CI      [+0.0009,+0.0037]   (n=20, NOT used for decision)
+      cluster 95%CI  [-0.0011,+0.0057]   (t_df=3, se=0.0011; var comps teacher/stream/resid 2.62e-06/8.72e-07/7.81e-06)
+(b) STRICTLY BETTER TAIL vs excess_cvar -> FAIL
+      paired mean +0.0833;  wins 16/20
+      IID 95%CI      [+0.0331,+0.1334]   (n=20, NOT used for decision)
+      cluster 95%CI  [-0.0531,+0.2196]   (t_df=3, se=0.0428; var comps teacher/stream/resid 7.44e-03/0.00e+00/6.94e-03)
+(c) MECHANISM CONTRIBUTES vs buffer_rrr_uniform -> FAIL
+      paired mean +0.0714;  wins 19/20
+      IID 95%CI      [+0.0367,+0.1060]   (n=20, NOT used for decision)
+      cluster 95%CI  [-0.0017,+0.1444]   (t_df=3, se=0.0229; var comps teacher/stream/resid 1.21e-03/0.00e+00/5.68e-03)
+
+VERDICT: STOP / revise -- a pre-registered criterion failed
+
+================ OFF-FLOOR ROBUSTNESS (no-harm / graceful) ================
+[off-floor] compressible:
+    psr_lora             mean 0.993 tail 0.989
+    excess_cvar          mean 0.992 tail 0.989
+    buffer_rrr_uniform   mean 0.993 tail 0.989
+[off-floor] conflicting:
+    psr_lora             mean 0.465 tail -0.229
+    excess_cvar          mean 0.436 tail -0.298
+    buffer_rrr_uniform   mean 0.465 tail -0.230
+[off-floor] compressible mean not hurt: PASS; conflicting graceful (>= uniform solve): PASS
+
+================ RESOURCE LEDGER (memory matched, compute NOT) ================
+  buffer budget (ALL arms): 16 windows = 591360 bytes (d=24, batch=96); adapter 2*d*R=192 floats
+  stream length: 240 windows/world
+  psr_lora               18.64 ms/window   [13 weighted-RRR SVD/window]
+  buffer_rrr_uniform      4.04 ms/window   [1 weighted-RRR SVD/window]
+  excess_cvar            16.03 ms/window   [20 GD steps/window (+ up to ceil(tau*B) replay windows)]
+  uniform_replay          3.85 ms/window   [20 GD steps/window (+1 replay window)]
+  agem                   16.29 ms/window   [20 GD steps/window (+ buffer-grad projection)]
+  sequential              2.07 ms/window   [20 GD steps/window (no replay)]
+  -> PSR-LoRA trades compute for the tail: 9.0x the wall-clock of the cheapest arm (sequential); this is disclosed, not matched.

@@ -1,0 +1,8 @@
+[
+  {
+    "name": "conv-seed1",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && for i in $(seq 1 1440); do f=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits -i 1); if [ \"$f\" -ge 6000 ]; then break; fi; sleep 60; done && CUDA_VISIBLE_DEVICES=1 /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --update-cap-per-class 400 --epochs 3 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 1 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_converged",
+    "gpu_gib": 0,
+    "timeout_seconds": 43200
+  }
+]

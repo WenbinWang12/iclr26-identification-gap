@@ -1,0 +1,127 @@
+\section{Introduction}
+\label{sec:introduction}
+
+A model that learns fifteen tasks in sequence under one fixed LoRA adapter forgets.
+The standard reading is that capacity ran out: the adapter's rank cannot hold
+fifteen tasks' worth of representation change, so methods allocate rank more
+cleverly, penalise interference between task subspaces, or compress and retrieve old
+subspaces. All of this treats forgetting as a property of the parameter update.
+
+Part of it is not. When a prompted model is scored by restricted argmax over a
+verbalizer set --- \texttt{False}/\texttt{True}, \texttt{Bad}/\texttt{Good} --- the
+decision depends on the \emph{difference} between the label logits, and that
+difference can be corrected by a per-label additive offset. An offset has zero rank.
+It costs a handful of floats. If a task's accuracy can be restored by one, then
+whatever was lost was never a capacity problem, and rank spent on it is wasted.
+
+This paper measures how much of the forgetting on a standard $15$-task stream is of
+that kind, and then tries to fix it.
+
+\paragraph{The term, and a boundary condition that makes it falsifiable.}
+Write $R_g^{\mathrm{orc}}$ for task $g$'s accuracy under the best offset chosen
+\emph{knowing $g$}, and $R_g^{\mathrm{shr}}$ for the best offset shared across all
+tasks. The gap $\Delta^{\mathrm{id}}_g = R_g^{\mathrm{orc}} - R_g^{\mathrm{shr}}$ is
+what task identity would buy at the output layer, and it is separate from
+representation drift by construction. It also has a sharp boundary: if tasks'
+verbalizer sets are pairwise disjoint, a single offset can serve every task at once
+and $\Delta^{\mathrm{id}} \equiv 0$ exactly (Proposition~\ref{prop:disjoint}). The
+term exists only where output tokens are \emph{shared}, and on Order-4 ten of
+fifteen tasks share theirs. We check the zero prediction in every run: $0$
+violations, worst deviation $0.0$.
+
+\paragraph{What we measure.}
+Under one shared offset the gap is $3.13$~pp. Under an offset shared only within a
+\emph{scope} --- the set of tasks with the same verbalizer, readable from the prompt
+without knowing which task is being asked --- it is $0.00$~pp, CI $[-1.71,+1.71]$.
+The scope index recovers $+1.51$~pp, CI $[+0.43,+2.74]$; adding true task identity
+on top buys a further $+0.02$~pp pooled, but that pooled figure averages over
+singleton scopes where our implementation makes the two rungs identical by
+construction, and on the multi-task scopes where the comparison is live task
+identity buys $+1.10$~pp, CI $[+0.40,+1.83]$
+(Section~\ref{sec:gap-real}, disclosure~(iii)). So most of what the output layer is
+missing is the scope, which is free at inference time; the residual attributable to
+the task label is small but not zero, and we do not claim it vanishes.
+
+\paragraph{Three parameter-space interventions cannot touch it.}
+We froze three protocols and ran them: an orthogonality penalty of O-LoRA's form,
+anchoring the verbalizer logits to their post-training values, and anchoring them in
+the gauge-fixed coordinates the theory says are the identified ones. None improved
+task-agnostic accuracy; at the strengths their own gates selected two reduced it;
+and the one built from the correct symmetry
+argument did the most damage. The per-scope offset kept recovering the same
+$+1.51$~pp on top of each. Three failures do not prove no parameter-space fix
+exists, and we say so in Section~\ref{sec:limitations} --- but they do locate the
+term outside the space those methods act in.
+
+\paragraph{The cheap fix fails, and the failure is informative.}
+Section~\ref{sec:enumeration} enumerates the rules those constraints admit, and
+there are two: one keeps past examples and lets the model go stale, the other keeps
+the current model and gives up the examples. Keeping both is the definition of
+rehearsal, so the list is complete. Take them in order.
+The first is to store the table: at each task boundary fit that task's
+optimum on its own data, keep it, and apply the scope's Chebyshev centre at test
+time. No task ID, no stored examples, $33$ floats. It is $5.08$~pp \emph{worse than
+applying no offset at all}, damaging $11$ of $12$ tasks. The design isolates why. On
+singleton scopes the Chebyshev centre of a one-element table is that element, so
+aggregation, routing, and the gauge cannot be responsible --- and those scopes still
+lose $4.18$~pp, CI $[-6.61,-1.76]$. What remains is staleness: an offset fitted
+against $\theta_g$ is wrong at $\theta_{15}$, measured at $6.16$~pp mean. The
+$+1.51$~pp is real but reachable only by fitting against the \emph{current} model.
+
+\paragraph{The second route does not survive its own control either.}
+That leaves the other admissible row: fit against the current model and give up the
+stored examples. The only data satisfying both is the query batch itself.
+Section~\ref{sec:bpo} tests the
+offset computed from that batch's logits alone --- no labels, no task identity,
+\emph{zero} stored floats, no hyperparameter. It gains $+4.40$~pp over a refit
+global offset and then fails the control we pre-registered against our own splits,
+inverting to $-0.67$~pp once the query mix is skewed. We report it as an artefact of
+our evaluation protocol. So the paper's contribution is a constraint and a closed
+design space, not a technique.
+
+\paragraph{Contributions.}
+\begin{enumerate}\itemsep2pt
+\item A decomposition separating the identification gap from representation drift,
+  with an exactly-zero boundary condition (Proposition~\ref{prop:disjoint}) that
+  makes it falsifiable rather than merely definable, and a minimax
+  characterisation of the best shared offset as a Chebyshev radius
+  (Proposition~\ref{prop:cheb}). The budgeted extension is proved for binary
+  shared verbalizers and \textbf{open} beyond them; we state which of our numbers
+  rest on which (Section~\ref{sec:theory}).
+\item Measurement on Order-4: the gap is $3.13$~pp under a global offset and
+  $0.00$~pp under a per-scope one; scope recovers $+1.51$~pp and task identity
+  adds $+1.10$~pp, CI $[+0.40,+1.83]$, on top when restricted to multi-task scopes
+  where the comparison is measurable (Section~\ref{sec:gap-real}).
+\item Three frozen parameter-space protocols, all negative, with the most
+  principled doing the most damage (Section~\ref{sec:three-anchors}).
+\item A negative result with an isolated mechanism: storing per-task offsets is
+  worse than storing nothing, and singleton scopes locate the cause in staleness
+  with aggregation, routing, and gauge ruled out by construction
+  (Section~\ref{sec:sso}).
+\item An enumeration showing those constraints admit exactly two non-vacuous
+  rules (Section~\ref{sec:enumeration}), and a test of the second one ---
+  computing the offset from the unlabelled query batch --- reported as an
+  \emph{artefact of our
+  own evaluation split} rather than a method: it gains $+4.40$~pp on a
+  class-balanced audit set and inverts to $-0.67$~pp at a $70{:}30$ class mix,
+  failing the control criterion we had pre-registered to catch exactly that
+  (Section~\ref{sec:bpo}). With Section~\ref{sec:sso} this closes the design space
+  instead of extending it.
+\item Four pre-registered rules in that second row, all of which fail their own
+  criteria, and one mechanism that survives them: within each task, the gain that
+  query-batch calibration realises is predicted by the magnitude of the correction
+  it proposes (median rank correlation $+0.72$, positive in $8$ of $8$ tasks, on
+  five seeds used to fit nothing). Thresholding on that magnitude still leaves a
+  $-2.34$~pp worst case against a pre-registered $-1.0$~pp floor. We can therefore
+  say why the row is empty, not merely that it is.
+\end{enumerate}
+
+\paragraph{How to read the evidence.}
+Every phase was frozen with its criteria, thresholds, and predeclared outcomes
+before it was implemented, each protocol SHA-pinned; we report the criteria that
+failed alongside those that passed, including one we had predicted would fail. All
+comparisons are internal --- arms differing in one component at an identical
+budget, identical splits, identical seeds --- and the official test files are never
+opened, so our absolute accuracies are not comparable to published leaderboard
+numbers and we do not place them in such tables. We run no published continual-PEFT
+baseline, and make no claim against one.

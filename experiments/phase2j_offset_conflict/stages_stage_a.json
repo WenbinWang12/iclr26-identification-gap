@@ -1,0 +1,41 @@
+[
+  {
+    "name": "01-fetch-verify",
+    "cmd": "/mnt/data/wenbin/phase2_torch_venv/bin/python /mnt/data/wenbin/iclr26/fetch_resume.py",
+    "gpu_gib": 0,
+    "timeout_seconds": 10800
+  },
+  {
+    "name": "02-offsets-unit-tests",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m pytest experiments/phase2j_offset_conflict/tests/test_offsets.py -q",
+    "gpu_gib": 0,
+    "timeout_seconds": 1800
+  },
+  {
+    "name": "03-smoke-t5-small",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.wiring_smoke --model google-t5/t5-small --steps 20 --batch-size 4 --eval-n 48 --out /mnt/data/wenbin/iclr26/runs/phase2j_smoke_small",
+    "gpu_gib": 2,
+    "requires": ["01-fetch-verify", "02-offsets-unit-tests"],
+    "timeout_seconds": 5400
+  },
+  {
+    "name": "04-verbalizer-audit",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.verbalizer_audit --model google-t5/t5-large",
+    "gpu_gib": 0,
+    "timeout_seconds": 1800
+  },
+  {
+    "name": "05-smoke-t5-large-bf16",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.wiring_smoke --model google-t5/t5-large --dtype bfloat16 --steps 30 --batch-size 4 --eval-n 64 --out /mnt/data/wenbin/iclr26/runs/phase2j_smoke_large_bf16",
+    "gpu_gib": 3,
+    "requires": ["03-smoke-t5-small"],
+    "timeout_seconds": 10800
+  },
+  {
+    "name": "06-smoke-t5-large-longer",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2j_offset_conflict.wiring_smoke --model google-t5/t5-large --dtype bfloat16 --steps 200 --batch-size 4 --grad-accum 16 --eval-n 128 --out /mnt/data/wenbin/iclr26/runs/phase2j_smoke_large_accum",
+    "gpu_gib": 3,
+    "requires": ["05-smoke-t5-large-bf16"],
+    "timeout_seconds": 14400
+  }
+]

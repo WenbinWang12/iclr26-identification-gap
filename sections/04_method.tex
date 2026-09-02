@@ -1,0 +1,177 @@
+\section{The Design Space the Two Constraints Leave}
+\label{sec:method}
+
+Section~\ref{sec:gap-real} will show that one offset per scope recovers
+$+1.51$~pp over a single global offset, and Section~\ref{sec:three-anchors} that three parameter-space interventions
+leave that term untouched. But the per-scope offset as measured there is refit at
+every stage from the \texttt{risk} logits of all seen tasks. It re-reads old data,
+so it is a rehearsal ceiling and not something one can deploy.
+
+This section does not propose a method. It derives the object a deployable rule
+would have to approximate, then enumerates the rules our constraints admit, and
+the enumeration is short: two. Section~\ref{sec:sso} tests the first,
+Section~\ref{sec:bpo} the second. Both fail, for different and separately
+measurable reasons. The closure of this small design space, rather than a
+technique, is what the paper delivers.
+
+\paragraph{The constraints, fixed before any candidate.}
+At inference we may read the prompt's option list and nothing else --- no task
+index. Between tasks we may store a bounded amount of state, but no examples and
+no logits of past tasks. And we may not change the training objective:
+Section~\ref{sec:three-anchors}'s three attempts to fix this in parameter space
+all failed, twice harmfully, so a fourth is not a design we are entitled to
+propose. A rule is \emph{admissible} when it satisfies all three.
+
+\subsection{The target object is a Chebyshev centre}
+
+Fix a scope $S$ with labels $\ell_1,\dots,\ell_{K_S}$. For each member task
+$g\in\mathrm{mem}(S)$, let $\bz_g\in\R^{K_S}$ be an offset on those labels that
+maximises $g$'s balanced accuracy, gauge-fixed to zero mean --- adding a constant
+to every coordinate leaves the restricted argmax unchanged, so only $P_0\bz_g$ is
+identified. A single shared offset $\bb$ on this scope must serve all members at
+once, and the natural worst-case question is which $\bb$ minimises the largest
+distance to any member's optimum.
+
+\begin{proposition}[Logit-space minimax; unconditional]
+\label{prop:cheb}
+Let $Z_S=\{P_0\bz_g : g\in\mathrm{mem}(S)\}$. Then
+\begin{equation}
+  \min_{\bb\in\R^{K_S}}\ \max_{g\in\mathrm{mem}(S)}\ \|\bb-P_0\bz_g\|_2
+  \;=\; r_S,
+  \label{eq:cheb}
+\end{equation}
+where $r_S$ is the Chebyshev radius of $Z_S$, the minimum is attained at the
+unique Chebyshev centre of $Z_S$, and $r_S\ge\tfrac{1}{2}\mathrm{diam}(Z_S)$.
+Moreover $r_S=q_1(S)$, the $m=1$ quantization radius of Section~\ref{sec:ladder}.
+\end{proposition}
+
+Proposition~\ref{prop:cheb} is stated in logit space and holds with no
+assumptions. We are deliberate about what it does \emph{not} say: the
+corresponding statement in accuracy space, that some task must lose an amount
+proportional to $r_S$, requires a margin-density constant $\kappa$ and is false
+without it --- two tasks with margins $\pm10$ can be rescaled to margins
+$\pm 0.01$, shrinking every distance by $1000\times$ while the accuracy loss stays
+at $1$. Distance and loss are different quantities. We report the measured
+$\kappa$ wherever the accuracy-space form is used, and its worst value on this
+stream is $0.0182$, on WiC. Section~\ref{sec:three-anchors} contains a
+counterexample from our own runs in which $q_1$ and $q_2$ both shrank while
+accuracy fell, so this caveat is load-bearing rather than pro forma.
+
+One feature of \eqref{eq:cheb} is what makes the enumeration below finite: the
+target shared offset depends on the member tasks' \emph{optima} and on nothing
+else. Not on their examples, not on their logits, not on their order. An
+admissible rule therefore does not need to reconstruct old data --- it needs
+current-model estimates of those optima. The whole question is where an
+admissible rule can get them.
+
+\subsection{Two admissible sources, and no third}
+\label{sec:enumeration}
+
+An admissible rule must produce an offset for the query's scope using only
+(i) bounded state carried across task boundaries and (ii) the query itself. Any
+estimate of $\bz_g$ is fitted from logits, and logits require a model and
+examples. Cross the two:
+
+\begin{center}\small
+\begin{tabular}{llll}
+\toprule
+examples used & model used & admissible? & where \\
+\midrule
+past tasks' & current & no --- re-reads old data & the rehearsal ceiling \\
+past tasks' & \emph{as of their own stage} & yes & \S\ref{sec:sso} (SSO) \\
+the query batch & current & yes & \S\ref{sec:bpo} (BPO) \\
+none & --- & yes, but vacuous & $R^{\mathrm{raw}}$, the floor \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\noindent The first row is Section~\ref{sec:gap-real}'s $+1.51$~pp, and it is a
+ceiling precisely because it sits outside the constraint set. The last row is the
+no-offset floor. The two admissible non-vacuous rows are the two candidates, and
+they differ in exactly one respect: which of the two arguments to
+$\mathrm{acc}_g(\theta,\bb)$ they are allowed to keep current. SSO keeps the
+examples and lets the model go stale; BPO keeps the model and gives up the
+examples. There is no admissible rule that keeps both, because keeping both is
+the definition of rehearsal.
+
+\paragraph{Candidate 1: store the optima (SSO).}
+Maintain a table indexed by scope. When training on task $g$ finishes, fit
+$\bz_g$ on $g$'s own \texttt{risk} split using $g$'s current logits, at that
+moment; gauge-fix it to zero mean and append $P_0\bz_g$ to the entry for
+$\mathrm{scope}(g)$; discard the logits and the examples. At inference, read the
+option list, look up its scope, and apply the Chebyshev centre of that scope's
+stored optima. This is admissible: step 1 touches only the task being trained, the
+lookup key is the option list rather than a task index, and inference-time
+arithmetic changes nothing about training --- the objective, the optimiser and the
+$2.36$M trainable scalars are bit-identical to the \texttt{none} arm. The stored
+state is
+\begin{equation}
+  \textstyle\sum_S |\mathrm{table}[S]|\cdot(K_S-1)
+  \label{eq:cost}
+\end{equation}
+scalars --- one gauge-fixed vector per (task, scope) pair, each with $K_S-1$
+degrees of freedom after zero-mean fixing. On the $15$-task stream the final table
+holds $12$ entries and $\mathbf{33}$ floats against $2.36$M trainable parameters.
+Equation~\eqref{eq:cost} is asserted by test, not by inspection, and reported at
+every stage of every run.
+
+\paragraph{The risk this candidate accepts, stated before we measured it.}
+The fit uses $g$'s logits \emph{at the time $g$ was trained}, and the model keeps
+moving afterwards. A stored optimum can therefore go stale, and unlike the
+rehearsal ceiling --- which refits from current logits of all seen tasks and so is
+always fresh --- SSO has no mechanism to notice. Whether staleness costs more than
+rehearsal-freeness buys is an empirical question, it is the question our frozen
+criteria were written to answer, and Proposition~\ref{prop:disjoint} gives it a
+clean probe: on a singleton scope the Chebyshev centre of a one-element set
+\emph{is} that element, so the singleton gap
+$|R^{\mathrm{sso}}-R^{\mathrm{orc}}|$ measures pure staleness with no aggregation
+confound. Section~\ref{sec:sso} reports that it costs $5.08$~pp below the
+no-offset floor, and that the singleton probe carries $-4.18$~pp of it.
+
+\paragraph{Candidate 2: compute the offset from the query batch (BPO).}
+Give up stored optima entirely and read the only current-model logits an
+admissible rule may touch --- the query batch's own. Section~\ref{sec:bpo} states
+the rule and reports it. It gains $+4.40$~pp over the global offset, and its own
+pre-registered control shows the gain is an artefact of our class-balanced
+evaluation split rather than a property of the rule.
+
+\paragraph{The query-batch row is where we spent the most effort, and it is empty.}
+Three separately pre-registered rules occupy this row, and all three fail. BPO
+fails its own control, as above. A separation-gated invariant offset (SIO), built
+to remove the dependence of batch calibration on the batch's class marginal, fails
+every one of its six frozen criteria on real logits: the two-component structure it
+fits is absent, since the class margin $s=z_1-z_0$ is unimodal with a median
+separation of $0.89$ standard deviations, and the gate abstains on $78.6\%$ of
+batches. A variance-gated rule (VGC), built after inspecting $210$ stored batches
+and gated on $\mathrm{sd}(s)$, passes its criteria on the development seed and then
+reverses on held-out seeds: worst-case gain $-9.38$~pp against a floor of $-3.0$,
+median gain $0.00$~pp, and a within-task rank correlation whose median flips sign.
+A third rule (SCG) gates batch calibration on the magnitude of the correction it
+proposes rather than on any property of the batch, and it fails its worst-case
+criterion by $1.34$~pp on $2$ of $350$ held-out batches ($-2.34$ against a $-1.0$~pp
+floor) while passing its mean-gain and non-vacuity criteria.
+
+What survives all four attempts is a measured asymmetry plus one confirmed
+mechanism, neither of which is a rule. The asymmetry: batch calibration gains
+$+5.40$~pp on average over the raw predictor but loses up to $14.84$~pp, and it loses
+precisely on the batches where the oracle offset has almost nothing to gain
+($2.34$~pp of headroom against $9.38$~pp elsewhere). The mechanism, pre-registered
+and tested on five seeds used to fit nothing: within each task, the gain batch
+calibration realises is predicted by the magnitude of its own proposed correction,
+with a median rank correlation of $+0.72$ that is positive in $8$ of $8$ tasks. A
+single global threshold on that magnitude is nonetheless not enough to make the rule
+safe out of sample. So the row is a negative result about an admissible
+\emph{source} --- one whose failure we can now attribute, which is more than we could
+say of it before.
+
+\paragraph{Generalisation to $m>1$, and why nothing rests on it.}
+Allowing $m$ centres per scope replaces the Chebyshev centre with a minimax
+$m$-centre codebook of radius $q_m(S)$ and requires a task-free router to pick a
+centre. We implement it and report it for candidate 1, using the honest prototype
+router (nearest stored class-mean in encoder state, no task index). Two caveats,
+both recorded before the run: the router needs per-task state that
+Equation~\eqref{eq:cost} does not cover, and we report that separately rather
+than folding it into the cost; and Section~\ref{sec:gap-real}'s finding that the
+$m$-centre codebook bought exactly $0.0000$ over $m=1$ makes us expect $m>1$ to
+buy nothing here either. It did not: $+0.52$~pp with a CI spanning zero. Every
+primary number in this paper is an $m=1$ number, which needs no router at all.

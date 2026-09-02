@@ -1,0 +1,36 @@
+[
+  {
+    "name": "qoc-unit-tests",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m pytest experiments/phase2k_qoc/tests experiments/phase2j_offset_conflict/tests -q",
+    "gpu_gib": 0,
+    "timeout_seconds": 900
+  },
+  {
+    "name": "qoc-seed1",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 1 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_full",
+    "gpu_gib": 3,
+    "timeout_seconds": 28800,
+    "requires": ["qoc-unit-tests"]
+  },
+  {
+    "name": "qoc-seed2",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 2 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_full",
+    "gpu_gib": 3,
+    "timeout_seconds": 28800,
+    "requires": ["qoc-unit-tests"]
+  },
+  {
+    "name": "qoc-seed3",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.run_qoc --n-tasks 15 --cap-per-class 200 --risk-per-class 64 --audit-per-class 64 --eval-batch-size 2 --m-values 1,2,4 --seed 3 --out /mnt/data/wenbin/iclr26/runs/phase2k_qoc_full",
+    "gpu_gib": 3,
+    "timeout_seconds": 28800,
+    "requires": ["qoc-unit-tests"]
+  },
+  {
+    "name": "qoc-decide",
+    "cmd": "cd /mnt/data/wenbin/iclr26 && /mnt/data/wenbin/phase2_torch_venv/bin/python -m experiments.phase2k_qoc.decide --runs /mnt/data/wenbin/iclr26/runs/phase2k_qoc_full --seeds 1,2,3 --m 4",
+    "gpu_gib": 0,
+    "timeout_seconds": 3600,
+    "requires": ["qoc-seed1", "qoc-seed2", "qoc-seed3"]
+  }
+]

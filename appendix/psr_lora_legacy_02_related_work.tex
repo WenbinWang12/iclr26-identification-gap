@@ -1,0 +1,75 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Shallow versus deep forgetting: established, and not ours.}
+The decomposition of forgetting into a representation term and a decision-boundary
+term is prior art, and we claim none of it. \citet{davari2022probing} defined
+\emph{representation forgetting} as the change in the accuracy of an
+\emph{optimal linear probe} before and after a new task. Subsequent work names the
+split directly as shallow versus deep forgetting --- shallow being what re-fitting
+a linear head recovers, deep being irreversible loss of feature separability ---
+and supplies neural-collapse asymptotics for it
+\citep{headscollapse2025}. Related diagnostics measure recoverability through an
+affine map on hidden states \citep{lostorhidden2026}, and function-space theory
+predicts forgetting from NTK eigenmodes \citep{functionspace2026}.
+
+All four are vision classification with per-task heads, and this is the structural
+gap we work in. Where each task owns a private classifier, ``re-fit the head'' is
+a per-task operation and the shallow term is recoverable \emph{by construction}.
+Under generative PEFT with a single decoder there is no per-task head to re-fit:
+the cheap fix must be an offset on $O(|Y_g|)$ verbalizer logits, and it must be
+selected without a task index. The quantity that then governs what is recoverable
+is not the shallow term but its \emph{identification} component
+(Section~\ref{sec:setup}), which is identically zero in the per-task-head setting
+and therefore invisible to all four papers. The functional-space analysis of
+\citet{functionspace2026} states this boundary itself, listing token-level
+cross-entropy over a large vocabulary as breaking its factorisation.
+
+\paragraph{Low-rank adaptation and rank-budget allocation.}
+LoRA represents an update with low-rank factors over a frozen backbone
+\citep{hu2022lora}; adapters give a related bottleneck \citep{houlsby2019adapter};
+AdaLoRA allocates a parameter budget adaptively within one-shot fine-tuning
+\citep{zhang2023adalora}. A recent line allocates rank across a stream: E$^2$-LoRA
+concentrates energy and frees rank dynamically \citep{li2026e2lora}, NSR
+compresses, stores, and reallocates LoRA subspaces \citep{yoon2026nsr}, LiteLoRA
+decides between reusing an adapter and recruiting a new one
+\citep{dieudonne2026litelora}, SLICE initialises factors with replay-aware
+gradient surgery \citep{pasquali2026slice}, and ProCL reuses program-memory slots
+\citep{le2026procl}.
+
+Every one of these allocates \emph{parameters}, on an average-case signal.
+E$^2$-LoRA's closest to ours in spirit --- its signal is output-drift energy and its
+own ablation shows the average-only objective is what limits it --- and that is
+precisely the failure mode our measurements point at from the other side: rank
+spent on a term that a $13$-float output-layer table removes. We do not claim to
+beat these methods, and we did not run them; the comparison we make is internal
+and is described as such in Section~\ref{sec:three-anchors}.
+
+\paragraph{Orthogonality and anchoring in continual PEFT.}
+O-LoRA assigns successive tasks orthogonal low-rank subspaces
+\citep{wang2023olora}; classical regularisers penalise movement in parameter
+space \citep{kirkpatrick2017ewc} or project gradients
+\citep{lopezpaz2017gem,farajtabar2020ogd,saha2021gpm}. We re-implement an
+orthogonality penalty of O-LoRA's form inside our own harness and report what it
+does to the identification gap. We state plainly, here and in
+Section~\ref{sec:three-anchors}, that this is our re-implementation at our budget
+and not a reproduction of the published numbers, so no comparison against the
+original table is made or implied.
+
+\paragraph{Forgetting in continual language-model fine-tuning.}
+Continual fine-tuning of LMs and the TRACE benchmark document substantial
+forgetting \citep{luo2023forgetting,wang2023trace}. These are the phenomena our
+stream instantiates. What they do not separate is how much of the measured drop is
+recoverable at inference without a task index --- the question
+Section~\ref{sec:gap-real} answers on a $15$-task stream.
+
+\paragraph{Quantization, covering, and minimax centres.}
+The object our method computes is a Chebyshev centre, and the budgeted version is
+a minimax $m$-centre covering problem, i.e.\ discrete $k$-centre
+\citep{gonzalez1985kcentre,hochbaum1985kcentre}. We use exactness only where it
+holds: the $1$-centre is exact and unique, and for $m>1$ our construction is an
+upper bound on the covering radius rather than the optimum, which we say wherever
+an $m>1$ number appears. Rate--distortion framings of adapter budgets
+\citep{shannon1959rate} motivate the vocabulary but supply no bound we rely on,
+because the binding constraint here is identifiability rather than description
+length.

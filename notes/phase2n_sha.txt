@@ -1,0 +1,3 @@
+420383b4195f95e257f0413489e54985c41c2ee06e15bddb33ad2dcb53d23b65 *notes/phase2n_gauge_fixed_anchor_protocol.md
+b708c83f6726ee465194d482ed5decd0f524e8df11812c369b573b60e8526280 *notes/phase2n_gauge_fixed_anchor_protocol.md
+c38c926fcb8d712eed81d2eefa094614e9f4770bb699cb4e61c46767da13cf8b *notes/phase2n_gauge_fixed_anchor_protocol.md  # after A2 (final)

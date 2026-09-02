@@ -1,0 +1,614 @@
+{
+  "G0_numpy_identity": {
+    "passed": true,
+    "protocol_hash": "99893D34AB9B47057906B499843C4236A146242FCDAECBA5A019B12CCE06B55E",
+    "source_hashes": {
+      "__init__.py": "845e82777b12f4b75b07b5e72e6b396cdc309114cbda3e0a5dd8ed8b096ced20",
+      "artifacts.py": "cf61763a43f2273ab39e2adfa726217ce51cb13ebb8734e8d71c2236c9e4f66e",
+      "core_numpy.py": "2002fbe170ece1215985f4b1b6452d05435c643b79af65cdaf557f0f2f293a72",
+      "evidence.py": "a713c865b1196b87fa3bbfc6776aae43982f37e8ea37184d6775bb9f03cafb83",
+      "phase2_gpu_bridge.py": "3e2e542a891f108d0cb9e2310b41525038bef0bed590281fbd0244074187b109",
+      "replay.py": "1ddc0e6d7c1b0566e47814eecc1a77b65f5c424ef6ef3137633130a98c4ab1a4",
+      "test_phase2_gpu_bridge.py": "aba878eed9bf537b0ad38219de8d17c92c53ef0885ec0feaba8e20646faa9a2a",
+      "test_validation.py": "d6c5c5c8f669c36294ab6d99af7187dde07eec22f8c6f9006d19678a9636f6bc",
+      "torch_runner.py": "68984d46086056d2918821dbed5c42cf5844aadd07bcdb6dde1df1b271dbbe9c",
+      "validation.py": "ae7dc26926842982f70fe52c3be4c6be42285db8a7b958320a2c50e13577b511"
+    }
+  },
+  "G1_oracle_capacity": {
+    "contraction_bound": 1.1830213143546207e-19,
+    "contraction_bound_limit": 1.2e-19,
+    "max_analytic_tail_delta": 1.1102230246251565e-16,
+    "max_sanity_normalized_error": 8.180590707764311e-17,
+    "max_weighted_modal_svd_delta": 0.0,
+    "oracle_rows": [
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.7131748708432084e-32,
+        "oracle_loss": 1.7131748708432084e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 1
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8422864683601252e-32,
+        "oracle_loss": 1.8422864683601252e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 2
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.83701868634264e-32,
+        "oracle_loss": 1.83701868634264e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 3
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8501881413863526e-32,
+        "oracle_loss": 1.8501881413863526e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 4
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8454471375706162e-32,
+        "oracle_loss": 1.8454471375706162e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 5
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.852822032395095e-32,
+        "oracle_loss": 1.852822032395095e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 6
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8490593309540341e-32,
+        "oracle_loss": 1.8490593309540341e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 7
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8541389778994663e-32,
+        "oracle_loss": 1.8541389778994663e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 8
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8510661050559335e-32,
+        "oracle_loss": 1.8510661050559335e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 9
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.854929145202089e-32,
+        "oracle_loss": 1.854929145202089e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 10
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.852343143120778e-32,
+        "oracle_loss": 1.852343143120778e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 11
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.8554559234038377e-32,
+        "oracle_loss": 1.8554559234038377e-32,
+        "rank": 2,
+        "regime": "compatible",
+        "window": 12
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.938397334682682e-32,
+        "oracle_loss": 2.938397334682682e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 1
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.7737551477071858e-32,
+        "oracle_loss": 1.7737551477071858e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 2
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.45518853642659e-32,
+        "oracle_loss": 3.45518853642659e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 3
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.24510957447731e-32,
+        "oracle_loss": 2.24510957447731e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 4
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.1906550337743379e-32,
+        "oracle_loss": 2.1906550337743379e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 5
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.1164791459813297e-32,
+        "oracle_loss": 2.1164791459813297e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 6
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.2770306273571822e-32,
+        "oracle_loss": 2.2770306273571822e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 7
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.20431051654897e-32,
+        "oracle_loss": 2.20431051654897e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 8
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.1785912225949115e-32,
+        "oracle_loss": 2.1785912225949115e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 9
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.13529207103705e-32,
+        "oracle_loss": 2.13529207103705e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 10
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.2357509296347996e-32,
+        "oracle_loss": 2.2357509296347996e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 11
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.1907108305728565e-32,
+        "oracle_loss": 2.1907108305728565e-32,
+        "rank": 4,
+        "regime": "compatible",
+        "window": 12
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.344970170568365e-32,
+        "oracle_loss": 2.344970170568365e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 1
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 2.656067101502185e-32,
+        "oracle_loss": 2.656067101502185e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 2
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.440204901768109e-32,
+        "oracle_loss": 3.440204901768109e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 3
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.852696840752257e-32,
+        "oracle_loss": 3.852696840752257e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 4
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.2985754837536205e-32,
+        "oracle_loss": 4.2985754837536205e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 5
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.812590540828002e-32,
+        "oracle_loss": 3.812590540828002e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 6
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.951914370716272e-32,
+        "oracle_loss": 4.951914370716272e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 7
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.515399413443584e-32,
+        "oracle_loss": 4.515399413443584e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 8
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.4969262584994447e-32,
+        "oracle_loss": 4.4969262584994447e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 9
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.357980736464516e-32,
+        "oracle_loss": 4.357980736464516e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 10
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.286371330422387e-32,
+        "oracle_loss": 4.286371330422387e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 11
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 4.1748050191016795e-32,
+        "oracle_loss": 4.1748050191016795e-32,
+        "rank": 8,
+        "regime": "compatible",
+        "window": 12
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.5443550741555147e-32,
+        "oracle_loss": 1.5443550741555147e-32,
+        "rank": 2,
+        "regime": "stress",
+        "window": 1
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.1125409712691907e-32,
+        "oracle_loss": 1.1125409712691907e-32,
+        "rank": 2,
+        "regime": "stress",
+        "window": 2
+      },
+      {
+        "capacity_ratio": 0.24035628797643155,
+        "inf_loss": 3.014297437589476e-32,
+        "oracle_loss": 0.17404999999999993,
+        "rank": 2,
+        "regime": "stress",
+        "window": 3
+      },
+      {
+        "capacity_ratio": 0.4211781624313849,
+        "inf_loss": 3.207354372710057e-32,
+        "oracle_loss": 0.30019999999999997,
+        "rank": 2,
+        "regime": "stress",
+        "window": 4
+      },
+      {
+        "capacity_ratio": 0.5293874408258711,
+        "inf_loss": 3.5091240571905296e-32,
+        "oracle_loss": 0.3712700000000001,
+        "rank": 2,
+        "regime": "stress",
+        "window": 5
+      },
+      {
+        "capacity_ratio": 0.6013359262703981,
+        "inf_loss": 3.2037809555966867e-32,
+        "oracle_loss": 0.4148666666666667,
+        "rank": 2,
+        "regime": "stress",
+        "window": 6
+      },
+      {
+        "capacity_ratio": 0.652578947368421,
+        "inf_loss": 3.7281952801876185e-32,
+        "oracle_loss": 0.4428214285714286,
+        "rank": 2,
+        "regime": "stress",
+        "window": 7
+      },
+      {
+        "capacity_ratio": 0.6908862727468553,
+        "inf_loss": 5.412153564301183e-32,
+        "oracle_loss": 0.46105000000000007,
+        "rank": 2,
+        "regime": "stress",
+        "window": 8
+      },
+      {
+        "capacity_ratio": 0.7205713027870904,
+        "inf_loss": 5.330096475042593e-32,
+        "oracle_loss": 0.472838888888889,
+        "rank": 2,
+        "regime": "stress",
+        "window": 9
+      },
+      {
+        "capacity_ratio": 0.7442206498911165,
+        "inf_loss": 5.808005327702419e-32,
+        "oracle_loss": 0.4801600000000001,
+        "rank": 2,
+        "regime": "stress",
+        "window": 10
+      },
+      {
+        "capacity_ratio": 0.7634796193315371,
+        "inf_loss": 6.401299233502603e-32,
+        "oracle_loss": 0.48426818181818193,
+        "rank": 2,
+        "regime": "stress",
+        "window": 11
+      },
+      {
+        "capacity_ratio": 0.7794446857562897,
+        "inf_loss": 5.996219360789674e-32,
+        "oracle_loss": 0.48600000000000004,
+        "rank": 2,
+        "regime": "stress",
+        "window": 12
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.5443550741555147e-32,
+        "oracle_loss": 1.5443550741555147e-32,
+        "rank": 4,
+        "regime": "stress",
+        "window": 1
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.1125409712691907e-32,
+        "oracle_loss": 1.1125409712691907e-32,
+        "rank": 4,
+        "regime": "stress",
+        "window": 2
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.014297437589476e-32,
+        "oracle_loss": 3.014297437589476e-32,
+        "rank": 4,
+        "regime": "stress",
+        "window": 3
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.207354372710057e-32,
+        "oracle_loss": 3.207354372710057e-32,
+        "rank": 4,
+        "regime": "stress",
+        "window": 4
+      },
+      {
+        "capacity_ratio": 0.13898077910226428,
+        "inf_loss": 3.5091240571905296e-32,
+        "oracle_loss": 0.09747000000000006,
+        "rank": 4,
+        "regime": "stress",
+        "window": 5
+      },
+      {
+        "capacity_ratio": 0.27061566150092403,
+        "inf_loss": 3.2037809555966867e-32,
+        "oracle_loss": 0.18670000000000006,
+        "rank": 4,
+        "regime": "stress",
+        "window": 6
+      },
+      {
+        "capacity_ratio": 0.3643684210526316,
+        "inf_loss": 3.7281952801876185e-32,
+        "oracle_loss": 0.24725000000000003,
+        "rank": 4,
+        "regime": "stress",
+        "window": 7
+      },
+      {
+        "capacity_ratio": 0.43445440326674345,
+        "inf_loss": 5.412153564301183e-32,
+        "oracle_loss": 0.2899250000000001,
+        "rank": 4,
+        "regime": "stress",
+        "window": 8
+      },
+      {
+        "capacity_ratio": 0.4887652815875917,
+        "inf_loss": 5.330096475042593e-32,
+        "oracle_loss": 0.3207277777777779,
+        "rank": 4,
+        "regime": "stress",
+        "window": 9
+      },
+      {
+        "capacity_ratio": 0.5320334477707945,
+        "inf_loss": 5.808005327702419e-32,
+        "oracle_loss": 0.34326000000000007,
+        "rank": 4,
+        "regime": "stress",
+        "window": 10
+      },
+      {
+        "capacity_ratio": 0.5672691050851344,
+        "inf_loss": 6.401299233502603e-32,
+        "oracle_loss": 0.3598136363636365,
+        "rank": 4,
+        "regime": "stress",
+        "window": 11
+      },
+      {
+        "capacity_ratio": 0.5964783320525241,
+        "inf_loss": 5.996219360789674e-32,
+        "oracle_loss": 0.37191666666666673,
+        "rank": 4,
+        "regime": "stress",
+        "window": 12
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.5443550741555147e-32,
+        "oracle_loss": 1.5443550741555147e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 1
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 1.1125409712691907e-32,
+        "oracle_loss": 1.1125409712691907e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 2
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.014297437589476e-32,
+        "oracle_loss": 3.014297437589476e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 3
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.207354372710057e-32,
+        "oracle_loss": 3.207354372710057e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 4
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.5091240571905296e-32,
+        "oracle_loss": 3.5091240571905296e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 5
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.2037809555966867e-32,
+        "oracle_loss": 3.2037809555966867e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 6
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 3.7281952801876185e-32,
+        "oracle_loss": 3.7281952801876185e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 7
+      },
+      {
+        "capacity_ratio": 0.0,
+        "inf_loss": 5.412153564301183e-32,
+        "oracle_loss": 5.412153564301183e-32,
+        "rank": 8,
+        "regime": "stress",
+        "window": 8
+      },
+      {
+        "capacity_ratio": 0.0713451183582241,
+        "inf_loss": 5.330096475042593e-32,
+        "oracle_loss": 0.0468166666666667,
+        "rank": 8,
+        "regime": "stress",
+        "window": 9
+      },
+      {
+        "capacity_ratio": 0.14994148965025536,
+        "inf_loss": 5.808005327702419e-32,
+        "oracle_loss": 0.09674000000000002,
+        "rank": 8,
+        "regime": "stress",
+        "window": 10
+      },
+      {
+        "capacity_ratio": 0.21394685547210915,
+        "inf_loss": 6.401299233502603e-32,
+        "oracle_loss": 0.13570454545454547,
+        "rank": 8,
+        "regime": "stress",
+        "window": 11
+      },
+      {
+        "capacity_ratio": 0.26700524574827084,
+        "inf_loss": 5.996219360789674e-32,
+        "oracle_loss": 0.16648333333333334,
+        "rank": 8,
+        "regime": "stress",
+        "window": 12
+      }
+    ],
+    "passed": true,
+    "passed_capacity": true,
+    "passed_contraction_bound": true,
+    "passed_error": true,
+    "passed_oracle_agreement": true,
+    "passed_support": true,
+    "q_min_keep": 0.08333333333333333,
+    "q_min_keep_expected": 0.08333333333333333,
+    "residual_failures": 0,
+    "support_failures": 0,
+    "weighted_modal_svd_mismatches": 0
+  }
+}

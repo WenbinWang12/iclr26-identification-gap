@@ -1,0 +1,14 @@
+== reproducibility spot-check vs outputs_heldout.txt (frozen 4/12) ==
+  world t20280001/s8001: psr tail 0.805  (expected 0.805)  OK
+  world t20280001/s8002: psr tail 0.751  (expected 0.751)  OK
+  reproducibility: PASS
+
+[off-floor @ frozen 4/12] compressible:
+    psr_lora             mean 0.992 tail 0.988
+    excess_cvar          mean 0.992 tail 0.988
+    buffer_rrr_uniform   mean 0.992 tail 0.988
+[off-floor @ frozen 4/12] conflicting:
+    psr_lora             mean 0.530 tail 0.237
+    excess_cvar          mean 0.533 tail 0.189
+    buffer_rrr_uniform   mean 0.531 tail 0.235
+[off-floor] compressible mean not hurt: PASS; conflicting graceful (>= uniform solve): PASS

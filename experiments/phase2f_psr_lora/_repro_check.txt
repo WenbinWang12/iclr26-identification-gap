@@ -1,0 +1,51 @@
+  world t20270001/s7001: psr tail 0.827  cvar tail 0.852  unif-rrr tail 0.748  offline 0.862
+  world t20270001/s7002: psr tail 0.823  cvar tail 0.845  unif-rrr tail 0.772  offline 0.862
+  world t20270001/s7003: psr tail 0.808  cvar tail 0.760  unif-rrr tail 0.723  offline 0.862
+  world t20270001/s7004: psr tail 0.839  cvar tail 0.582  unif-rrr tail 0.731  offline 0.857
+  world t20270002/s7001: psr tail 0.616  cvar tail 0.732  unif-rrr tail 0.531  offline 0.845
+  world t20270002/s7002: psr tail 0.671  cvar tail 0.472  unif-rrr tail 0.598  offline 0.837
+  world t20270002/s7003: psr tail 0.595  cvar tail 0.493  unif-rrr tail 0.490  offline 0.838
+  world t20270002/s7004: psr tail 0.819  cvar tail 0.724  unif-rrr tail 0.530  offline 0.818
+  world t20270003/s7001: psr tail 0.545  cvar tail 0.560  unif-rrr tail 0.544  offline 0.756
+  world t20270003/s7002: psr tail 0.487  cvar tail 0.447  unif-rrr tail 0.501  offline 0.783
+  world t20270003/s7003: psr tail 0.527  cvar tail 0.487  unif-rrr tail 0.511  offline 0.752
+  world t20270003/s7004: psr tail 0.574  cvar tail 0.457  unif-rrr tail 0.527  offline 0.763
+  world t20270004/s7001: psr tail 0.851  cvar tail 0.796  unif-rrr tail 0.833  offline 0.908
+  world t20270004/s7002: psr tail 0.734  cvar tail 0.805  unif-rrr tail 0.717  offline 0.914
+  world t20270004/s7003: psr tail 0.730  cvar tail 0.818  unif-rrr tail 0.702  offline 0.903
+  world t20270004/s7004: psr tail 0.846  cvar tail 0.686  unif-rrr tail 0.797  offline 0.911
+  world t20270005/s7001: psr tail 0.629  cvar tail 0.606  unif-rrr tail 0.518  offline 0.830
+  world t20270005/s7002: psr tail 0.686  cvar tail 0.419  unif-rrr tail 0.428  offline 0.830
+  world t20270005/s7003: psr tail 0.442  cvar tail 0.451  unif-rrr tail 0.440  offline 0.830
+  world t20270005/s7004: psr tail 0.516  cvar tail 0.523  unif-rrr tail 0.497  offline 0.823
+
+================ per-arm summary (mean +/- sd over 20 worlds) ================
+  psr_lora             mean 0.971+-0.009   tail 0.678+-0.133   (tail/offline 0.81)
+  psr_grad_defensive   mean 0.970+-0.012   tail 0.634+-0.136   (tail/offline 0.76)
+  excess_cvar          mean 0.966+-0.010   tail 0.626+-0.150   (tail/offline 0.75)
+  agem                 mean 0.969+-0.010   tail 0.608+-0.145   (tail/offline 0.72)
+  sequential           mean 0.969+-0.010   tail 0.608+-0.145   (tail/offline 0.72)
+  buffer_rrr_uniform   mean 0.971+-0.010   tail 0.607+-0.127   (tail/offline 0.72)
+  uniform_replay       mean 0.969+-0.010   tail 0.605+-0.138   (tail/offline 0.72)
+  mir_replay           mean 0.968+-0.010   tail 0.583+-0.152   (tail/offline 0.70)
+  ewc_lora             mean 0.966+-0.011   tail 0.583+-0.167   (tail/offline 0.69)  [diverged 1/20]
+  gss_replay           mean 0.969+-0.010   tail 0.579+-0.139   (tail/offline 0.69)
+  OFFLINE oracle       tail 0.839 (reachable best)
+
+================ PRE-REGISTERED KILL CRITERION ================
+(a) NON-INFERIOR MEAN vs agem: paired dmean +0.0023 (95%CI [+0.0009,+0.0037]), margin -0.01 -> PASS
+(b) STRICTLY BETTER TAIL vs excess_cvar: paired dtail +0.0525 (95%CI [+0.0057,+0.0994]) -> PASS
+(c) MECHANISM CONTRIBUTES vs buffer_rrr_uniform: paired dtail +0.0714 (95%CI [+0.0367,+0.1060]) -> PASS
+
+VERDICT: KEEP the method line (all three pass)
+
+================ OFF-FLOOR ROBUSTNESS (no-harm / graceful) ================
+[off-floor] compressible:
+    psr_lora             mean 0.993 tail 0.989
+    excess_cvar          mean 0.992 tail 0.989
+    buffer_rrr_uniform   mean 0.993 tail 0.989
+[off-floor] conflicting:
+    psr_lora             mean 0.465 tail -0.229
+    excess_cvar          mean 0.362 tail -0.655
+    buffer_rrr_uniform   mean 0.465 tail -0.230
+[off-floor] compressible mean not hurt: PASS; conflicting graceful (>= uniform solve): PASS

@@ -1,0 +1,27 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We formulated continual PEFT as online allocation within a fixed low-rank
+update space under task-identity-free, clocked temporal mixture drift. The resulting analysis
+does not equate forgetting with capacity. It separates irreducible conflict,
+fixed-rank approximation, and online error; characterizes when sequential
+updates accumulate old loss; and shows that the locally zero-interference space
+contracts as historical sensitivity directions accumulate. This geometry
+motivates \method{}, a single fixed-rank adapter that, each window, re-solves a
+risk-reweighted reduced-rank regression from a bounded buffer rather than growing
+or freezing capacity. We are explicit about what allocation can and cannot do:
+the spectral tail is an unavoidable capacity floor that no allocation rule
+removes, so reallocation can only reduce the avoidable online error and steer
+where the fixed budget spends its retention. In our controlled linear mixture
+every implicit allocator charges that aggregate floor to the worst-served
+source, so their worst-group retention clusters at a common low value, and only
+the coverage-aware explicit minimax re-solve \emph{redistributes} the fixed
+budget to raise it---at matched frequency-weighted mean, as a paired-average gain
+over a crossed design of held-out geometries and stream draws, not a lowering of
+the aggregate floor and not a uniform reduction in forgetting. A minimal
+nonlinear probe (a two-layer ReLU MLP) does not yet reproduce the
+linear-regime prediction, which we report rather than suppress. The next decisive step is
+empirical: determine whether the predicted spectral and curvature quantities
+forecast forgetting on real temporal streams and whether curvature-aware
+allocation improves a clearly specified retention--plasticity or worst-group
+trade-off under strictly matched resources.

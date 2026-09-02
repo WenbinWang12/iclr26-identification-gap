@@ -1,0 +1,752 @@
+\section{Proofs}
+\label{app:proofs}
+
+This appendix proves the five propositions of the main text and states, for each,
+exactly where the proof stops. Two of them are unconditional
+(Propositions~\ref{prop:disjoint} and~\ref{prop:cheb}); two are conditional on a
+margin-density constant $\kappa$ that we measure rather than assume
+(Propositions~\ref{prop:cheb-acc} and~\ref{prop:amp}); one is proved in the
+special case $d=1$ that covers every scorable multi-task scope on our benchmark
+and is open beyond it (Proposition~\ref{prop:qm}). We also record, in
+Appendix~\ref{app:narrowed}, three claims that earlier drafts of this work stated
+too strongly, together with the counterexamples that forced the narrowing. They
+are kept visible because each one changes how a number in the main text may be
+reported.
+
+\subsection{Setting and gauge}
+\label{app:gauge}
+
+Fix a scope $S$ with label set $Y_S=\{\ell_1,\dots,\ell_{K}\}$, $K=K_S$. For an
+input $\bx$ and adapter parameters $\theta$, write the verbalizer-restricted logit
+vector
+\begin{equation}
+  \bm{\lambda}_\theta(\bx)\in\R^{K},
+  \qquad
+  \big[\bm{\lambda}_\theta(\bx)\big]_k = \bu_{\ell_k}^\top\bh_\theta(\bx),
+  \label{eq:app-logit}
+\end{equation}
+with $\bu_y$ the frozen unembedding row for token $y$. An offset $\bb\in\R^{K}$
+acts by $\hat y(\bx)=\arg\max_k\big([\bm{\lambda}_\theta(\bx)]_k+b_k\big)$.
+
+\paragraph{The gauge.}
+For any $c\in\R$, the offsets $\bb$ and $\bb+c\mathbf{1}$ induce the same
+restricted argmax at every input, so $\bb$ acts only through its image in the
+quotient $\R^{K}/\mathrm{span}(\mathbf{1})$. We fix the gauge by the zero-sum
+projector
+\begin{equation}
+  P_0\bb \;=\; \bb - \Big(\tfrac{1}{K}\textstyle\sum_k b_k\Big)\mathbf{1},
+  \qquad
+  V_0 \;=\; \{\bm{v}\in\R^{K}:\ \textstyle\sum_k v_k = 0\}\ \cong\ \R^{K-1},
+  \label{eq:app-gauge}
+\end{equation}
+and equip $V_0$ with the Euclidean norm. Every offset below is an element of
+$V_0$. This is the same $P_0$ as in Section~\ref{sec:method}, and it is the reason
+Equation~\eqref{eq:cost} counts $K_S-1$ rather than $K_S$ scalars per stored
+vector.
+
+For $K=2$ the space $V_0$ is one-dimensional: $P_0\bb=(-t,t)$ with
+$t=(b_1-b_0)/2$, so an offset is fully described by the scalar contrast
+$s=b_1-b_0$, and $\|P_0\bb-P_0\bb'\|_2=|s-s'|/\sqrt2$. This constant $1/\sqrt2$ is
+a unit convention, not a dimension: it is why a scope whose four member contrasts
+span a range of exactly $2$ is recorded with $q_1=0.7071$.
+
+Write $R_g(\bb)$ for task $g$'s balanced accuracy under shared offset $\bb$ at the
+current parameters, and
+\begin{equation}
+  \bz_g \in \argmax_{\bm{v}\in V_0} R_g(\bm{v}),
+  \qquad
+  R_g^{\mathrm{orc}} = R_g(\bz_g).
+  \label{eq:app-orc}
+\end{equation}
+Ties in \eqref{eq:app-orc} are broken by any fixed rule; nothing below depends on
+which, because the statements quantify over all shared $\bb$ and refer to $\bz_g$
+only through its gauge-fixed value.
+
+\subsection{Proof of Proposition~\ref{prop:disjoint} (disjoint verbalizers give a zero gap)}
+\label{app:proof-disjoint}
+
+\begin{proof}
+Suppose the verbalizer sets $Y_1,\dots,Y_T$ are pairwise disjoint. An offset in
+the sense of Section~\ref{sec:setup} is a vector $\bb\in\R^{V}$ over the whole
+vocabulary, and task $g$'s prediction reads only the coordinates $\{b_y:y\in Y_g\}$.
+Let $\bb_g^\star\in\R^{V}$ be an optimal offset for task $g$, supported on $Y_g$
+(any optimal offset may be restricted to $Y_g$ without changing $g$'s predictions,
+since coordinates outside $Y_g$ never enter $g$'s argmax). Define
+\begin{equation}
+  \bb^\star \;=\; \sum_{g=1}^{T}\bb_g^\star .
+  \label{eq:app-disjoint-sum}
+\end{equation}
+Because the supports are pairwise disjoint, for every $g$ and every $y\in Y_g$ we
+have $b^\star_y = [\bb_g^\star]_y$. Hence the restricted argmax of task $g$ under
+$\bb^\star$ agrees with its restricted argmax under $\bb_g^\star$ at every input,
+so $R_g(\bb^\star)=R_g^{\mathrm{orc}}$ for all $g$ simultaneously. Since
+$R_g^{\mathrm{shr}}$ is the accuracy under the \emph{best} single shared offset, it
+is at least $R_g(\bb^\star)$, and it is at most $R_g^{\mathrm{orc}}$ always. Both
+inequalities together give $R_g^{\mathrm{shr}}=R_g^{\mathrm{orc}}$ and therefore
+$\Delta_g^{\mathrm{id}}=0$ for every $g$ and every time $t$.
+\end{proof}
+
+\begin{remark}[The singleton corollary we use as a wiring check]
+\label{rem:singleton}
+The same argument applied to a single scope gives the form used in
+Section~\ref{sec:method}: if $|\mathrm{mem}(S)|=1$ then $Z_S$ is a one-point set,
+its Chebyshev centre \emph{is} that point, and $r_S=0$ exactly. This is a
+prediction of the theory with no free constant, so any nonzero measured
+$\Delta^{\mathrm{id}}$ on a singleton scope is a bug rather than a finding, and we
+report the check in every run ($0$ violations, $87$--$144$ observations per arm,
+worst absolute deviation $0.0$). Note what the check does \emph{not} cover: it
+constrains the scoped rung, not a stored-offset method, because a stored optimum
+is fitted at an earlier parameter value. That distinction is exactly what makes
+the singleton split of Section~\ref{sec:sso} an isolate for staleness.
+\end{remark}
+
+\begin{remark}[Why this is the honest boundary, not a weakness]
+Proposition~\ref{prop:disjoint} says the phenomenon we study has a precondition
+that is a property of the benchmark and is checkable without running anything: the
+tasks must reuse output tokens. On a stream with pairwise disjoint verbalizers
+$\Delta^{\mathrm{id}}\equiv0$ and nothing in this paper applies. We state it first
+for that reason.
+\end{remark}
+
+\subsection{Proof of Proposition~\ref{prop:cheb} (logit-space minimax)}
+\label{app:proof-cheb}
+
+Recall $Z_S=\{P_0\bz_g : g\in\mathrm{mem}(S)\}\subset V_0$, a finite set of
+$n=|\mathrm{mem}(S)|$ points, and
+$F(\bb)=\max_{g\in\mathrm{mem}(S)}\|\bb-P_0\bz_g\|_2$.
+
+\begin{proof}
+\emph{(i) The minimum over $\R^{K}$ is attained inside $V_0$.}
+For $\bb\in\R^{K}$ decompose $\bb = P_0\bb + \beta\mathbf{1}$ with
+$\beta=\frac1K\sum_k b_k$. Since every $\bm{p}\in Z_S$ lies in $V_0$ and
+$\mathbf{1}\perp V_0$, Pythagoras gives
+$\|\bb-\bm{p}\|_2^2 = \|P_0\bb-\bm{p}\|_2^2 + K\beta^2 \ge \|P_0\bb-\bm{p}\|_2^2$,
+with equality iff $\beta=0$. So $F(\bb)\ge F(P_0\bb)$ with equality iff
+$\bb\in V_0$, and it suffices to minimise $F$ over $V_0$.
+
+\emph{(ii) The minimum is attained.}
+$F$ is a finite maximum of convex functions, hence convex, and continuous. It is
+coercive: $F(\bb)\ge\|\bb\|_2-\max_g\|P_0\bz_g\|_2\to\infty$. A continuous coercive
+function on the finite-dimensional space $V_0$ attains its infimum, and by
+definition that infimum is the Chebyshev radius $r_S$ of $Z_S$ and its minimiser
+set is the set of Chebyshev centres. This gives \eqref{eq:cheb}.
+
+\emph{(iii) The minimiser is unique.}
+Suppose $\bb_1\neq\bb_2$ both attain $F=r_S$, and let
+$\bar\bb=\tfrac12(\bb_1+\bb_2)$. For each $\bm{p}\in Z_S$, the parallelogram law
+applied to $\tfrac12(\bb_1-\bm{p})+\tfrac12(\bb_2-\bm{p})$ gives
+\begin{equation}
+  \|\bar\bb-\bm{p}\|_2^2
+  \;=\;\tfrac12\|\bb_1-\bm{p}\|_2^2+\tfrac12\|\bb_2-\bm{p}\|_2^2
+      -\tfrac14\|\bb_1-\bb_2\|_2^2
+  \;\le\; r_S^2-\tfrac14\|\bb_1-\bb_2\|_2^2
+  \;<\;r_S^2 .
+  \label{eq:app-parallelogram}
+\end{equation}
+Taking the maximum over $\bm{p}\in Z_S$ yields $F(\bar\bb)<r_S$, contradicting
+minimality. Hence the Chebyshev centre is unique. Combined with (i), the minimiser
+over all of $\R^{K}$ is unique as well, and it is the zero-mean representative.
+
+\emph{(iv) The diameter bound.}
+For any $g,g'\in\mathrm{mem}(S)$ and any $\bb\in V_0$, the triangle inequality gives
+$\|P_0\bz_g-P_0\bz_{g'}\|_2\le\|\bb-P_0\bz_g\|_2+\|\bb-P_0\bz_{g'}\|_2\le 2F(\bb)$.
+Maximising the left side over the pair and minimising the right over $\bb$ gives
+$r_S\ge\tfrac12\mathrm{diam}(Z_S)$. In particular $r_S=0$ iff
+$\mathrm{diam}(Z_S)=0$, i.e.\ iff all member optima coincide after gauge fixing.
+
+\emph{(v) $r_S=q_1(S)$.}
+The $m$-centre quantization radius of Section~\ref{sec:ladder} is
+$q_m(Z_S)=\min_{|C|\le m}\max_{\bm{p}\in Z_S}\mathrm{dist}(\bm{p},C)$. At $m=1$ a
+codebook is a single point $C=\{\bb\}$ and $\mathrm{dist}(\bm{p},C)=\|\bb-\bm{p}\|_2$,
+so $q_1(Z_S)=\min_{\bb} F(\bb)=r_S$.
+\end{proof}
+
+\begin{remark}[Uniqueness is a statement about vectors, not about decision rules]
+Part (iii) gives a unique minimising \emph{vector} in $V_0$. As an inference rule
+the minimiser is unique only modulo $\mathrm{span}(\mathbf{1})$, by the gauge
+freedom of Appendix~\ref{app:gauge}; the zero-mean representative is the
+norm-minimal member of that equivalence class. This is why the method stores
+$P_0\bz_g$ and not $\bz_g$, and why the cost \eqref{eq:cost} is $K_S-1$ per vector.
+\end{remark}
+
+\begin{remark}[What makes the target streamable]
+\label{rem:streamable}
+The right-hand side of \eqref{eq:cheb} is a function of the member optima $Z_S$
+alone. It does not involve the members' examples, their logits, their sample sizes,
+or their arrival order. That is the entire licence for the method of
+Section~\ref{sec:method}: if the target depended on the data through anything more
+than $Z_S$, storing a $K_S$-vector per task could not in principle suffice.
+Proposition~\ref{prop:cheb} therefore establishes that the SSO \emph{target} is
+representable at the stated cost --- and nothing more. It does not establish that
+the stored vectors remain valid as $\theta$ moves, which is the empirical question
+Section~\ref{sec:sso} answers in the negative.
+\end{remark}
+
+\subsection{Proposition~\ref{prop:cheb-acc}: from distance to accuracy, and what it costs}
+\label{app:proof-cheb-acc}
+
+Proposition~\ref{prop:cheb} bounds a \emph{distance}. Turning it into a statement
+about accuracy requires an assumption, and the reason is not technical: a distance
+can be large while costing nothing. If every example of every member task sits far
+from its decision boundary, moving the shared offset by a bounded amount flips no
+prediction and each $R_g$ is locally constant. We therefore separate two
+quantities that an earlier draft of this work conflated.
+
+\begin{definition}[Disagreement and accuracy-decay profiles]
+\label{def:profiles}
+Fix a task $g$ and let $\hat y(\cdot\,;\bb)$ denote its restricted argmax under
+offset $\bb$. For $t\ge0$ define
+\begin{align}
+  \Phi_g(t) &= \min_{\bm{u}\in V_0,\ \|\bm{u}\|_2=1}
+    \ \Pr_{\bx\sim\cD_g}\!\big[\hat y(\bx;\bz_g+t\bm{u})\neq \hat y(\bx;\bz_g)\big],
+    \label{eq:app-phi}\\
+  \Psi_g(t) &= \min_{\bm{u}\in V_0,\ \|\bm{u}\|_2=1}
+    \ \big[R_g(\bz_g)-R_g(\bz_g+t\bm{u})\big].
+    \label{eq:app-psi}
+\end{align}
+$\Phi_g$ is the smallest fraction of predictions that \emph{change} when the offset
+is displaced a distance $t$ from $g$'s own optimum; $\Psi_g$ is the smallest
+resulting \emph{loss of accuracy}. Both minima are over directions, so both are
+worst-case over the direction the shared offset happens to lie in. By optimality
+of $\bz_g$ in \eqref{eq:app-orc}, $\Psi_g(t)\ge0$ for all $t$.
+\end{definition}
+
+\begin{assumption}[Margin density, disagreement form]
+\label{asm:kappa-dis}
+There exist $\kappa_{\mathrm{dis}}>0$ and $t_0>0$ with
+$\Phi_g(t)\ \ge\ \kappa_{\mathrm{dis}}\cdot\min(t,t_0)$ for every $t\ge0$ and every
+$g\in\mathrm{mem}(S)$.
+\end{assumption}
+
+\begin{assumption}[Margin density, accuracy form]
+\label{asm:kappa-acc}
+There exist $\kappa>0$ and $t_0>0$ with
+$\Psi_g(t)\ \ge\ \kappa\cdot\min(t,t_0)$ for every $t\ge0$ and every
+$g\in\mathrm{mem}(S)$.
+\end{assumption}
+
+Assumption~\ref{asm:kappa-acc} is the hypothesis of
+Proposition~\ref{prop:cheb-acc} as stated in Section~\ref{sec:theory}; the
+interval $[0,\varepsilon]$ there is $[0,t_0]$ here. The proof is then two lines,
+and this is deliberate: the work is done by \emph{where} the two statements live,
+not by the inequality itself.
+
+\begin{proof}[Proof of Proposition~\ref{prop:cheb-acc}]
+Let $\bb\in V_0$ be any shared offset on $S$. By Proposition~\ref{prop:cheb} there
+is a member $g$ with $t:=\|\bb-P_0\bz_g\|_2\ \ge\ r_S$. Set
+$\bm{u}=(\bb-P_0\bz_g)/t$ if $t>0$ (if $t=0$ then $r_S=0$ and the claim is
+vacuous). Since $\Psi_g$ minimises over unit directions,
+\begin{equation}
+  R_g^{\mathrm{orc}}-R_g(\bb)
+  \;=\; R_g(\bz_g)-R_g(\bz_g+t\bm{u})
+  \;\ge\; \Psi_g(t)
+  \;\ge\; \kappa\min(t,t_0)
+  \;\ge\; \kappa\min(r_S,t_0),
+  \label{eq:app-cheb-acc-chain}
+\end{equation}
+using Assumption~\ref{asm:kappa-acc} and then $t\ge r_S$ together with
+monotonicity of $\tau\mapsto\min(\tau,t_0)$. Taking the maximum over
+$g\in\mathrm{mem}(S)$ on the left can only increase it, which is
+\eqref{eq:cheb-acc}.
+\end{proof}
+
+\noindent The same argument with $\Phi$ in place of $\Psi$ gives the disagreement
+form, which we record separately because it is the one our measurement certifies.
+
+\begin{lemma}[Disagreement-space minimax]
+\label{lem:dis-minimax}
+Under Assumption~\ref{asm:kappa-dis}, for every shared $\bb$ on $S$,
+\begin{equation}
+  \max_{g\in\mathrm{mem}(S)}
+    \Pr_{\bx\sim\cD_g}\!\big[\hat y(\bx;\bb)\neq\hat y(\bx;\bz_g)\big]
+  \;\ge\; \kappa_{\mathrm{dis}}\cdot\min(r_S,t_0).
+\end{equation}
+\end{lemma}
+
+\subsubsection{What the measured constant certifies, stated precisely}
+\label{app:kappa-measured}
+
+We report $\kappa\approx0.0182$ (worst task, WiC) in Section~\ref{sec:theory}. The
+estimator behind that number is a top-$2$ margin CDF, so it estimates
+$\kappa_{\mathrm{dis}}$ of Assumption~\ref{asm:kappa-dis}, not $\kappa$ of
+Assumption~\ref{asm:kappa-acc}. The two are ordered, and only in one direction:
+
+\begin{lemma}[The disagreement constant bounds the accuracy constant]
+\label{lem:kappa-order}
+$\Psi_g(t)\le\Phi_g(t)$ for all $t\ge0$. Consequently the largest valid constant in
+Assumption~\ref{asm:kappa-acc} is at most the largest valid constant in
+Assumption~\ref{asm:kappa-dis}: $\kappa\le\kappa_{\mathrm{dis}}$.
+\end{lemma}
+
+\begin{proof}
+Fix $g$ and $t$, and for a unit direction $\bm{u}$ write
+$\Psi_g^{\bm{u}}(t)=R_g(\bz_g)-R_g(\bz_g+t\bm{u})$ and
+$D_g^{\bm{u}}(t)=\Pr[\hat y(\bx;\bz_g+t\bm{u})\neq\hat y(\bx;\bz_g)]$.
+
+\emph{Step 1 (pointwise in $\bm{u}$).} Let $A$ be the event that the prediction is
+correct at $\bz_g$ and incorrect at $\bz_g+t\bm{u}$, and $B$ the reverse. Then
+$\Psi_g^{\bm{u}}(t)=\Pr[A]-\Pr[B]\le\Pr[A]\le\Pr[A\cup B]\le D_g^{\bm{u}}(t)$,
+since $A$ and $B$ are disjoint subsets of the disagreement event.
+
+\emph{Step 2 (transfer to the profiles).} Let $\bm{u}^\star$ attain
+$\Phi_g(t)=\min_{\bm{u}}D_g^{\bm{u}}(t)$, which exists because the unit sphere in
+$V_0$ is compact and $D_g^{\bm{u}}$ takes finitely many values on a finite sample.
+Then
+\begin{equation}
+  \Psi_g(t)\;=\;\min_{\bm{u}}\Psi_g^{\bm{u}}(t)
+  \;\le\;\Psi_g^{\bm{u}^\star}(t)
+  \;\le\;D_g^{\bm{u}^\star}(t)
+  \;=\;\Phi_g(t).
+\end{equation}
+
+\emph{Step 3.} If Assumption~\ref{asm:kappa-acc} holds with constant $\kappa$ then
+$\kappa\min(t,t_0)\le\Psi_g(t)\le\Phi_g(t)$, so Assumption~\ref{asm:kappa-dis}
+holds with the same constant. Hence the supremum of valid $\kappa$ is no larger
+than the supremum of valid $\kappa_{\mathrm{dis}}$.
+\end{proof}
+
+\noindent So the number we measured is an \emph{upper} estimate of the constant that
+Proposition~\ref{prop:cheb-acc} needs. We state the consequence rather than leaving
+it implicit: \textbf{Equation~\eqref{eq:cheb-acc} evaluated at
+$\kappa=0.0182$ is an optimistic reading of a bound we have not separately
+certified, and Lemma~\ref{lem:dis-minimax} at
+$\kappa_{\mathrm{dis}}=0.0182$ is the statement our measurement supports.} Nothing
+downstream changes, because no empirical claim in this paper is derived from
+\eqref{eq:cheb-acc}: the geometric half carries the load and every accuracy-space
+number we report is measured. But the distinction has to be on the page, because
+$0.0182$ appears next to an accuracy-space inequality in the main text.
+
+Three further gaps between the assumption and the estimator, in the order they
+matter:
+
+\begin{enumerate}
+  \item \textbf{Centring.} The estimator computes the margin CDF of the raw
+    verbalizer logits, i.e.\ the flip curve around $\bb=\mathbf{0}$, whereas
+    Definition~\ref{def:profiles} centres at $\bz_g$. The two differ by a shift of
+    the margin distribution and \emph{we do not know the sign of the discrepancy};
+    it is a proxy, not a conservative one.
+  \item \textbf{Grid safety.} The curve is recorded on
+    $t\in\{0.1,0.25,0.5,1,1.5,2,3,4\}$. The naive slope $\min_i N(t_i)/t_i$
+    verifies $N(t)\ge\kappa t$ only at grid points, while the assumption needs all
+    $t$; since $N$ is non-decreasing the worst case in $[t_i,t_{i+1})$ is
+    $t\to t_{i+1}^-$ with $N$ still at $N(t_i)$, so the valid slope is
+    $\min_i N(t_i)/t_{i+1}$. Grid ratios reach $2.5\times$ and the two columns
+    differ by up to that factor. Only the latter is a lower bound, and it is what
+    we report.
+  \item \textbf{Multi-class conservatism.} For $K_S\ge3$ only top-$2$ flips are
+    counted, so $N$ is itself a lower bound on the flip fraction and
+    $\kappa_{\mathrm{dis}}$ is understated for MNLI, AGNews, DBpedia, Yahoo, Yelp
+    and Amazon. This gap favours the bound.
+\end{enumerate}
+
+\noindent Item 2 is why the reported worst-task value is $0.0182$ rather than the
+naive $0.0312$ or the older two-quantile estimate $0.0871$; the last should not be
+cited. We quote the worst task rather than the median $0.0625$ because $\kappa$ must
+hold \emph{simultaneously} for every member of a scope, so the smallest-$\kappa$
+member sets the bound --- a median would overstate the usable constant by
+$3.4\times$.
+
+\subsubsection{The assumption is necessary, not decorative}
+\label{app:kappa-necessary}
+
+\begin{proposition}[No assumption-free accuracy-space form exists]
+\label{prop:no-free-lunch}
+There is no function $\omega$ with $\omega(\rho)>0$ for $\rho>0$ such that
+$\max_{g\in\mathrm{mem}(S)}[R_g^{\mathrm{orc}}-R_g(\bb)]\ge\omega(r_S)$ holds for
+every scope, every model and every shared $\bb$.
+\end{proposition}
+
+\begin{proof}
+Two tasks share the binary verbalizer $\{\ell_0,\ell_1\}$, so $V_0\cong\R$ and an
+offset is the scalar contrast $s$. Let task $1$ have every example at logit gap
+$+c$ in favour of its true label and task $2$ every example at gap $-c$, for a
+constant $c>0$. Then $z_1=0$ and any $z_2>c$ is optimal for task $2$, so
+$r_S\ge c/2$. At $\bb=0$ task $1$ is perfect and task $2$ scores $0$, so the
+left-hand side equals $1$ --- but it equals $1$ for \emph{every} $c$, including
+$c\to0$, where $r_S\to0$. Conversely rescaling all logits by $\alpha$ multiplies
+$r_S$ by $\alpha$ while leaving every argmax, hence every accuracy, unchanged. So
+the left-hand side is constant along a family on which $r_S$ ranges over
+$(0,\infty)$, and no positive $\omega(r_S)$ can bound it below for all members of
+the family; taking $\alpha$ large also shows no upper bound of the form
+$\omega(r_S)\le$ accuracy loss can be non-vacuous, since accuracy differences are
+at most $1$ and $r_S$ is unbounded.
+\end{proof}
+
+\noindent This is the concrete form of the correction recorded in
+Section~\ref{sec:theory}: an earlier version of our own analysis bounded an
+accuracy difference below by a diameter-type quantity. Accuracy differences are at
+most $1$; diameters are unbounded; the two are not comparable without a constant
+that ties logit distance to flip probability. That constant is $\kappa$, and
+Proposition~\ref{prop:no-free-lunch} is why it cannot be removed.
+
+\begin{remark}[What the conditional proposition is still worth]
+Given how close Assumption~\ref{asm:kappa-acc} is to the conclusion of
+Proposition~\ref{prop:cheb-acc}, it is fair to ask what the proposition adds. The
+answer is a change of quantifier, not a strengthening of the rate. The assumption
+is \emph{local}, \emph{per-task}, and about a single task's own neighbourhood; the
+conclusion is about the \emph{worst member of a scope} and its right-hand side
+$r_S$ is a function of the member optima alone --- computable, by
+Proposition~\ref{prop:cheb}, from the geometry of the demands without reference to
+any model or dataset. That transfer is the content. We do not claim more for it,
+and at $\kappa\approx0.018$ we do not use it quantitatively.
+\end{remark}
+
+\subsection{Proof of Proposition~\ref{prop:qm} (budgeted offsets)}
+\label{app:proof-qm}
+
+A budget of $m$ task-free offsets on a scope is a \emph{codebook}
+$C=\{\bm{c}_1,\dots,\bm{c}_m\}\subset V_0$ together with a rule assigning each task
+to a centre. Write $X=Z_S\subset V_0$ for the member optima, $d=\dim V_0=K_S-1$,
+$T=|X|$, and
+\begin{equation}
+  q_m(X)\;=\;\min_{|C|\le m}\ \max_{\bm{x}\in X}\ \mathrm{dist}(\bm{x},C),
+  \qquad \mathrm{dist}(\bm{x},C)=\min_{j}\|\bm{x}-\bm{c}_j\|_2 .
+  \label{eq:app-qm}
+\end{equation}
+By construction $q_1\ge q_2\ge\cdots\ge q_T=0$, which is the monotonicity of the
+ladder in Section~\ref{sec:ladder}. Note that \eqref{eq:app-qm} presumes
+nearest-centre assignment; a task-free router that assigns otherwise can only do
+worse, which is why $q_m$ is a bound on any routed method and not a promise about
+one.
+
+\subsubsection{The closed form at \texorpdfstring{$d=1$}{d=1}}
+
+\begin{proposition}[Closed form, $m=2$, $d=1$]
+\label{prop:q2-closed}
+Let $X=\{x_1\le\cdots\le x_T\}\subset\R$ with $T\ge2$. Then
+\begin{equation}
+  q_2(X)\;=\;\min_{1\le j\le T-1}\ \max\!\Big(\tfrac{x_j-x_1}{2},\ \tfrac{x_T-x_{j+1}}{2}\Big),
+  \label{eq:app-q2}
+\end{equation}
+attained by $C=\{\tfrac{x_1+x_j}{2},\ \tfrac{x_{j+1}+x_T}{2}\}$ for a minimising $j$.
+\end{proposition}
+
+\begin{proof}
+\emph{Step 1: an optimal $2$-codebook induces a contiguous split.} Let
+$C=\{c_1\le c_2\}$ and assign each point to its nearest centre. In $\R$ the
+nearest-centre rule assigns $x$ to $c_1$ iff $x\le(c_1+c_2)/2$, so the assignment
+is a threshold rule: there is $j\in\{0,\dots,T\}$ with $\{x_1,\dots,x_j\}\to c_1$
+and $\{x_{j+1},\dots,x_T\}\to c_2$. Only the $T+1$ contiguous splits need be
+considered. This is exactly the step that fails for $d\ge2$: there the Voronoi
+cells of two centres are half-spaces, but enumerating orderings of the points does
+not enumerate the achievable bipartitions.
+
+\emph{Step 2: within a block the best centre is the midrange.} For a finite
+$B\subset\R$, $\min_c\max_{x\in B}|x-c|=(\max B-\min B)/2$, attained uniquely at
+$c=(\max B+\min B)/2$: for any $c$,
+$\max_{x\in B}|x-c|\ge\tfrac12[(\max B-c)+(c-\min B)]=(\max B-\min B)/2$, with
+equality iff $c$ is the midpoint.
+
+\emph{Step 3: combine.} For split $j$ the covering radius is
+$\max\big((x_j-x_1)/2,(x_T-x_{j+1})/2\big)$ by Step 2 applied to each block.
+Minimising over $j$ gives \eqref{eq:app-q2}. The degenerate splits $j=0$ and $j=T$
+leave one block empty and reduce to $q_1=(x_T-x_1)/2$, which is never better than
+the best proper split, so restricting to $1\le j\le T-1$ is without loss.
+\end{proof}
+
+\begin{remark}[The equality clause, stated correctly]
+\label{rem:equality-clause}
+$q_2=q_1$ iff $T=1$ (both are $0$). For $T=2$ and $x_1\neq x_2$ we have
+$q_2=0<q_1=(x_2-x_1)/2$: two centres cover two points exactly. An earlier draft of
+this note wrote ``equality iff $T\le2$'', which is wrong, and wrong in a way that
+would have contradicted our own measurement --- $T=2$ is precisely the
+$\{\texttt{bad},\texttt{good}\}$ scope where the data records $q_2=0$. Left visible
+rather than silently corrected.
+\end{remark}
+
+\subsubsection{The pigeonhole bound, and its tightness at \texorpdfstring{$d=1$}{d=1}}
+
+A closed form requires solving the problem. For the paper we also want a bound that
+reads off the geometry of the demands directly. Define the \emph{$(m{+}1)$-point
+separation}
+\begin{equation}
+  \mathrm{sep}_{m+1}(X)\;=\;\max_{X'\subseteq X,\ |X'|=m+1}\ \ \min_{\bm{u}\neq\bm{v}\in X'}\|\bm{u}-\bm{v}\|_2,
+  \label{eq:app-sep}
+\end{equation}
+with $\mathrm{sep}_{m+1}(X)=0$ when $|X|\le m$.
+
+\begin{proposition}[Pigeonhole lower bound, every dimension]
+\label{prop:pigeonhole}
+For every $m\ge1$, every $d\ge1$ and every finite $X\subset\R^d$,
+\begin{equation}
+  q_m(X)\;\ge\;\tfrac12\,\mathrm{sep}_{m+1}(X).
+  \label{eq:app-pigeonhole}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+If $|X|\le m$ both sides are $0$. Otherwise fix any $X'\subseteq X$ with
+$|X'|=m+1$ and any codebook $C$ with $|C|\le m$. Assign each point of $X'$ to a
+nearest centre; since $|X'|>|C|$, two distinct points $\bm{u},\bm{v}\in X'$ share a
+centre $\bm{c}$. Then
+$\|\bm{u}-\bm{v}\|_2\le\|\bm{u}-\bm{c}\|_2+\|\bm{c}-\bm{v}\|_2\le2\max_{\bm{x}\in X}\mathrm{dist}(\bm{x},C)$,
+so $\max_{\bm{x}\in X}\mathrm{dist}(\bm{x},C)\ge\tfrac12\min_{\bm{u}\neq\bm{v}\in X'}\|\bm{u}-\bm{v}\|_2$.
+Minimising the left side over $C$ and maximising the right over $X'$ gives
+\eqref{eq:app-pigeonhole}.
+\end{proof}
+
+\begin{proposition}[Tightness at $d=1$, every $m$]
+\label{prop:pigeonhole-tight}
+For every $m\ge1$ and every finite $X\subset\R$, \eqref{eq:app-pigeonhole} holds
+with equality: $q_m(X)=\tfrac12\,\mathrm{sep}_{m+1}(X)$.
+\end{proposition}
+
+\begin{proof}
+Write $r=\tfrac12\mathrm{sep}_{m+1}(X)$ and $X=\{x_1\le\cdots\le x_T\}$. By
+Proposition~\ref{prop:pigeonhole} it suffices to exhibit a codebook of at most $m$
+centres with covering radius $\le r$. Construct one greedily: set $y_1=x_1$ and
+$c_1=y_1+r$, which covers every point in $[y_1,y_1+2r]$; let $y_2$ be the smallest
+point of $X$ exceeding $y_1+2r$, set $c_2=y_2+r$, and continue. The construction
+terminates with some number $M$ of centres, and by definition it covers every point
+of $X$ within distance $r$.
+
+Suppose $M\ge m+1$. Then the first $m+1$ selected points $y_1,\dots,y_{m+1}$ satisfy
+$y_{i+1}>y_i+2r$ for each $i$, so for $X'=\{y_1,\dots,y_{m+1}\}$ --- a subset of $X$
+of size $m+1$, using $|X|\ge M\ge m+1$ --- every pair is separated by more than
+$2r$, whence $\min_{\bm{u}\neq\bm{v}\in X'}|\bm{u}-\bm{v}|>2r$ and therefore
+$\mathrm{sep}_{m+1}(X)>2r=\mathrm{sep}_{m+1}(X)$, a contradiction. So $M\le m$ and
+$q_m(X)\le r$.
+\end{proof}
+
+\noindent Proposition~\ref{prop:pigeonhole-tight} is what licenses
+Section~\ref{sec:theory}'s claim that the pigeonhole bound is not merely a bound but
+\emph{is} $q_m$ for binary shared verbalizers: the budget bound then reads off the
+geometry of the demands with no optimisation. We had previously only verified this
+numerically ($600$ random instances, $n\in[2,7]$, $m\in[1,4]$, random scales, $0$
+disagreements against the exact enumerator); the greedy argument above proves it.
+The proof uses the ordering of $\R$ in an essential way --- the same greedy scheme in
+$d\ge2$ is the standard factor-$2$ approximation and gives no equality --- and
+consistently with that, at $d\ge2$ the bound is strict in the majority of random
+instances ($164$ of $400$ strictly greater than the enumerated value). The
+tightness claim must therefore stay confined to $d=1$;
+Proposition~\ref{prop:pigeonhole} itself is valid in every dimension.
+
+Both new statements above are checked numerically against an independently written
+brute-force enumerator over contiguous blocks
+(\texttt{experiments/phase2q\_bpo/tests/test\_appendix\_proofs.py}):
+Proposition~\ref{prop:pigeonhole-tight} on $600$ random instances with
+$n\in[2,8)$, $m\in[1,5)$ and scales spanning four orders of magnitude, exact to
+$10^{-9}$; the greedy construction's centre count on a further $400$; and the
+equilateral-triangle witness for strictness at $d=2$.
+
+\subsubsection{Why the \texorpdfstring{$d=1$}{d=1} case is the one that matters here}
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{llcc c}
+\toprule
+label set & member tasks & $K_S$ & $d=K_S-1$ & scorable? \\
+\midrule
+\texttt{\{false, true\}} & WiC, QQP, BoolQA, MultiRC & $2$ & $\mathbf{1}$ & yes \\
+\texttt{\{bad, good\}} & IMDB, SST-2 & $2$ & $\mathbf{1}$ & yes \\
+\texttt{\{contradiction, entailment, neutral\}} & MNLI, CB & $3$ & $2$ & CB no \\
+\texttt{\{negative, \dots, very positive\}} & Yelp, Amazon & $5$ & $4$ & neither \\
+\bottomrule
+\end{tabular}
+\caption{Multi-member scopes on the $15$-task stream. Every scope that survives our
+exclusion rules has $d=1$, so every $q_m$ we report is covered by
+Propositions~\ref{prop:q2-closed} and~\ref{prop:pigeonhole-tight}. CB's rarest class
+has $16$ examples, below the $64$/class the frozen protocol requires; Yelp and Amazon
+fail the distinct-first-piece precondition, since \texttt{very positive} and
+\texttt{very negative} share their first sentencepiece token.}
+\label{tab:scope-dims}
+\end{table}
+
+Table~\ref{tab:scope-dims} is the reason the special case suffices, and the reason is
+a property of the benchmark rather than a convenience of the analysis. It is also a
+limitation in the direction we state in Section~\ref{sec:limitations}: the open case
+is \emph{unmeasurable} here, not quietly assumed. A stream with a scorable $K_S\ge3$
+shared scope would take the reported $q_m$ outside what we have proved.
+
+\subsubsection{Transfer to accuracy, and the routing restriction}
+
+\begin{corollary}[Budgeted accuracy bound, per-task routing]
+\label{cor:qm-acc}
+Under Assumption~\ref{asm:kappa-acc}, for any codebook of $m$ task-free offsets on
+scope $S$ assigned \emph{per task} --- all examples of a task share a centre ---
+\begin{equation}
+  \max_{g\in\mathrm{mem}(S)}\big[R_g^{\mathrm{orc}}-R_g^{(m)}\big]
+  \;\ge\;\kappa\cdot\min\big(q_m(Z_S),\,t_0\big),
+  \label{eq:app-qm-acc}
+\end{equation}
+where $R_g^{(m)}$ is $g$'s accuracy under the centre it is assigned.
+\end{corollary}
+
+\begin{proof}
+Identical to Proposition~\ref{prop:cheb-acc} with $r_S$ replaced by $q_m$: by
+\eqref{eq:app-qm} some member is at distance at least $q_m$ from its assigned
+centre, and \eqref{eq:app-cheb-acc-chain} applies verbatim to that member with
+$t=\|\bm{c}(g)-P_0\bz_g\|_2\ge q_m$.
+\end{proof}
+
+\begin{remark}[The restriction is load-bearing: per-example routing breaks it]
+\label{rem:per-example}
+Corollary~\ref{cor:qm-acc} requires the router to be \emph{per task}. It is
+\textbf{false} for a general per-example router, and not marginally so. Take one
+binary task, $50$ examples with contrast $s=-3$ and true label $1$, and $50$ with
+$s=+3$ and true label $0$. The best single offset scores $0.500$; two centres
+$\{+4,-4\}$ with a router reading $\mathrm{sign}(s)$ score $1.000$ --- strictly
+\emph{above} the single-offset oracle $R^{\mathrm{orc}}$, so no bound of the form
+$R^{\mathrm{orc}}-R^{(m)}\ge(\text{positive})$ can hold. Per-example routing is a
+strictly more powerful object than the one Proposition~\ref{prop:qm} bounds.
+
+Our implementation contains both kinds. The prototype and batch-margin routers are
+per task; the confidence router is per example, and it is the one measured to be
+degenerate (oracle agreement $0.000$--$0.008$). So the theory and the reported
+numbers are consistent --- but \eqref{eq:app-qm-acc} must be quoted with
+``per-task routing'' attached, never as a statement about arbitrary task-free
+routers. Whether a per-example task-free rule can be made to work is open, and
+Remark~\ref{rem:per-example} shows it has \emph{more} headroom than the bound
+allows, which makes the question live rather than closed.
+\end{remark}
+
+\subsection{Proof of Proposition~\ref{prop:amp} (margin-conditional amplification)}
+\label{app:proof-amp}
+
+This is the proposition behind Section~\ref{sec:theory}'s claim about rank budgets,
+and it replaces a strict impossibility claim that an earlier version of this work
+made and that is not correct. We state the repair first, then prove what survives.
+
+\paragraph{What was claimed, and why it was wrong.}
+The earlier assertion was that $\Delta^{\mathrm{id}}$ can be made large with
+$\|\Delta\bW\|$ arbitrarily small, making rank-based forgetting bounds of the form
+\eqref{eq:rankbound} vacuous for this term. That is false. A small $\|\Delta\bW\|$
+\emph{does} imply a small logit perturbation, which \emph{does} imply a small
+accuracy change --- unless many examples sit within that perturbation of the decision
+boundary. The correct statement is conditional on the same margin density, and the
+conclusion is weaker than impossibility.
+
+\begin{proposition}[Margin-conditional amplification, restated]
+\label{prop:amp-restated}
+Let the adapter update change the hidden state by $\Delta\bh(\bx)=\Delta\bW\,\bh(\bx)$
+for a matrix $\Delta\bW$ acting linearly on the state that feeds the unembedding.
+Then for any two verbalizer tokens $\ell_j,\ell_k$ of a scope, the induced shift in
+the pairwise logit difference satisfies
+\begin{equation}
+  \delta \;:=\; \sup_{\bx}\big|(\bu_{\ell_k}-\bu_{\ell_j})^\top\Delta\bh(\bx)\big|
+  \;\le\; \|\bu_{\ell_k}-\bu_{\ell_j}\|_2\;\|\Delta\bW\|_2\;\sup_{\bx}\|\bh(\bx)\|_2 ,
+  \label{eq:app-amp-delta}
+\end{equation}
+and, under Assumption~\ref{asm:kappa-dis} with $\delta\le t_0$, a shift of size
+$\delta$ along the verbalizer-difference direction changes at least
+$\kappa_{\mathrm{dis}}\,\delta$ of the predicted mass.
+\end{proposition}
+
+\begin{proof}
+For \eqref{eq:app-amp-delta}, Cauchy--Schwarz and the definition of the spectral
+norm give
+$|(\bu_{\ell_k}-\bu_{\ell_j})^\top\Delta\bW\bh(\bx)|
+\le\|\bu_{\ell_k}-\bu_{\ell_j}\|_2\|\Delta\bW\bh(\bx)\|_2
+\le\|\bu_{\ell_k}-\bu_{\ell_j}\|_2\|\Delta\bW\|_2\|\bh(\bx)\|_2$;
+take the supremum over $\bx$. For the second part, a shift of the pairwise logit
+difference by $\delta$ is realised by displacing the gauge-fixed offset a distance
+proportional to $\delta$ along the corresponding direction of $V_0$, so
+Assumption~\ref{asm:kappa-dis} applies with $t=\delta$, giving flipped mass at
+least $\kappa_{\mathrm{dis}}\min(\delta,t_0)=\kappa_{\mathrm{dis}}\delta$.
+\end{proof}
+
+\begin{remark}[Scope of \eqref{eq:app-amp-delta}, stated rather than glossed]
+\label{rem:amp-scope}
+Equation~\eqref{eq:app-amp-delta} is proved for an update entering \emph{linearly}
+in the state that feeds the unembedding. For a LoRA update deeper in the network the
+same inequality holds with an extra factor: if the map from adapter weights to the
+final hidden state is $L$-Lipschitz in spectral norm on the relevant domain, then
+$\delta\le\|\bu_{\ell_k}-\bu_{\ell_j}\|_2\,L\,\|\Delta\bW\|_2$. Our adapters are on
+$q/v$ projections at every layer, so the deep case is the one that applies to our
+runs and $L$ is not something we measure. This is where the unspecified constant $c$
+of Section~\ref{sec:theory} lives, and we do not report a numerical value for it.
+\end{remark}
+
+\paragraph{The claim we are entitled to.}
+Combining \eqref{eq:app-amp-delta} with the flip bound: a rank-$1$ update aligned
+with a shared verbalizer-difference direction can satisfy the right-hand side of
+\eqref{eq:rankbound} --- small $\sqrt{\rho}\|\bB\|\|\bA\|$ --- and still move
+accuracy by order $\kappa\delta$. So \eqref{eq:rankbound} is loose by the factor
+$\kappa$ in exactly the place that matters, and the entitled claim is neither
+impossibility nor vacuity:
+
+\begin{quote}
+The rank bound is \textbf{uninformative about which of its two terms the damage
+lands in}, and can be satisfied while $\Delta^{\mathrm{id}}$ is large.
+\end{quote}
+
+That is the operative point for allocators. Output-drift energy, importance scores
+and rank minimisation are all averages over the whole drift; none separates the
+component a zero-rank shared offset could absorb from the component that genuinely
+requires subspace capacity. Under a fixed lifetime budget, rank spent on the former
+is wasted --- and by Propositions~\ref{prop:cheb} and~\ref{prop:qm}, offset capacity
+spent on conflicting tasks cannot substitute for rank either. Both budgets bind, for
+different reasons.
+
+\subsection{Claims we narrowed, and what forced each narrowing}
+\label{app:narrowed}
+
+Four statements in earlier versions of this analysis were stronger than what we can
+prove. Each is recorded with the object that refuted it, because in every case the
+correction changes how a number in the main text may be reported --- which is the
+only reason to keep them on the page.
+
+\paragraph{1. The candidate-centre enumerator is not exact beyond $d=1$.}
+Our implementation computes $q_m$ by enumerating candidate centres over ``the points
+together with all pairwise midpoints''. Step 2 of Proposition~\ref{prop:q2-closed}
+shows this is exact at $d=1$, and also at $n\le2$ in any dimension, since the
+midpoint of two points is their Chebyshev centre. It is \textbf{wrong for $d\ge2$}:
+for three points forming a unit equilateral triangle the enumeration returns
+$\sqrt3/2=0.8660$ while the true Chebyshev radius is the circumradius
+$1/\sqrt3=0.5774$, an overestimate by exactly $1.5\times$, because the circumcentre
+is neither a point nor a pairwise midpoint. No reported number is invalidated: the
+enumerator is consulted only on scopes with $d=1$ or $n\le2$
+(Table~\ref{tab:scope-dims}), and an overestimated radius inside a lower bound means
+claiming less. But the docstrings and an earlier theory note asserted exactness
+unconditionally, and that had to be narrowed to ``$d=1$ or $n\le2$''.
+
+\paragraph{2. The pigeonhole bound is tight only at $d=1$.}
+Proposition~\ref{prop:pigeonhole-tight} proves equality in one dimension for every
+$m$. At $d\ge2$ the bound is strict in the majority of random instances --- $164$ of
+$400$ --- so it must be quoted as a bound there, never as a formula.
+Proposition~\ref{prop:pigeonhole} remains valid in all dimensions.
+
+\paragraph{3. The accuracy-space bound needs a constant, and it is not the one we
+measured.} Proposition~\ref{prop:no-free-lunch} shows no assumption-free
+accuracy-space form exists. Beyond that, Lemma~\ref{lem:kappa-order} shows the
+measured $0.0182$ is an upper estimate of the constant
+Proposition~\ref{prop:cheb-acc} requires, because the estimator is a margin CDF and
+therefore measures prediction disagreement rather than accuracy loss. The certified
+statement is Lemma~\ref{lem:dis-minimax}. We rest no empirical claim on either.
+
+\paragraph{4. Proposition~\ref{prop:qm} is proved for $d=1$, not in general.}
+The case $m\ge2$ with $d\ge2$ is open. The correct phrasing of the gap is ``$m\ge2$
+in dimension $\ge2$'', not ``$m\ge2$'': the $d=1$ case is closed for every $m$ by
+Propositions~\ref{prop:q2-closed} and~\ref{prop:pigeonhole-tight}. We may write
+``proved for binary shared verbalizers''; we may not write
+``Proposition~\ref{prop:qm} is proved''.
+
+\subsection{Status summary}
+\label{app:status}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llll}
+\toprule
+statement & status & needs & where \\
+\midrule
+Prop.~\ref{prop:disjoint} (disjoint $\Rightarrow$ zero gap) & proved & --- & \S\ref{app:proof-disjoint} \\
+Prop.~\ref{prop:cheb} (logit-space minimax) & proved & --- & \S\ref{app:proof-cheb} \\
+Prop.~\ref{prop:q2-closed} (closed form $q_2$) & proved & $d=1$ & \S\ref{app:proof-qm} \\
+Prop.~\ref{prop:pigeonhole} (pigeonhole bound) & proved & any $d$ & \S\ref{app:proof-qm} \\
+Prop.~\ref{prop:pigeonhole-tight} (tightness) & proved & $d=1$, any $m$ & \S\ref{app:proof-qm} \\
+Lem.~\ref{lem:dis-minimax} (disagreement minimax) & proved & Asm.~\ref{asm:kappa-dis} (measured) & \S\ref{app:proof-cheb-acc} \\
+Prop.~\ref{prop:cheb-acc} (accuracy minimax) & proved & Asm.~\ref{asm:kappa-acc} (not measured) & \S\ref{app:proof-cheb-acc} \\
+Cor.~\ref{cor:qm-acc} (budgeted accuracy) & proved & Asm.~\ref{asm:kappa-acc}, per-task routing & \S\ref{app:proof-qm} \\
+Prop.~\ref{prop:amp} (amplification) & proved & linear case; $L$ unmeasured if deep & \S\ref{app:proof-amp} \\
+$q_m$ for $m\ge2$, $d\ge2$ & \textbf{open} & --- & \S\ref{app:narrowed} \\
+per-example task-free routing & \textbf{open} & --- & Rem.~\ref{rem:per-example} \\
+\bottomrule
+\end{tabular}
+\caption{What is proved, under what, and where. Two rows are open and are reported as
+open; the two conditional rows carry assumptions whose constants are discussed in
+\S\ref{app:kappa-measured}, and only one of those constants is measured.}
+\label{tab:proof-status}
+\end{table}
