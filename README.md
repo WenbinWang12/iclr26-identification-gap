@@ -82,6 +82,86 @@ seeds; `analyze_destale.py` over `destale_s{1,2,3}.json`).
   carved from training files; official test files are never opened, so absolute
   accuracies are **not** leaderboard-comparable.
 
+## Extended experiments — what to run, what you get
+
+Four larger-scale axes extend the headline 2×2. Each ships a runner, a frozen
+protocol note (criteria declared **before** running), a SLURM sweep, and an
+analyzer that aggregates over seeds with sign-consistency. All live in
+`experiments/phase2z_task_grouping/`; all write `*_s{seed}.json` and open no
+official test file. Run seeds 1–3 (SLURM arrays `-a 1-3` in every sweep).
+
+The command shown is the analyzer; the sweep that produces its inputs is the
+matching `sweep_*.sh` (`sbatch` it, or run the `run_*.py` directly with the frozen
+args in the sweep). Full step-by-step + cluster adaptation notes: [`RUNBOOK.md`](RUNBOOK.md) §3.
+
+### 3A — Deployable router + stored offset (closes the two upper bounds)
+
+Replaces oracle scope routing with a **task-free NCM router** (nearest stored
+class-mean in the *base, adapter-disabled* encoder — so routing cannot depend on
+the adapter it selects) and the refit offset with the deployable **stored** offset.
+
+```bash
+sbatch experiments/phase2z_task_grouping/sweep_router.sh          # produces router_s{1,2,3}.json
+python experiments/phase2z_task_grouping/analyze_router.py 1 2 3
+```
+
+**You get:** router→true-family accuracy; **routing cost** (`oracle − routed`);
+the **deployable end-to-end** number (`route + stored − shared`) as primary; the
+oracle/refit ceiling only as labelled reference. Verdict: deployable e2e > 0 on
+every seed, and whether the router recovers ≥ 50 % of the oracle grouping gain.
+Protocol: `notes/phase2ze_router_protocol.md`.
+
+### 3B — Generality across task orders × backbones
+
+Reruns the identical 2×2 under 4 stream orders (`canonical`, `reverse`,
+`shuffleA`, `shuffleB`) and other backbones (T5 sizes; a decoder-only LM via a
+last-position scoring + prompt-masked LM-loss path). Only order/model change.
+
+```bash
+# one cell per submit; seeds 1-3 over the array:
+sbatch --export=ALL,ORDER=reverse,MODEL=google-t5/t5-large \
+       experiments/phase2z_task_grouping/sweep_generality.sh   # generality_{order}_{tag}_s{seed}.json
+python experiments/phase2z_task_grouping/analyze_generality.py  # discovers every cell
+```
+
+**You get:** the four effect signs (`e2e`, `repr`, `group_alone`, `offset_alone`)
+per (order, backbone) cell, and a **sign-robustness verdict** — SIGN-ROBUST(+) vs
+FLIPS, with the flipping cells named. The `canonical / t5-large` cell is the
+consistency anchor (must reproduce +11.76 pp). Protocol: `notes/phase2zf_generality_protocol.md`.
+
+### 3C — Non-binary scope where the offset theory is open (K_S ≥ 3)
+
+Couples MNLI + CB into one genuine 3-way NLI scope (keys scopes by label **set**;
+relaxes the size floor to admit CB), exercising the `d ≥ 2` regime the paper's
+2×2 never hits.
+
+```bash
+sbatch experiments/phase2z_task_grouping/sweep_scopes.sh          # scopes_s{1,2,3}.json
+python experiments/phase2z_task_grouping/analyze_scopes.py 1 2 3
+```
+
+**You get:** the 2×2 restricted to the K_S ≥ 3 multi-task subset (e2e, offset-alone
+per seed) vs all tasks; and per-scope **quantization radius `q_m`** under both
+regimes (`q_1 > 0` certifies a genuinely non-degenerate scope). Protocol:
+`notes/phase2zg_scopes_protocol.md`.
+
+### 3D — Published baselines at matched budget
+
+Runs `seqft`, **O-LoRA** (orthogonality penalty), and **EWC** — each a single
+rank-8 LoRA on the *same* stream/splits/seeds/scorer as the method.
+
+```bash
+sbatch --export=ALL,METHOD=olora experiments/phase2z_task_grouping/sweep_baselines.sh  # baselines_olora_s{seed}.json
+python experiments/phase2z_task_grouping/analyze_baselines.py 1 2 3
+```
+
+**You get:** a matched-budget accuracy table (baselines vs the method's cells).
+The analyzer prints the **deployable** head-to-head (vs the 3A router+stored
+number) as the honest comparison, and labels `method_gp_off` as oracle+refit
+ceiling. E²-LoRA / NSR are **not** implemented (they need components outside this
+harness) and are refused as method choices, never faked. Protocol:
+`notes/phase2zh_baselines_protocol.md`.
+
 ## Repository map
 
 | Path | Purpose |
@@ -100,7 +180,10 @@ Key entry points in `experiments/phase2z_task_grouping/`:
 `run_grouping.py` (shared vs grouped, oracle + learned-router scaffold),
 `run_combined.py` (the 2×2), `run_destale.py` (stored vs refit offset under each
 regime), `analyze_combined.py` / `analyze_destale.py` (canonical aggregation),
-`sweep_*.sh` (SLURM templates), `sanity.sh` (t5-small smoke test).
+`sweep_*.sh` (SLURM templates), `sanity.sh` (t5-small smoke test). Extended axes
+(see the section above): `run_router.py` (3A), `orders.py` + `backbones.py` +
+`run_generality.py` (3B), `run_scopes.py` (3C), `run_baselines.py` (3D), each with
+its `analyze_*.py` and `sweep_*.sh`.
 
 ## Build
 
