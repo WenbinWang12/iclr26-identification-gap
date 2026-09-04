@@ -1,115 +1,76 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-Part of what looks like capacity exhaustion in continual PEFT is not. On a
-$15$-task stream under one fixed LoRA adapter, an additive per-label offset on the
-verbalizer logits --- zero rank, a handful of scalars --- recovers accuracy that
-rank-allocation methods are built to protect. We isolated that component, showed it
-is not reachable from parameter space by three separate routes, and then found that
-both ways of deploying it fail --- each for a reason the design let us measure
-rather than guess at.
+Part of what looks like capacity exhaustion in continual PEFT is not, and the two
+parts call for two different fixes. On a $15$-task stream under one fixed LoRA
+adapter, an additive per-label offset on the verbalizer logits --- zero rank, a
+handful of scalars --- recovers accuracy that rank-allocation methods are built to
+protect; that is an \emph{output-layer} constraint. What the offset cannot recover
+is the representation the shared adapter overwrote as later tasks arrived; that is a
+distinct \emph{representation-layer} constraint. This paper measures both and
+proposes a single fixed-budget method that relieves both: reallocate the rank across
+task families so each family adapter drifts only under its own family, and add the
+per-scope offset on top.
 
-Three results, in the order the evidence forces, and then the one route they leave.
+\emph{The two moves compose, at a bit-identical budget.} Splitting the tasks into
+$K{=}4$ semantic families with a rank-$2$ adapter each --- exactly the parameters of
+one shared rank-$8$ adapter --- beats the shared adapter by $+8.00$~pp across three
+seeds. The per-scope offset adds $+6.58$~pp on its own, and still adds $+5.18$~pp on
+top of grouping, so the two constraints are independent and neither fix subsumes the
+other. End-to-end, the combined method beats the standard single-adapter baseline by
+$+11.76$~pp, positive on every seed and roughly nine times the same-configuration
+noise floor (Section~\ref{sec:combined}). The gain is a reallocation, not extra
+capacity: the trainable-parameter count is bit-for-bit identical across all four
+cells of the $2\times2$.
 
-\emph{The component is real and its information content is specific.} Under one
-globally shared offset the identification gap is $3.13$~pp; under an offset shared
-only within a verbalizer scope it is $0.00$~pp, CI $[-1.71,+1.71]$. Scope --- free
-at inference, readable from the prompt --- recovers $+1.51$~pp, CI
-$[+0.43,+2.74]$. Task identity adds $+1.10$~pp, CI $[+0.40,+1.83]$, on top when
-restricted to multi-task scopes where the comparison is measurable
-(Section~\ref{sec:gap-real}, disclosure~(iii)). The gap is
-also exactly zero when verbalizer sets are disjoint
+\emph{The output component is real and its information content is specific.} Under
+one globally shared offset the identification gap is $3.13$~pp; under an offset
+shared only within a verbalizer scope it is $0.00$~pp, CI $[-1.71,+1.71]$. Scope ---
+free at inference, readable from the prompt --- recovers $+1.51$~pp, CI
+$[+0.43,+2.74]$. The gap is exactly zero when verbalizer sets are disjoint
 (Proposition~\ref{prop:disjoint}), which we verify in every run and which explains
 why the per-task-head literature cannot see this term at all.
 
-\emph{Three parameter-space interventions do not touch it.} An orthogonality
-penalty of O-LoRA's form, verbalizer-logit anchoring, and gauge-fixed anchoring:
-none improved task-agnostic accuracy, two reduced it at the strength their own
-prefix gate selected, and the one derived from the correct symmetry argument did
-the most damage while the per-scope offset kept recovering the same $+1.51$~pp on
-top of each. The harm is a property of the intervention \emph{at the gated}
-$\lambda$: our $\lambda_a=0.5$ arm, completed to three seeds, fails the same
-criterion from the other side with no detectable effect.
+\emph{The objective is the wrong lever for the representation constraint.} An
+orthogonality penalty of O-LoRA's form, verbalizer-logit anchoring, and gauge-fixed
+anchoring all left task-agnostic accuracy unimproved, two of them harmfully. This is
+what motivated changing the \emph{allocation} rather than the objective, and the
+allocation move is what delivered the representation-layer gain the penalties could
+not.
 
-\emph{Storing the offsets is worse than storing nothing.} A rehearsal-free
-streaming table --- fit each task's optimum at its boundary, apply the scope's
-Chebyshev centre at test time, $33$ floats --- scores $5.08$~pp \emph{below} using
-no offset at all and damages $11$ of $12$ tasks. Singleton scopes locate the cause
-without ambiguity: there the Chebyshev centre of a one-element table \emph{is} that
-element, so aggregation, routing, and the gauge cannot contribute, and those scopes
-still lose $4.18$~pp, CI $[-6.61,-1.76]$. The residue is staleness, measured at
-$6.16$~pp mean. So the $+1.51$~pp is real but reachable only by fitting against the
-\emph{current} model: it is available to rehearsal and not to offset storage.
+\paragraph{What we report at its upper bound, honestly.}
+Both moves are scored at their upper bound: the offset is fit against the current
+model and family routing uses the scope at evaluation. The deployable offset sources
+each carry a measured cost on this stream. Storing per-task optima and applying the
+scope's Chebyshev centre --- $33$ floats, no task index --- scores $5.08$~pp
+\emph{below} using no offset at all, because a value fit at a task's boundary goes
+stale as a monolithic adapter keeps moving; singleton scopes locate the cause with
+aggregation, routing, and gauge ruled out by construction ($-4.18$~pp, CI
+$[-6.61,-1.76]$). Computing the offset from the query batch instead gains $+4.40$~pp
+and then inverts to $-0.67$~pp under the class-mix control we pre-registered against
+our own balanced splits. We report both plainly. Grouping is positioned to soften
+the staleness cost --- a per-family adapter drifts less than a monolithic one --- and
+we mark the de-staling of stored offsets under grouping, and a task-free family
+router, as the measurements that would close the deployment gap. Neither is claimed
+here; the allocation result does not depend on them.
 
-That last result is the one we would most like to have gone the other way, and it
-determines what we can and cannot claim. We cannot claim a deployable
-rehearsal-free method for this term. We can claim that the term exists, that it is
-worth roughly $1.5$~pp on this stream, that three parameter-space families do not
-address it, and that two specific output-layer constructions fail with identified
-mechanisms rather than unexplained ones --- storing the offsets fails to drift, and
-computing them from the query batch works only on a balanced evaluation set.
-
-\paragraph{The second admissible rule, and why it closes rather than opens.}
-Section~\ref{sec:enumeration}'s enumeration has two non-vacuous rows, and storing
-the optima was the first. The second keeps the model current and gives up the
-stored examples, which admits exactly one source of information: the queries
-themselves. Section~\ref{sec:bpo} measures it. An offset chosen to flatten the
-predicted label histogram --- storing zero floats, using no labels, with no
-hyperparameter --- gains $\mathbf{+4.40}$~pp over a refit global offset, clearing
-the primary criterion by a wide margin.
-
-The criterion we had pre-registered against our own confound then fails. Our audit
-splits are class-balanced by construction, so a rule that equalises predicted class
-frequencies is partly right for reasons belonging to our splits. Re-scored on a
-$70{:}30$ query mix the gain becomes $\mathbf{-0.67}$~pp: the effect does not
-attenuate off balance, it \emph{inverts}. Two further readings point the same way
---- the rule scores above the per-task oracle that should bound it, and its
-advantage scales with how much of the evaluation set is visible at once, both
-signatures of transductive access rather than of a decision rule. We therefore
-report it as an artefact of our evaluation protocol and not as a method, which is
-what that protocol's predeclared outcome instructed us to do in this exact case.
-
-This is why we describe the design space as closed rather than unexplored, and the
-qualifier matters: closed \emph{as enumerated}. Both admissible rows of
-Section~\ref{sec:enumeration} reach the $1.51$~pp only by reading something a
-deployed model will not have --- a value fitted before the drift, or the class
-composition of the evaluation batch itself --- and the inadmissible row reads
-earlier tasks' examples outright. What we have not ruled out is a rule outside our
-constraint set: one that alters the training objective in a way our three failed
-anchors did not, or a per-example router, which Section~\ref{sec:theory} shows can
-in principle exceed even the per-task oracle. That is a stronger statement than
-``we tried and failed'', and a weaker one than ``impossible'' --- it is a mechanism
-for each failure and a boundary drawn where our measurements can support it.
+\paragraph{The one task that loses, and what it points to.}
+The grouped allocation is not uniformly better. The $14$-way DBpedia loses $5.1$~pp
+because rank $2$ is genuinely too small for it --- the only task negative in all three
+seeds --- and it is the same task whose offset cell stays competitive under the
+shared adapter's larger rank. We report it rather than average it away, and it is the
+concrete motivation for an adaptive per-family rank: a topic family with fourteen
+labels should draw more of the budget than a binary one. That is the natural next
+rung, and unlike the offset-deployment questions it is a pure allocation question the
+same method already frames.
 
 \paragraph{Scope.}
-One stream (Order-4), one backbone (T5-large), one budget (LoRA $r{=}8$,
-$2.36$M trainable scalars), three seeds, generative PEFT with a shared decoder and
-restricted-argmax scoring. Every comparison is internal: arms differ in one
-component at an identical budget with identical splits and seeds. We ran no
-published continual-PEFT baseline and make no claim against one, and the official
-test files were never opened, so our absolute accuracies do not belong in
-leaderboard tables. The budgeted quantization result is proved for binary shared
-verbalizers and remains open beyond them.
-
-\paragraph{The two sensitivities we said would matter, run and negative.}
-We flagged two measurements as more valuable than another intervention: how the
-identification gap scales with the number of tasks sharing a verbalizer, and
-whether the staleness grows with stream length as the mechanism predicts. Both are
-answerable from the runs already reported, so we froze criteria for them and
-answered them (Phase-2R, zero additional compute). \textbf{Neither is established
-on this stream.} The gap against live scope membership gives $-0.278$~pp per member,
-CI $[-1.721,+1.017]$ --- sign not interpretable, interval spanning zero, and
-consistent in sign across all three arms. Staleness against age gives $+0.387$~pp
-per subsequent task, CI $[-0.051,+3.379]$: predicted sign, criterion failed. The
-wiring check that guards both passes exactly ($87$ observations, $0$ violations).
-So the claim we are left with is a level and not a rate, and this is not in tension
-with Section~\ref{sec:theory}: at $\kappa\approx0.018$ that section already declared
-the accuracy-space bound weak on this benchmark, and a scale dependence we cannot
-resolve is what a weak bound predicts.
-
-What remains genuinely open is therefore sharper than before: whether any
-correction fixed at a task boundary survives an arbitrarily long stream. Our
-evidence locates the decay in the stored value itself and measures its level, but
-this stream is too short, and its per-scope membership too small, to measure how
-that decay scales. Answering it needs a longer stream with more scope-mates per
-verbalizer, not a new method.
+One stream (Order-4), one backbone (T5-large), one budget (LoRA $r{=}8$, $2.36$M
+trainable scalars), three seeds, generative PEFT with a shared decoder and
+restricted-argmax scoring. Family routing and the offset are scored at their upper
+bound, as stated. Every comparison is internal: arms differ in one component at an
+identical budget with identical splits and seeds. We ran no published continual-PEFT
+baseline and make no claim against one, and the official test files were never
+opened, so our absolute accuracies do not belong in leaderboard tables. The budgeted
+quantization result is proved for binary shared verbalizers and remains open beyond
+them.

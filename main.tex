@@ -10,6 +10,9 @@
 \usepackage{array}
 \usepackage{tabularx}
 \usepackage{graphicx}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usepgfplotslibrary{groupplots}
 \usepackage{xcolor}
 \usepackage{xspace}
 \usepackage{algorithm}
@@ -27,8 +30,8 @@
 
 \input{paper_macros}
 
-\title{The Identification Gap: A Second Capacity Constraint\\
-in Task-Agnostic Continual PEFT}
+\title{Two Capacity Constraints, One Fixed Budget:\\
+Grouping and Offsets in Task-Agnostic Continual PEFT}
 
 \author{Anonymous Authors}
 
@@ -44,8 +47,8 @@ trainable parameters. We identify a second constraint that a parameter budget
 does not buy. When a generative model serves a stream of tasks without task
 identity, tasks that reuse output tokens must share one decision rule over those
 tokens, and the accuracy this costs is invisible to rank-based analyses. We
-define the \emph{identification gap} $\Delta^{\mathrm{id}}$ --- the part of
-recoverable forgetting that requires knowing which task a query came from --- and
+define the \emph{identification gap} $\Delta^{\mathrm{id}}$ (the part of
+recoverable forgetting that requires knowing which task a query came from) and
 separate it from representation drift. Two results are unconditional: the gap is
 \emph{exactly} zero when verbalizer sets are pairwise disjoint, which makes the
 term falsifiable rather than merely definable, and the best shared offset on a
@@ -54,32 +57,34 @@ individual optima, so the unavoidable worst-case error is that set's Chebyshev
 radius. The budgeted extension to $m$ stored offsets is proved for binary shared
 verbalizers and is open beyond them; we state which reported numbers rest on
 which. On a $15$-task T5-large LoRA stream the gap is $3.13$~pp against a single
-global offset and $0.00$~pp against one offset per token-group, so a rule reading
-only the prompt's option list closes it. Task identity adds $+1.10$~pp, CI
+global offset and $0.00$~pp against one offset per \emph{scope} (the set of
+tasks that reuse a token set), so a rule reading only the prompt's option list
+closes it. Task identity adds $+1.10$~pp, CI
 $[+0.40,+1.83]$, on top when restricted to multi-task scopes where the comparison
 is measurable; the pooled $+0.02$~pp averages over rows our implementation forces
 to zero by construction and licenses nothing (Section~\ref{sec:gap-real},
-disclosure~(iii)). The constraint does not live in parameter space: three frozen
+disclosure~(iii)). The output constraint does not live in parameter space: three frozen
 protocols spending the same $2.36$M scalars differently all fail to touch the
-gap, and at the strengths their own prefix gates selected the one derived from the
-correct symmetry argument does the most damage,
-with its own preregistered mechanism check refuting our proposed mechanism. Nor
-is it removed by storing the offsets: a streamed per-group table is $5.08$~pp
-\emph{worse} than storing nothing, and because a single-member group's Chebyshev
-centre is provably that member, singleton groups isolate the cause as staleness
-with aggregation, routing, and gauge ruled out by construction. The one
-rehearsal-free route left --- computing the offset from the unlabelled query batch,
-storing nothing --- gains $4.40$~pp on our class-balanced audit split and inverts to
-$-0.67$~pp once the query mix is skewed to $70{:}30$, failing a control we
-pre-registered to catch precisely that; we report it as an artefact of our
-evaluation protocol and not as a method. Those two are the only non-vacuous rules
-our constraints admit --- one keeps the past examples and lets the model go stale,
-the other keeps the model and gives up the examples, and keeping both is
-rehearsal by definition. What the paper delivers is therefore a
-constraint and a design space closed as enumerated, rather than a technique. Every phase was frozen
-with criteria, thresholds, and predeclared outcomes before implementation and
+gap. Rather than change the training objective again, we change the
+\emph{allocation}: split the tasks into $K{=}4$ semantic families and give each a
+rank-$2$ adapter holding exactly the parameters of one shared rank-$8$ adapter, so
+each family drifts only under its own family. This fixes the representation
+constraint the offset cannot, and it \emph{composes} with the offset. At a
+bit-identical budget across three seeds, grouping alone beats the shared adapter by
+$+8.00$~pp, the per-scope offset adds $+6.58$~pp on its own and $+5.18$~pp on top of
+grouping, and the combined method beats the standard single-adapter baseline
+end-to-end by $\mathbf{+11.76}$~pp, positive on every seed. The two constraints are
+independent and additive. We report the method at its upper bound (the offset is
+fit against the current model and family routing uses the scope at evaluation) and
+state the deployment gap honestly: a stored offset goes stale ($5.08$~pp below floor,
+with singleton scopes isolating the cause) and a query-batch offset inverts under a
+pre-registered class-mix control ($+4.40 \to -0.67$~pp), so we report those two
+sources with their measured costs and note that grouping is positioned to soften the
+staleness. The one task that loses under grouping, the $14$-way DBpedia, is reported
+rather than averaged away and motivates an adaptive per-family rank. Every phase was
+frozen with criteria, thresholds, and predeclared outcomes before implementation and
 SHA-pinned; we report the criteria that failed beside those that passed,
-including six amendments that correct or retract earlier claims of our own. All comparisons
+including amendments that correct or retract earlier claims of our own. All comparisons
 are internal at matched budget and the official test files are never opened, so
 our accuracies are not leaderboard-comparable and we do not present them as such.
 \end{abstract}

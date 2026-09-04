@@ -142,6 +142,36 @@ Proposition~\ref{prop:qm} lives. A reader should treat our evidence as concernin
 binary shared verbalizers.
 
 \paragraph{Router state is not free, and we do not fold it into our headline cost.}
-The $m{=}1$ table costs $13$ floats. Any $m>1$ variant additionally needs a
+The $m{=}1$ table costs $33$ floats. Any $m>1$ variant additionally needs a
 task-free router with per-task state that this figure does not cover; we report
 that separately and never inside the same number.
+
+\paragraph{Our proposed method is scored at two upper bounds.}
+The combined method of Section~\ref{sec:combined} is measured with oracle scope
+routing --- at evaluation we set each query's family adapter from its scope --- and
+with the offset fit against the final model on each task's \texttt{risk} split. Both
+are upper bounds, not deployable rules. A deployable system needs a task-free router
+that recovers the family from the input alone; Section~\ref{sec:gap-real}'s honest
+prototype router (nearest stored class-mean in encoder state) is the natural
+candidate, and closing the grouped-oracle-to-grouped-routed gap is the first
+measurement we owe. The $+11.76$~pp end-to-end number should therefore be read as the
+achievable ceiling of the allocation, and a reviewer is entitled to discount it until
+the router is measured. What is \emph{not} an upper bound is the fixed-budget
+allocation itself: the four cells of the $2\times2$ share a bit-identical trainable
+budget, so the comparison between them is exact regardless of routing.
+
+\paragraph{Grouping de-stales the stored offset, but the deployable offset is not a net gain on its own.}
+Section~\ref{sec:method} argued that a per-family adapter is perturbed only by its own
+family, so a stored per-family offset should drift less than one stored against a
+monolithic adapter. We measured this (Section~\ref{sec:combined}): grouping cuts the
+staleness of the deployable stored offset from $8.22$~pp to $1.95$~pp, on all three
+seeds, so the stored offset now tracks the refit upper bound the composed method reports.
+Two honest limits remain. First, the offset column of the $2\times2$ is still \emph{run}
+with the refit offset, not the stored one; we have shown the stored offset nearly matches
+it, not re-run the whole $2\times2$ under the stored rule. Second, and more important, the
+stored offset's net gain over no offset is $-0.51$~pp mean under grouping and mixed in
+sign across seeds: grouping removes the active \emph{harm} that staleness caused on a
+shared adapter ($-5.08$~pp in Section~\ref{sec:sso}), but on this stream it does not turn
+the deployable offset into a reliable standalone improvement. The deployable value of the
+offset is therefore that it composes with grouping at close to the upper bound, not that
+it helps on its own.

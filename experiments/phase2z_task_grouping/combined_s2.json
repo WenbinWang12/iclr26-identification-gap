@@ -1,0 +1,122 @@
+[
+  {
+    "task": "MNLI",
+    "group": "inference",
+    "R_sh": 0.4166666666666667,
+    "R_sh_off": 0.65625,
+    "R_gp": 0.5729166666666666,
+    "R_gp_off": 0.8020833333333334,
+    "n_audit": 96,
+    "K": 3
+  },
+  {
+    "task": "WiC",
+    "group": "semantic_match",
+    "R_sh": 0.515625,
+    "R_sh_off": 0.53125,
+    "R_gp": 0.5,
+    "R_gp_off": 0.5,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "COPA",
+    "group": "inference",
+    "R_sh": 0.5,
+    "R_sh_off": 0.484375,
+    "R_gp": 0.5,
+    "R_gp_off": 0.46875,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "QQP",
+    "group": "semantic_match",
+    "R_sh": 0.71875,
+    "R_sh_off": 0.734375,
+    "R_gp": 0.921875,
+    "R_gp_off": 0.90625,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "BoolQA",
+    "group": "inference",
+    "R_sh": 0.65625,
+    "R_sh_off": 0.78125,
+    "R_gp": 0.875,
+    "R_gp_off": 0.875,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "RTE",
+    "group": "inference",
+    "R_sh": 0.515625,
+    "R_sh_off": 0.71875,
+    "R_gp": 0.875,
+    "R_gp_off": 0.875,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "IMDB",
+    "group": "sentiment",
+    "R_sh": 0.90625,
+    "R_sh_off": 0.890625,
+    "R_gp": 0.9375,
+    "R_gp_off": 0.890625,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "SST-2",
+    "group": "sentiment",
+    "R_sh": 0.890625,
+    "R_sh_off": 0.890625,
+    "R_gp": 0.953125,
+    "R_gp_off": 0.96875,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "DBpedia",
+    "group": "topic",
+    "R_sh": 0.9709821428571429,
+    "R_sh_off": 0.9665178571428571,
+    "R_gp": 0.90625,
+    "R_gp_off": 0.9799107142857143,
+    "n_audit": 448,
+    "K": 14
+  },
+  {
+    "task": "AGNews",
+    "group": "topic",
+    "R_sh": 0.7890625,
+    "R_sh_off": 0.8984375,
+    "R_gp": 0.8203125,
+    "R_gp_off": 0.8984375,
+    "n_audit": 128,
+    "K": 4
+  },
+  {
+    "task": "MultiRC",
+    "group": "inference",
+    "R_sh": 0.671875,
+    "R_sh_off": 0.640625,
+    "R_gp": 0.6875,
+    "R_gp_off": 0.734375,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "Yahoo",
+    "group": "topic",
+    "R_sh": 0.7125,
+    "R_sh_off": 0.70625,
+    "R_gp": 0.715625,
+    "R_gp_off": 0.70625,
+    "n_audit": 320,
+    "K": 10
+  }
+]

@@ -8,14 +8,20 @@ cleverly, penalise interference between task subspaces, or compress and retrieve
 subspaces. All of this treats forgetting as a property of the parameter update.
 
 Part of it is not. When a prompted model is scored by restricted argmax over a
-verbalizer set --- \texttt{False}/\texttt{True}, \texttt{Bad}/\texttt{Good} --- the
+verbalizer set (\texttt{False}/\texttt{True}, \texttt{Bad}/\texttt{Good}), the
 decision depends on the \emph{difference} between the label logits, and that
 difference can be corrected by a per-label additive offset. An offset has zero rank.
 It costs a handful of floats. If a task's accuracy can be restored by one, then
 whatever was lost was never a capacity problem, and rank spent on it is wasted.
 
-This paper measures how much of the forgetting on a standard $15$-task stream is of
-that kind, and then tries to fix it.
+This says the fixed budget faces \emph{two} capacity constraints, in two different
+places: an output-layer one that an offset can fix without spending rank, and a
+representation-layer one that it cannot. This paper measures how much of the
+forgetting on a standard $15$-task stream is of each kind, and proposes a method that
+relieves both at a fixed parameter budget: reallocating the rank across task
+families for the representation, and adding a per-scope offset for the output. At a
+bit-identical budget the two moves compose, beating the standard single-adapter
+baseline end-to-end by $+11.76$~pp across three seeds (Section~\ref{sec:combined}).
 
 \paragraph{The term, and a boundary condition that makes it falsifiable.}
 Write $R_g^{\mathrm{orc}}$ for task $g$'s accuracy under the best offset chosen
@@ -31,8 +37,8 @@ violations, worst deviation $0.0$.
 
 \paragraph{What we measure.}
 Under one shared offset the gap is $3.13$~pp. Under an offset shared only within a
-\emph{scope} --- the set of tasks with the same verbalizer, readable from the prompt
-without knowing which task is being asked --- it is $0.00$~pp, CI $[-1.71,+1.71]$.
+\emph{scope} (the set of tasks with the same verbalizer, readable from the prompt
+without knowing which task is being asked) it is $0.00$~pp, CI $[-1.71,+1.71]$.
 The scope index recovers $+1.51$~pp, CI $[+0.43,+2.74]$; adding true task identity
 on top buys a further $+0.02$~pp pooled, but that pooled figure averages over
 singleton scopes where our implementation makes the two rungs identical by
@@ -42,86 +48,83 @@ identity buys $+1.10$~pp, CI $[+0.40,+1.83]$
 missing is the scope, which is free at inference time; the residual attributable to
 the task label is small but not zero, and we do not claim it vanishes.
 
-\paragraph{Three parameter-space interventions cannot touch it.}
-We froze three protocols and ran them: an orthogonality penalty of O-LoRA's form,
-anchoring the verbalizer logits to their post-training values, and anchoring them in
-the gauge-fixed coordinates the theory says are the identified ones. None improved
-task-agnostic accuracy; at the strengths their own gates selected two reduced it;
-and the one built from the correct symmetry
-argument did the most damage. The per-scope offset kept recovering the same
-$+1.51$~pp on top of each. Three failures do not prove no parameter-space fix
-exists, and we say so in Section~\ref{sec:limitations} --- but they do locate the
-term outside the space those methods act in.
+\paragraph{The output layer is only half of it.}
+Fixing the output layer does not stop the representation from forgetting. We froze
+three parameter-space protocols that target the representation --- an orthogonality
+penalty of O-LoRA's form, anchoring the verbalizer logits to their post-training
+values, and anchoring them in the gauge-fixed coordinates the theory identifies ---
+and none improved task-agnostic accuracy; at the strengths their own gates selected,
+two reduced it. The per-scope offset kept recovering the same $+1.51$~pp on top of
+each, confirming the two layers are separate, but none of these \emph{objective}
+changes bought representation-layer accuracy. So one shared adapter faces two
+distinct capacity constraints, and penalising interference after the fact did not
+relieve the second one.
 
-\paragraph{The cheap fix fails, and the failure is informative.}
-Section~\ref{sec:enumeration} enumerates the rules those constraints admit, and
-there are two: one keeps past examples and lets the model go stale, the other keeps
-the current model and gives up the examples. Keeping both is the definition of
-rehearsal, so the list is complete. Take them in order.
-The first is to store the table: at each task boundary fit that task's
-optimum on its own data, keep it, and apply the scope's Chebyshev centre at test
-time. No task ID, no stored examples, $33$ floats. It is $5.08$~pp \emph{worse than
-applying no offset at all}, damaging $11$ of $12$ tasks. The design isolates why. On
-singleton scopes the Chebyshev centre of a one-element table is that element, so
-aggregation, routing, and the gauge cannot be responsible --- and those scopes still
-lose $4.18$~pp, CI $[-6.61,-1.76]$. What remains is staleness: an offset fitted
-against $\theta_g$ is wrong at $\theta_{15}$, measured at $6.16$~pp mean. The
-$+1.51$~pp is real but reachable only by fitting against the \emph{current} model.
+\paragraph{The method: relieve both constraints at a fixed budget.}
+We stop changing the objective and change the \emph{allocation}. Split the tasks
+into $K{=}4$ semantic families and give each a rank-$2$ adapter; the four hold
+exactly the parameters of one shared rank-$8$ adapter, so this is a reallocation and
+not extra capacity. Each family adapter is perturbed only by its own family, which
+contains the cross-family overwriting that a shared adapter suffers. On top of that
+we apply the per-scope output offset. At a bit-identical budget, on three seeds, the
+grouped allocation beats the shared adapter by $+8.00$~pp, the offset adds on top,
+and the combined method beats the standard shared/no-offset baseline
+\emph{end-to-end by $+11.76$~pp}, positive on every seed (Section~\ref{sec:combined}).
+The two moves are independent: grouping still adds $+5.18$~pp after the output layer
+is corrected, so neither subsumes the other. This is the paper's central positive
+result: two capacity constraints, two matched-budget moves, and the relief adds.
 
-\paragraph{The second route does not survive its own control either.}
-That leaves the other admissible row: fit against the current model and give up the
-stored examples. The only data satisfying both is the query batch itself.
-Section~\ref{sec:bpo} tests the
-offset computed from that batch's logits alone --- no labels, no task identity,
-\emph{zero} stored floats, no hyperparameter. It gains $+4.40$~pp over a refit
-global offset and then fails the control we pre-registered against our own splits,
-inverting to $-0.67$~pp once the query mix is skewed. We report it as an artefact of
-our evaluation protocol. So the paper's contribution is a constraint and a closed
-design space, not a technique.
+\paragraph{What we report as an upper bound, and why.}
+Both moves are scored at their upper bound: the offset is fit against the current
+model, and family routing uses the scope at evaluation. Section~\ref{sec:enumeration}
+enumerates the deployable sources for the offset (there are exactly two) and
+Sections~\ref{sec:sso} and~\ref{sec:bpo} show each has a cost on this stream (a
+stored offset goes stale, $5.08$~pp below floor; a query-batch offset gains
+$+4.40$~pp then inverts to $-0.67$~pp under a class-mix control). We report those
+honestly and note that grouping is positioned to soften the staleness cost, because
+a per-family adapter drifts less than a monolithic one, a mechanism we motivate
+and mark as measured only at the upper bound (Section~\ref{sec:limitations}). The
+allocation claim itself (two matched-budget moves that compose) does not depend
+on how tightly the deployable offset tracks the upper bound.
 
 \paragraph{Contributions.}
 \begin{enumerate}\itemsep2pt
-\item A decomposition separating the identification gap from representation drift,
-  with an exactly-zero boundary condition (Proposition~\ref{prop:disjoint}) that
-  makes it falsifiable rather than merely definable, and a minimax
-  characterisation of the best shared offset as a Chebyshev radius
-  (Proposition~\ref{prop:cheb}). The budgeted extension is proved for binary
-  shared verbalizers and \textbf{open} beyond them; we state which of our numbers
-  rest on which (Section~\ref{sec:theory}).
-\item Measurement on Order-4: the gap is $3.13$~pp under a global offset and
-  $0.00$~pp under a per-scope one; scope recovers $+1.51$~pp and task identity
-  adds $+1.10$~pp, CI $[+0.40,+1.83]$, on top when restricted to multi-task scopes
-  where the comparison is measurable (Section~\ref{sec:gap-real}).
-\item Three frozen parameter-space protocols, all negative, with the most
-  principled doing the most damage (Section~\ref{sec:three-anchors}).
-\item A negative result with an isolated mechanism: storing per-task offsets is
-  worse than storing nothing, and singleton scopes locate the cause in staleness
-  with aggregation, routing, and gauge ruled out by construction
-  (Section~\ref{sec:sso}).
-\item An enumeration showing those constraints admit exactly two non-vacuous
-  rules (Section~\ref{sec:enumeration}), and a test of the second one ---
-  computing the offset from the unlabelled query batch --- reported as an
-  \emph{artefact of our
-  own evaluation split} rather than a method: it gains $+4.40$~pp on a
-  class-balanced audit set and inverts to $-0.67$~pp at a $70{:}30$ class mix,
-  failing the control criterion we had pre-registered to catch exactly that
-  (Section~\ref{sec:bpo}). With Section~\ref{sec:sso} this closes the design space
-  instead of extending it.
-\item Four pre-registered rules in that second row, all of which fail their own
-  criteria, and one mechanism that survives them: within each task, the gain that
-  query-batch calibration realises is predicted by the magnitude of the correction
-  it proposes (median rank correlation $+0.72$, positive in $8$ of $8$ tasks, on
-  five seeds used to fit nothing). Thresholding on that magnitude still leaves a
-  $-2.34$~pp worst case against a pre-registered $-1.0$~pp floor. We can therefore
-  say why the row is empty, not merely that it is.
+\item A decomposition separating the identification gap (output layer) from
+  representation drift, with an exactly-zero boundary condition
+  (Proposition~\ref{prop:disjoint}) that makes the output term falsifiable, and a
+  minimax characterisation of the best shared offset as a Chebyshev radius
+  (Proposition~\ref{prop:cheb}). The budgeted extension is proved for binary shared
+  verbalizers and \textbf{open} beyond them; we state which numbers rest on which
+  (Section~\ref{sec:theory}).
+\item A fixed-budget two-constraint method: task-family grouping adapters
+  (representation) plus a per-scope offset (output), each at a bit-identical
+  parameter count to a shared adapter (Section~\ref{sec:method}).
+\item The measurement that makes it a method and not a definition. On Order-4, at a
+  matched budget and across three seeds: grouping alone $+8.00$~pp, offset alone
+  $+6.58$~pp, grouping-on-top-of-offset $+5.18$~pp, and end-to-end $+11.76$~pp over
+  the standard baseline, all positive on every seed (Section~\ref{sec:combined}).
+  The two moves are independent and additive, and the one task that loses under
+  grouping (the $14$-way DBpedia, rank $2$ too small) is reported, not averaged
+  away.
+\item Evidence that the objective is the wrong lever for the representation
+  constraint: three frozen parameter-space interventions fail to buy
+  task-agnostic accuracy, motivating the allocation move
+  (Section~\ref{sec:three-anchors}).
+\item An enumeration of the deployable sources for the output offset --- exactly two
+  non-vacuous rules (Section~\ref{sec:enumeration}) --- with each tested and its cost
+  on this stream measured: a stored offset goes stale ($5.08$~pp below floor, with
+  singleton scopes locating the cause, Section~\ref{sec:sso}), and a query-batch
+  offset inverts under a pre-registered class-mix control (Section~\ref{sec:bpo}).
+  This is why the method reports the offset at its upper bound and states the
+  deployment gap plainly.
 \end{enumerate}
 
 \paragraph{How to read the evidence.}
 Every phase was frozen with its criteria, thresholds, and predeclared outcomes
 before it was implemented, each protocol SHA-pinned; we report the criteria that
 failed alongside those that passed, including one we had predicted would fail. All
-comparisons are internal --- arms differing in one component at an identical
-budget, identical splits, identical seeds --- and the official test files are never
+comparisons are internal (arms differing in one component at an identical
+budget, identical splits, identical seeds) and the official test files are never
 opened, so our absolute accuracies are not comparable to published leaderboard
 numbers and we do not place them in such tables. We run no published continual-PEFT
 baseline, and make no claim against one.

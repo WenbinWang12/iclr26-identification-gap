@@ -89,9 +89,19 @@ singleton scope the measured $\Delta^{\mathrm{id}}$ must be exactly zero --- and
 report it as such in every experiment below.
 
 The precondition is a property of the benchmark, not an assumption. On the
-$15$-task stream we use, the shared-verbalizer groups are
-\begin{center}
+$15$-task stream we use, the shared-verbalizer groups are those of
+Table~\ref{tab:scope-structure}, plus five singleton scopes. Ten of the fifteen
+tasks share output tokens with at least one other task, so $\Delta^{\mathrm{id}}$ is
+a live quantity on this stream rather than a hypothetical one.
+
+\begin{table}[t]
+\centering
 \small
+\caption{Shared-verbalizer scopes on the $15$-task Order-4 stream --- tasks that
+reuse an output-token set --- with scope cardinality $K_S$, plus five singleton
+scopes. Yelp/Amazon ($K_S=5$) and CB are later excluded from scored means
+(Section~\ref{sec:setup-exp}).}
+\label{tab:scope-structure}
 \begin{tabular}{llc}
 \toprule
 label set & member tasks & $K_S$ \\
@@ -102,10 +112,7 @@ label set & member tasks & $K_S$ \\
 \texttt{\{very negative, \ldots, very positive\}} & Yelp, Amazon & 5 \\
 \bottomrule
 \end{tabular}
-\end{center}
-plus five singleton scopes. Ten of the fifteen tasks share output tokens with at
-least one other task, so $\Delta^{\mathrm{id}}$ is a live quantity on this stream
-rather than a hypothetical one.
+\end{table}
 
 \subsection{The identification ladder}
 \label{sec:ladder}

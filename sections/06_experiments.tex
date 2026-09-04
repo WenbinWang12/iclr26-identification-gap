@@ -75,9 +75,16 @@ reading is that on this stream the useful identification budget is one offset pe
 scope; finer codebooks are unnecessary rather than harmful.
 
 \paragraph{The offset ladder, measured.}
-\texttt{none} arm, three seeds, mean over the $12$ scorable tasks:
-\begin{center}
+Table~\ref{tab:offset-ladder} gives the ladder on the \texttt{none} arm, three
+seeds, mean over the $12$ scorable tasks.
+\begin{table}[t]
+\centering
 \small
+\caption{The identification ladder on the \texttt{none} arm (three seeds, mean over
+the $12$ scorable tasks). Per-scope over global is $+1.51$~pp, CI $[+0.43,+2.74]$;
+the oracle task index adds only $+0.02$~pp pooled, and a finer codebook adds
+nothing.}
+\label{tab:offset-ladder}
 \begin{tabular}{lcl}
 \toprule
 inference rule & mean accuracy & requires \\
@@ -89,7 +96,7 @@ $m=4$ codebook per scope        & $0.7227$ & the option list \\
 one offset per task (oracle)    & $0.7229$ & \emph{the task index} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 Per-scope over global is $\mathbf{+1.51}$~pp, CI $[+0.43,+2.74]$, excluding zero.
 On multi-task scopes oracle over per-scope is $+1.10$~pp, CI $[+0.40,+1.83]$; the
 pooled figure across all scopes is $+0.02$~pp, CI $[-1.00,+1.00]$. We previously
@@ -117,7 +124,7 @@ task's own fitted offset to the scope rather than re-running the shared fit
 sound as an \emph{estimand} --- with one task in the pool, minimising worst-task
 loss and maximising that task's own objective have the same optimum, which is why
 the per-scope-over-global $+1.51$~pp is unaffected --- but it makes
-$R^{\mathrm{orc}}-R^{\mathrm{shr}}_{\mathrm{scoped}}$ exactly zero on those rows
+$R^{\mathrm{orc}}-R^{\mathrm{shr}}_{\mathrm{scope}}$ exactly zero on those rows
 as an identity, not as a finding. Empirically those rows are $783$ of $2511$ and
 $100\%$ of them are exactly zero. Restricted to multi-task scopes, where the
 comparison is live, the gap is $+1.10$~pp with cluster-bootstrap CI
@@ -270,10 +277,17 @@ accuracy & $0.7016$ & $0.7077$ & $\mathbf{0.6509}$ & $0.6561$ & $0.7227$ & $0.72
 \end{table}
 
 \paragraph{Singleton scopes isolate the cause.}
-The interesting part is not that P1 failed but that the design lets us say why.
-Split the loss by scope size:
+The interesting part is not that P1 failed but that the design lets us say why:
+Table~\ref{tab:sso-singleton} splits the loss by scope size.
 
-\begin{center}\small
+\begin{table}[t]
+\centering
+\small
+\caption{Storing offsets (SSO $m{=}1$) minus the global offset, split by scope size,
+three seeds. The loss persists on singleton scopes --- where the Chebyshev centre of
+a one-element table \emph{is} that element, so there is no aggregation, routing, or
+gauge conflict --- isolating staleness as the remaining cause.}
+\label{tab:sso-singleton}
 \begin{tabular}{lcc}
 \toprule
 $R^{\mathrm{sso}1}-R^{\mathrm{glob}}$ & point & CI \\
@@ -282,7 +296,7 @@ multi-task scopes & $-6.75$~pp & $[-10.71,-2.88]$ \\
 \textbf{singleton scopes} & $\mathbf{-4.18}$~\textbf{pp} & $[-6.61,-1.76]$ \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 On a singleton scope the Chebyshev centre of a one-element table \emph{is} that
 element, by Proposition~\ref{prop:cheb} --- and the run confirms it, with
@@ -343,8 +357,15 @@ rule that never predicts a class cannot score on it, so matching uniform is a
 label-free surrogate for ``do not let the drifted bias collapse a class''.
 
 \paragraph{It passes its primary criterion.}
-Three seeds, mean over the $12$ scorable tasks:
-\begin{center}\small
+Three seeds, mean over the $12$ scorable tasks (Table~\ref{tab:bpo-levels}).
+\begin{table}[t]
+\centering
+\small
+\caption{Batch prior offset (BPO), three seeds, mean over the $12$ scorable tasks.
+BPO beats the refit global offset by $+4.40$~pp (Q1 passes), but the comparison is
+transductive: it exceeds even the per-task oracle by reading the \texttt{audit}
+batch's own logits.}
+\label{tab:bpo-levels}
 \begin{tabular}{lcl}
 \toprule
 inference rule & accuracy & stored state \\
@@ -356,7 +377,7 @@ per-scope refit (rehearsal ceiling)  & $0.7525$ & re-reads old data \\
 per-task refit (needs task index)    & $0.7616$ & re-reads old data \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 Q1, the preregistered primary, asks that BPO beat the refit global offset:
 $\mathbf{+4.40}$~pp, CI $[+3.02,+5.78]$, \textbf{passes}. Q2 (no task loses more
 than $2$~pp against no-offset) passes, worst task Yahoo at $-0.62$~pp. Q3 passes.
@@ -366,8 +387,16 @@ The training gate passes at $0.7383$.
 Our \texttt{audit} splits are $64$/class, balanced by construction, so ``match
 uniform'' is partly correct because of how we built the split. Criterion Q4 existed
 solely to measure that, declared before any Phase-2Q number existed: re-score on
-deliberately imbalanced query mixes drawn from the same examples and the same model.
-\begin{center}\small
+deliberately imbalanced query mixes drawn from the same examples and the same model
+(Table~\ref{tab:bpo-classmix}).
+\begin{table}[t]
+\centering
+\small
+\caption{Criterion Q4: BPO minus the global offset as the query class mix is skewed
+away from balance. The effect does not merely shrink off balance --- it changes
+sign --- so the $+4.40$~pp gain is an artefact of the balanced \texttt{audit}
+construction, not a property of the rule.}
+\label{tab:bpo-classmix}
 \begin{tabular}{lcc}
 \toprule
 query class mix & BPO $-$ global & CI \\
@@ -377,7 +406,7 @@ $\mathbf{70{:}30}$ (thresholded) & $\mathbf{-0.67}$~\textbf{pp} & $[-3.55,+2.06]
 $90{:}10$ (reported only) & $-1.53$~pp & $[-7.98,+4.54]$ \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 Q4 \textbf{fails}. The effect does not shrink off balance --- it changes sign. Since
 no deployment stream is class-balanced, the $+4.40$~pp is a property of our
 evaluation harness, not of the rule. The protocol's predeclared outcome~3 covers
@@ -457,9 +486,17 @@ any spread measure we tested ($\mathrm{sd}$ $+0.10$, IQR $+0.05$, range $+0.10$)
 and better than its own scale-free version $|\overline{s}|/\mathrm{sd}(s)$ ($+0.32$).
 Applying the offset only when $|\overline{s}|\ge 1.4$ --- the smallest grid value that
 is harmful-free on each of three development seeds separately --- was frozen and then
-scored on \textbf{five seeds and $350$ batches used to fit nothing}:
+scored on \textbf{five seeds and $350$ batches used to fit nothing}; the criteria and
+their held-out results are Table~\ref{tab:scg}.
 
-\begin{center}\small
+\begin{table}[t]
+\centering
+\small
+\caption{SCG (apply batch calibration only when $|\overline{s}|\ge1.4$), scored on
+five held-out seeds and $350$ batches used to fit nothing. The mechanism criterion
+U5 passes ($8/8$ tasks), but the worst-case floor U1 fails by $1.34$~pp on $2$ of
+$350$ batches; the predeclared branch for a failed U1 is to stop.}
+\label{tab:scg}
 \begin{tabular}{llcl}
 \toprule
 criterion & quantity & threshold & held-out result \\
@@ -471,7 +508,7 @@ U4 & apply rate & $[0.10,0.60]$ & $0.271$ \ passes \\
 U5 & within-task $\rho(|\overline{s}|,\text{gain})$ & median${}>{+}0.25$ & $\mathbf{+0.72}$, $8/8$ positive \ \textbf{passes} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \noindent It cuts the harmful batches from $39/350$ to $2/350$ and misses its
 worst-case floor by $1.34$~pp on those two. The predeclared branch for a failed U1 is
@@ -500,14 +537,204 @@ held-out failures, which makes it a fitted parameter on the only unseen data we 
 It is recorded in the amendment as a hypothesis with its provenance stated, and
 testing it costs five more seeds.
 
-\paragraph{What this closes.}
-Every rehearsal-free route to the identification gap we have tested reaches it only
-by reading something a deployed model will not have: old task data (Section~\ref{sec:sso}),
-or the evaluation batch's own composition (Section~\ref{sec:bpo}). Four
-pre-registered rules now occupy that second row and all four fail their own criteria.
-Combined with Phase-2P's staleness measurement, the design space is closed rather
-than merely unexplored, and the honest summary of this paper's method question is a
-negative one --- with the qualification that we can now say \emph{why} the row is
-empty and not only that it is. We do not propose a variant, and nothing here licenses
-a new training-time regulariser: every arm in Sections~\ref{sec:bpo}
-and~\ref{sec:repair} trained byte-identically to baseline.
+\paragraph{What this closes for the \emph{deployable} offset.}
+This bounds how well the output-layer offset can be approximated without reading old
+data. Every rehearsal-free route to the identification gap we tested reaches it only
+by reading something a deployed model will not have: old task data
+(Section~\ref{sec:sso}) or the evaluation batch's own composition
+(Section~\ref{sec:bpo}). Four pre-registered rules occupy the query-batch row and all
+four fail their own criteria, so on this stream the offset is best obtained by fitting
+against the current model --- the upper bound the method reports in
+Section~\ref{sec:combined} --- and the gap to a fully task-free offset is a stated
+limitation rather than a claimed component. This does not bear on the
+representation-layer move, which is an allocation change and reads no past data at
+all; every arm in Sections~\ref{sec:bpo} and~\ref{sec:repair} trained byte-identically
+to baseline.
+
+\subsection{Task grouping reallocates the budget, and it composes with the offset}
+\label{sec:combined}
+
+The interventions of Section~\ref{sec:three-anchors} all spend the budget the same
+way --- one shared adapter --- and change only the training \emph{objective}. We now
+change the \emph{allocation} instead, at an identical budget, and combine it with the
+output-layer offset of Section~\ref{sec:gap-real}. Split the fifteen tasks into
+$K{=}4$ semantic families (inference, sentiment, topic, semantic-matching) and give
+each family its own rank-$2$ adapter; the four rank-$2$ adapters hold exactly the
+parameters of one rank-$8$ shared adapter ($4\times2=8$), verified per arm at run
+time. Each family adapter sees only its family's tasks, so cross-family interference
+is contained by construction. Routing to the family adapter uses the scope at
+evaluation, and the offset is fit against the final model on each task's held-out
+\texttt{risk} split (disjoint from the scored \texttt{audit} split); both are upper
+bounds in the sense of Section~\ref{sec:enumeration}, and Section~\ref{sec:limitations}
+states the deployment gap.
+
+\paragraph{Grouping alone.}
+At matched budget, the grouped allocation beats the shared adapter on all three
+seeds (scope-routed, no offset; Table~\ref{tab:grouping-alone}).
+
+\begin{table}[t]
+\centering
+\small
+\caption{Grouping alone (scope-routed, no offset): balanced accuracy (\%) at a
+bit-identical trainable budget. All three seeds positive; the smallest, $+5.99$~pp,
+is more than four times the $1.3$~pp same-configuration noise floor.}
+\label{tab:grouping-alone}
+\begin{tabular}{lrrr}
+\toprule
+ & shared (rank $8$) & grouped ($4{\times}2$) & $\Delta$ \\
+\midrule
+seed 1 & $69.30$ & $78.93$ & $+9.63$ \\
+seed 2 & $67.64$ & $76.03$ & $+8.39$ \\
+seed 3 & $70.21$ & $76.20$ & $+5.99$ \\
+\midrule
+mean   & $69.05$ & $77.05$ & $\mathbf{+8.00}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent All three seeds are positive and the smallest, $+5.99$~pp, is more than four
+times the $1.3$~pp same-configuration noise floor (Section~\ref{sec:setup-exp}). The
+effect is a reallocation, not extra capacity: the budget is bit-for-bit identical.
+The task-level breakdown shows the mechanism. The tasks that gain are the ones a
+single shared adapter had let later tasks overwrite --- RTE $+25.5$, QQP $+20.8$,
+BoolQA $+20.8$, SST-2 $+17.7$ (3-seed means, each positive in all three seeds), with
+MNLI $+9.0$ on average though negative in one seed. The tasks that lose are the ones
+that gave up capacity: the $14$-way DBpedia drops $5.1$~pp --- the only task negative
+in all three seeds --- because rank $2$ is genuinely too small for it, then AGNews
+$1.3$ and WiC $0.5$. Interference containment on the reused-token families outweighs
+the capacity surrendered by the topic family. The one reliable loser, DBpedia, is
+exactly the case an adaptive per-family rank would address, and we flag it as such
+rather than average it away.
+
+\paragraph{The two moves compose (the $2\times2$).}
+Adding the per-scope offset on top of each allocation gives the four corners of
+Section~\ref{sec:method}, all at one budget (Figure~\ref{fig:combined-2x2}); the
+per-seed decomposition into effects is Table~\ref{tab:combined-effects}.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=15pt,
+  width=0.72\textwidth, height=5.2cm,
+  enlarge x limits=0.4,
+  ymin=64, ymax=84,
+  ylabel={mean accuracy (\%)},
+  symbolic x coords={no offset,with offset},
+  xtick=data,
+  nodes near coords, nodes near coords style={font=\scriptsize},
+  legend style={at={(0.5,-0.20)},anchor=north,legend columns=2,font=\small},
+  ymajorgrids, tick align=inside,
+]
+\addplot coordinates {(no offset,68.68) (with offset,75.25)};
+\addplot coordinates {(no offset,78.07) (with offset,80.43)};
+\legend{shared (rank $8$),grouped ($4{\times}2$)}
+\end{axis}
+\end{tikzpicture}
+\caption{The two capacity moves compose at a bit-identical budget. Bars are 3-seed
+mean balanced accuracy (\%) over the $12$ scorable tasks for the four corners of the
+$2\times2$ (Section~\ref{sec:method}); ``with offset'' is the per-scope offset. The
+proposed grouped/offset cell ($80.43$) is best on every seed, and the end-to-end
+gain over the standard shared/no-offset baseline ($68.68$) is $\mathbf{+11.76}$~pp.
+Family routing and the offset are scored at their upper bounds
+(Section~\ref{sec:limitations}).}
+\label{fig:combined-2x2}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\small
+\caption{The $2\times2$ decomposed into its four effects (3-seed means, per-seed in
+brackets). Every effect is positive on all three seeds, so the two moves are
+independent and additive. The grouping-alone effect here ($+9.39$~pp) is the
+no-offset column of \emph{this} offset-arm run, a different arm set from the
+standalone grouping experiment of Table~\ref{tab:grouping-alone} ($+8.00$~pp); both
+are positive on all seeds.}
+\label{tab:combined-effects}
+\begin{tabular}{llc}
+\toprule
+effect & mean & per-seed / sign \\
+\midrule
+offset alone \ $(R_{\mathrm{sh{+}off}}-R_{\mathrm{sh}})$      & $+6.58$ & $+3.76,+5.29,+10.68$ \ all$+$ \\
+grouping alone \ $(R_{\mathrm{gp}}-R_{\mathrm{sh}})$          & $+9.39$ & $+9.01,+8.34,+10.83$ \ all$+$ \\
+grouping on top of offset \ $(R_{\mathrm{gp{+}off}}-R_{\mathrm{sh{+}off}})$ & $+5.18$ & $+6.82,+5.88,+2.84$ \ all$+$ \\
+end-to-end \ $(R_{\mathrm{gp{+}off}}-R_{\mathrm{sh}})$        & $\mathbf{+11.76}$ & $+10.58,+11.18,+13.51$ \ all$+$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent The proposed grouped/offset cell is best on every seed, and the two moves
+are independent: grouping still adds $+5.18$~pp after the output layer is already
+corrected, and the offset still adds on top of grouping, so neither subsumes the
+other. The end-to-end $+11.76$~pp over the standard shared/no-offset baseline is
+positive on all three seeds and roughly nine times the noise floor. This is the
+paper's central positive claim: at a fixed parameter budget the two capacity
+constraints of Section~\ref{sec:setup} are separately relievable and the relief adds.
+
+\paragraph{Where the offset does \emph{not} add, stated plainly.}
+The composition is not uniform across tasks, and the pattern is the expected one. The
+representation gain from grouping-on-top-of-offset is concentrated on the tasks a
+shared adapter had overwritten --- MNLI $+19.8$, QQP $+14.1$, RTE $+13.0$, SST-2
+$+6.3$ (3-seed means of $R_{\mathrm{gp{+}off}}-R_{\mathrm{sh{+}off}}$) --- while on the
+high-cardinality topic tasks the shared adapter's larger rank makes its offset-cell
+competitive: DBpedia is $-0.5$ and WiC $-3.7$ under grouping. These are the same tasks
+that lose in the grouping-alone breakdown and for the same reason, rank $2$ is too
+small for a $14$-way label set. The net is decisively positive because the reused-token
+families dominate the mean, but we report the topic-family cost rather than hide it,
+and it is the concrete motivation for the adaptive per-family rank we leave to future
+work.
+
+\paragraph{Grouping de-stales the stored offset, turning its column deployable.}
+The offset column above is fit against the \emph{final} model (the rehearsal ceiling
+of Section~\ref{sec:sso}), an upper bound. The deployable rule fits each task's optimum
+at the moment it finishes training, stores it, and never re-reads old data --- which
+pays a staleness cost because the model keeps moving afterward. Section~\ref{sec:method}
+argued that grouping should soften this: a family adapter is perturbed only by its own
+family's later tasks, so a stored per-family optimum drifts less than one stored against
+a monolithic adapter that every later task moves. We now measure it. Holding the
+Chebyshev aggregation ($m{=}1$), the scope routing, and the scored \texttt{audit} split
+identical, we compare the stored offset (fit at each task's boundary) against the refit
+upper bound (fit against the final model); only the fit \emph{time} differs, so the gap
+$\text{staleness}=R_{\mathrm{refit}}-R_{\mathrm{stored}}$ is pure staleness
+(Figure~\ref{fig:destale}).
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+  ybar, bar width=34pt,
+  width=0.55\textwidth, height=4.8cm,
+  enlarge x limits=0.6,
+  ymin=0, ymax=10,
+  ylabel={staleness $R_{\mathrm{refit}}{-}R_{\mathrm{stored}}$ (pp)},
+  symbolic x coords={shared (rank 8),grouped ($4{\times}2$)},
+  xtick=data,
+  nodes near coords, nodes near coords style={font=\small},
+  ymajorgrids, tick align=inside,
+]
+\addplot coordinates {(shared (rank 8),8.22) (grouped ($4{\times}2$),1.95)};
+\end{axis}
+\end{tikzpicture}
+\caption{Grouping de-stales the stored offset. Bars are 3-seed mean staleness
+$R_{\mathrm{refit}}-R_{\mathrm{stored}}$ (pp), holding the Chebyshev aggregation,
+scope routing, and \texttt{audit} split fixed so only fit \emph{time} differs.
+Grouping cuts staleness from $8.22$~pp (per-seed $7.98,10.08,6.62$) to $1.95$~pp
+($1.16,3.88,0.82$): a $+6.27$~pp reduction, positive on all three seeds. The stored
+offset's net gain over no offset remains mixed in sign (see text).}
+\label{fig:destale}
+\end{figure}
+
+\noindent Grouping cuts the staleness of the deployable stored offset from $8.22$~pp to
+$1.95$~pp, positive on all three seeds with small variance: under the grouped allocation
+the deployable stored offset recovers all but $\sim2$~pp of the refit upper bound, where
+on a shared adapter it forfeits over $8$~pp. This is the mechanism of
+Section~\ref{sec:method} confirmed directly, and it is what lets the offset column of the
+$2\times2$ be read as (near-)deployable rather than only as a ceiling. We state one
+limit plainly: the stored offset's \emph{net} gain over no offset ($R_{\mathrm{stored}}-
+R_{\mathrm{none}}$) is $-0.51$~pp mean under grouping and mixed in sign across seeds
+($+0.14,-1.67,+0.02$), against $-1.95$~pp on the shared adapter. So grouping removes the
+staleness \emph{penalty} that made the stored offset actively harmful on a shared adapter
+(Section~\ref{sec:sso}'s $-5.08$~pp), but it does not, on this stream, make the deployable
+offset a reliable net \emph{gain} on its own --- its value is that it now tracks the
+upper-bound offset the composed method uses, closing most of the deployment gap that
+Section~\ref{sec:limitations} had flagged.

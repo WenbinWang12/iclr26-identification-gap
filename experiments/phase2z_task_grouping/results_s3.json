@@ -1,0 +1,98 @@
+[
+  {
+    "task": "MNLI",
+    "group": "inference",
+    "R_shared": 0.4791666666666667,
+    "R_grouped_orc": 0.59375,
+    "n_audit": 96,
+    "K": 3
+  },
+  {
+    "task": "WiC",
+    "group": "semantic_match",
+    "R_shared": 0.5,
+    "R_grouped_orc": 0.5,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "COPA",
+    "group": "inference",
+    "R_shared": 0.5,
+    "R_grouped_orc": 0.53125,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "QQP",
+    "group": "semantic_match",
+    "R_shared": 0.796875,
+    "R_grouped_orc": 0.90625,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "BoolQA",
+    "group": "inference",
+    "R_shared": 0.671875,
+    "R_grouped_orc": 0.8125,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "RTE",
+    "group": "inference",
+    "R_shared": 0.5625,
+    "R_grouped_orc": 0.8125,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "IMDB",
+    "group": "sentiment",
+    "R_shared": 0.875,
+    "R_grouped_orc": 0.875,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "SST-2",
+    "group": "sentiment",
+    "R_shared": 0.828125,
+    "R_grouped_orc": 0.953125,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "DBpedia",
+    "group": "topic",
+    "R_shared": 0.9598214285714286,
+    "R_grouped_orc": 0.9419642857142857,
+    "n_audit": 448,
+    "K": 14
+  },
+  {
+    "task": "AGNews",
+    "group": "topic",
+    "R_shared": 0.8359375,
+    "R_grouped_orc": 0.8515625,
+    "n_audit": 128,
+    "K": 4
+  },
+  {
+    "task": "MultiRC",
+    "group": "inference",
+    "R_shared": 0.6875,
+    "R_grouped_orc": 0.640625,
+    "n_audit": 64,
+    "K": 2
+  },
+  {
+    "task": "Yahoo",
+    "group": "topic",
+    "R_shared": 0.728125,
+    "R_grouped_orc": 0.725,
+    "n_audit": 320,
+    "K": 10
+  }
+]

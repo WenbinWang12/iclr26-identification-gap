@@ -1,36 +1,70 @@
-\section{The Design Space the Two Constraints Leave}
+\section{A Two-Constraint Method Under a Fixed Budget}
 \label{sec:method}
 
-Section~\ref{sec:gap-real} will show that one offset per scope recovers
-$+1.51$~pp over a single global offset, and Section~\ref{sec:three-anchors} that three parameter-space interventions
-leave that term untouched. But the per-scope offset as measured there is refit at
-every stage from the \texttt{risk} logits of all seen tasks. It re-reads old data,
-so it is a rehearsal ceiling and not something one can deploy.
+Section~\ref{sec:gap-real} shows that the identification gap is a real, separable
+term at the output layer, and that one offset per scope recovers $+1.51$~pp of it
+over a single global offset. Section~\ref{sec:three-anchors} shows that three
+parameter-space interventions on the \emph{representation} layer leave that output
+term untouched. Read together they say the fixed budget faces two capacity
+constraints that live in different places (Section~\ref{sec:setup}): the output
+layer cannot serve every scope-mate with one offset, and the representation cannot
+hold fifteen tasks' worth of change in one shared adapter. This section proposes a
+method that spends the same budget to relieve \emph{both}, and measures the four
+corners of the design at an identical parameter count.
 
-This section does not propose a method. It derives the object a deployable rule
-would have to approximate, then enumerates the rules our constraints admit, and
-the enumeration is short: two. Section~\ref{sec:sso} tests the first,
-Section~\ref{sec:bpo} the second. Both fail, for different and separately
-measurable reasons. The closure of this small design space, rather than a
-technique, is what the paper delivers.
+\paragraph{The two moves.}
+The output-layer move is the per-scope offset of Section~\ref{sec:gap-real}: read
+the prompt's option list, look up its scope, and add the offset that best serves
+that scope's member tasks. It has zero rank and costs a small per-scope table
+(Eq.~\eqref{eq:cost}, $33$ floats on this stream), and it reads no task index.
+The representation-layer move changes \emph{allocation} rather than the objective.
+A single shared rank-$R$ adapter must absorb every task, so late tasks overwrite
+the subspace early tasks needed. Instead, partition the tasks into $K$ semantic
+families and give each family its own rank-$R/K$ adapter. The $K$ adapters hold
+exactly the parameters of one shared rank-$R$ adapter ($K\times R/K = R$), verified
+per arm at run time, so this is a reallocation and not extra capacity. Each family
+adapter sees only its family's tasks, so cross-family interference is contained by
+construction rather than penalised after the fact --- which is what
+Section~\ref{sec:three-anchors}'s penalties tried and failed to do.
 
-\paragraph{The constraints, fixed before any candidate.}
-At inference we may read the prompt's option list and nothing else --- no task
-index. Between tasks we may store a bounded amount of state, but no examples and
-no logits of past tasks. And we may not change the training objective:
-Section~\ref{sec:three-anchors}'s three attempts to fix this in parameter space
-all failed, twice harmfully, so a fourth is not a design we are entitled to
-propose. A rule is \emph{admissible} when it satisfies all three.
+\paragraph{The $2\times2$ that isolates each move.}
+Crossing the two moves gives four arms at one budget (Table~\ref{tab:method-grid}).
+\begin{table}[t]
+\centering
+\small
+\caption{The $2\times2$ design at one budget: representation-layer grouping crossed
+with the output-layer offset. The shared/no-offset cell is the standard
+single-adapter baseline; the grouped/offset cell is the proposed method.
+Section~\ref{sec:combined} reports all four cells on three seeds.}
+\label{tab:method-grid}
+\begin{tabular}{lll}
+\toprule
+ & no offset & $+$ per-scope offset \\
+\midrule
+shared (rank $R$)          & $R_{\mathrm{sh}}$ & $R_{\mathrm{sh{+}off}}$ \\
+grouped ($K\times R/K$)    & $R_{\mathrm{gp}}$ & $R_{\mathrm{gp{+}off}}$ \quad$\leftarrow$ proposed \\
+\bottomrule
+\end{tabular}
+\end{table}
+The shared/no-offset cell is the standard single-adapter baseline; the proposed
+method is the grouped/offset cell. The representation-layer contribution is
+$R_{\mathrm{gp{+}off}}-R_{\mathrm{sh{+}off}}$ (does grouping still help once the
+output layer is already corrected?); the output-layer contribution is
+$R_{\mathrm{sh{+}off}}-R_{\mathrm{sh}}$; the end-to-end gain is
+$R_{\mathrm{gp{+}off}}-R_{\mathrm{sh}}$. Section~\ref{sec:combined} reports all
+four cells on three seeds. The result is that the two moves are independent and
+additive: each helps alone, and grouping still helps on top of the offset, so the
+proposed cell is best in every seed.
 
-\subsection{The target object is a Chebyshev centre}
-
-Fix a scope $S$ with labels $\ell_1,\dots,\ell_{K_S}$. For each member task
-$g\in\mathrm{mem}(S)$, let $\bz_g\in\R^{K_S}$ be an offset on those labels that
-maximises $g$'s balanced accuracy, gauge-fixed to zero mean --- adding a constant
-to every coordinate leaves the restricted argmax unchanged, so only $P_0\bz_g$ is
-identified. A single shared offset $\bb$ on this scope must serve all members at
-once, and the natural worst-case question is which $\bb$ minimises the largest
-distance to any member's optimum.
+\paragraph{The target the offset move approximates is a Chebyshev centre.}
+The output move is not arbitrary: the best single offset for a scope is a
+minimax object, and naming it tells us both what a deployable rule must estimate
+and where the term must vanish. Fix a scope $S$ with labels
+$\ell_1,\dots,\ell_{K_S}$. For each member task $g\in\mathrm{mem}(S)$, let
+$\bz_g\in\R^{K_S}$ be an offset on those labels that maximises $g$'s balanced
+accuracy, gauge-fixed to zero mean --- adding a constant to every coordinate
+leaves the restricted argmax unchanged, so only $P_0\bz_g$ is identified. A single
+shared offset $\bb$ must serve all members at once.
 
 \begin{proposition}[Logit-space minimax; unconditional]
 \label{prop:cheb}
@@ -57,121 +91,132 @@ stream is $0.0182$, on WiC. Section~\ref{sec:three-anchors} contains a
 counterexample from our own runs in which $q_1$ and $q_2$ both shrank while
 accuracy fell, so this caveat is load-bearing rather than pro forma.
 
-One feature of \eqref{eq:cheb} is what makes the enumeration below finite: the
-target shared offset depends on the member tasks' \emph{optima} and on nothing
-else. Not on their examples, not on their logits, not on their order. An
-admissible rule therefore does not need to reconstruct old data --- it needs
-current-model estimates of those optima. The whole question is where an
-admissible rule can get them.
+A feature of \eqref{eq:cheb} organises the whole design: the target offset depends
+on the member tasks' \emph{optima} and on nothing else --- not their examples,
+their logits, or their order. The offset arm we score in
+Section~\ref{sec:combined} fits those optima against the \emph{final} model from
+each task's held-out \texttt{risk} split, disjoint from the scored \texttt{audit}
+split. This is an upper bound in the same sense that oracle scope routing is: it
+reads each past task's optimum at the current model. Two questions of
+\emph{deployability} then remain, and we treat them as such rather than folding
+them into the headline. First, where a task-free rule can get current-model
+estimates of those optima without re-reading old examples; the boundary condition
+below makes the term itself falsifiable, and Section~\ref{sec:enumeration}
+enumerates the admissible sources. Second, whether grouping changes the picture
+by construction: because a family adapter only ever moves when its own family's
+tasks arrive, a stored per-family optimum drifts less than one stored against a
+monolithic adapter every later task perturbs --- a mechanism we motivate here and
+flag in Section~\ref{sec:limitations} as measured only at the upper bound.
 
-\subsection{Two admissible sources, and no third}
+\paragraph{A boundary condition that makes the output term falsifiable.}
+If tasks' verbalizer sets are pairwise disjoint, one offset serves every task and
+$\Delta^{\mathrm{id}}\equiv0$ exactly (Proposition~\ref{prop:disjoint}). The
+output-layer move can only help where output tokens are \emph{shared}; on Order-4
+ten of fifteen tasks share theirs, and we verify the zero prediction in every run
+($0$ violations, worst deviation $0.0$). A stream of pairwise-disjoint verbalizers
+is one where our method reduces to grouping alone, and we say so.
+
+\subsection{The admissible sources for the offset, and no third}
 \label{sec:enumeration}
 
-An admissible rule must produce an offset for the query's scope using only
-(i) bounded state carried across task boundaries and (ii) the query itself. Any
-estimate of $\bz_g$ is fitted from logits, and logits require a model and
-examples. Cross the two:
+The offset arm we score is an upper bound because it reads each task's optimum at
+the current model. A \emph{deployable} rule must produce a scope's offset using
+only (i) bounded state carried across task boundaries and (ii) the query itself.
+Any estimate of $\bz_g$ is fitted from logits, and logits require a model and
+examples. Crossing the two gives Table~\ref{tab:admissible}.
 
-\begin{center}\small
+\begin{table}[t]
+\centering
+\small
+\caption{Admissible sources for a deployable offset: which examples a rule may read
+crossed with which model state it reads them under. Two rows are admissible and
+non-vacuous (SSO, BPO); both are shown to fail on this stream
+(Sections~\ref{sec:sso},~\ref{sec:bpo}).}
+\label{tab:admissible}
 \begin{tabular}{llll}
 \toprule
 examples used & model used & admissible? & where \\
 \midrule
-past tasks' & current & no --- re-reads old data & the rehearsal ceiling \\
+past tasks' & current & no --- re-reads old data & the offset upper bound \\
 past tasks' & \emph{as of their own stage} & yes & \S\ref{sec:sso} (SSO) \\
 the query batch & current & yes & \S\ref{sec:bpo} (BPO) \\
 none & --- & yes, but vacuous & $R^{\mathrm{raw}}$, the floor \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-\noindent The first row is Section~\ref{sec:gap-real}'s $+1.51$~pp, and it is a
-ceiling precisely because it sits outside the constraint set. The last row is the
-no-offset floor. The two admissible non-vacuous rows are the two candidates, and
-they differ in exactly one respect: which of the two arguments to
-$\mathrm{acc}_g(\theta,\bb)$ they are allowed to keep current. SSO keeps the
-examples and lets the model go stale; BPO keeps the model and gives up the
-examples. There is no admissible rule that keeps both, because keeping both is
-the definition of rehearsal.
+\noindent The first row is the upper bound scored in Section~\ref{sec:combined};
+the last is the no-offset floor. The two admissible non-vacuous rows differ in
+exactly one respect: which argument to $\mathrm{acc}_g(\theta,\bb)$ they keep
+current. Storing the optima (SSO) keeps the examples and lets the model go stale;
+computing from the query batch (BPO) keeps the model and gives up the examples. No
+admissible rule keeps both, because keeping both is rehearsal. Both deployable
+approximations are imperfect on this stream --- SSO loses to staleness
+(Section~\ref{sec:sso}), BPO to a class-balance confound
+(Section~\ref{sec:bpo}) --- which is why the offset column of
+Section~\ref{sec:combined}'s $2\times2$ is reported as an upper bound and the
+deployment gap is stated plainly in Section~\ref{sec:limitations}. The
+representation move carries the analogous caveat: routing to the right family
+adapter uses the scope at evaluation, an upper bound over a task-free router. What
+the $2\times2$ establishes cleanly is the \emph{allocation} claim --- that at a
+fixed budget the two moves each recover accuracy and compose --- independent of how
+tightly the deployable versions track it.
 
-\paragraph{Candidate 1: store the optima (SSO).}
-Maintain a table indexed by scope. When training on task $g$ finishes, fit
-$\bz_g$ on $g$'s own \texttt{risk} split using $g$'s current logits, at that
-moment; gauge-fix it to zero mean and append $P_0\bz_g$ to the entry for
-$\mathrm{scope}(g)$; discard the logits and the examples. At inference, read the
-option list, look up its scope, and apply the Chebyshev centre of that scope's
-stored optima. This is admissible: step 1 touches only the task being trained, the
-lookup key is the option list rather than a task index, and inference-time
-arithmetic changes nothing about training --- the objective, the optimiser and the
-$2.36$M trainable scalars are bit-identical to the \texttt{none} arm. The stored
-state is
+\paragraph{Why storing the optima goes stale (SSO), and how grouping bears on it.}
+Maintain a table indexed by scope. When training on task $g$ finishes, fit $\bz_g$
+on $g$'s own \texttt{risk} split using $g$'s logits \emph{at that moment},
+gauge-fix to zero mean, append $P_0\bz_g$ to the entry for $\mathrm{scope}(g)$, and
+discard the logits and examples. At inference, look up the query's scope and apply
+the Chebyshev centre of its stored optima. This is admissible --- it touches only
+the task being trained, keys on the option list not a task index, and leaves the
+objective and trainable scalars bit-identical to the no-offset arm --- with stored
+state
 \begin{equation}
   \textstyle\sum_S |\mathrm{table}[S]|\cdot(K_S-1)
   \label{eq:cost}
 \end{equation}
-scalars --- one gauge-fixed vector per (task, scope) pair, each with $K_S-1$
-degrees of freedom after zero-mean fixing. On the $15$-task stream the final table
-holds $12$ entries and $\mathbf{33}$ floats against $2.36$M trainable parameters.
-Equation~\eqref{eq:cost} is asserted by test, not by inspection, and reported at
-every stage of every run.
+scalars, $12$ entries and $\mathbf{33}$ floats on this stream, asserted by test.
+Its risk, stated before we measured it: the fit uses $g$'s logits at the time $g$
+was trained, and a monolithic adapter keeps moving afterwards, so a stored optimum
+goes stale. Section~\ref{sec:sso} reports it costs $5.08$~pp below the no-offset
+floor, with the singleton probe --- where the Chebyshev centre of a one-element set
+\emph{is} that element, ruling out aggregation, routing, and gauge --- carrying
+$-4.18$~pp of it. This is precisely the failure the grouping move is positioned to
+soften: a family adapter is perturbed only by its own family's tasks, so a
+per-family stored optimum drifts less than one stored against an adapter every
+later task moves. We measure grouping and the offset each at their upper bound in
+Section~\ref{sec:combined} and mark the de-staling of stored offsets under
+grouping as the natural next measurement (Section~\ref{sec:limitations}), not a
+result we claim here.
 
-\paragraph{The risk this candidate accepts, stated before we measured it.}
-The fit uses $g$'s logits \emph{at the time $g$ was trained}, and the model keeps
-moving afterwards. A stored optimum can therefore go stale, and unlike the
-rehearsal ceiling --- which refits from current logits of all seen tasks and so is
-always fresh --- SSO has no mechanism to notice. Whether staleness costs more than
-rehearsal-freeness buys is an empirical question, it is the question our frozen
-criteria were written to answer, and Proposition~\ref{prop:disjoint} gives it a
-clean probe: on a singleton scope the Chebyshev centre of a one-element set
-\emph{is} that element, so the singleton gap
-$|R^{\mathrm{sso}}-R^{\mathrm{orc}}|$ measures pure staleness with no aggregation
-confound. Section~\ref{sec:sso} reports that it costs $5.08$~pp below the
-no-offset floor, and that the singleton probe carries $-4.18$~pp of it.
+\paragraph{Why the query-batch source fails its own control (BPO).}
+Give up stored optima and read the only current-model logits an admissible rule
+may touch --- the query batch's own. Section~\ref{sec:bpo} states the rule: it
+gains $+4.40$~pp over the global offset and then inverts to $-0.67$~pp once the
+query class mix is skewed to $70{:}30$, failing the control we pre-registered
+against our own splits. Three separately pre-registered rules occupy this row and
+all three fail: BPO on its control; a separation-gated invariant offset (SIO) on
+all six of its frozen criteria (the two-component structure it assumes is absent
+--- the class margin $s=z_1-z_0$ is unimodal, median separation $0.89$ SD --- and
+the gate abstains on $78.6\%$ of batches); and a variance-gated rule (VGC) that
+passes on the development seed and reverses out of sample (worst-case $-9.38$~pp
+against a $-3.0$ floor). A fourth rule (SCG) gating on the magnitude of its own
+proposed correction fails its worst-case criterion by $1.34$~pp on $2$ of $350$
+held-out batches. What survives is a measured asymmetry --- batch calibration gains
+$+5.40$~pp on average but loses up to $14.84$~pp, precisely on batches where the
+oracle offset has little to gain --- and one confirmed mechanism: within each task,
+the realised gain is predicted by the magnitude of the proposed correction (median
+rank correlation $+0.72$, positive in $8$ of $8$ tasks, five seeds used to fit
+nothing). A single global threshold on that magnitude is not enough to make the
+row safe out of sample. So the query-batch source is a negative result we can now
+attribute, which is why the method deploys the stored-optima source and reports its
+upper bound honestly.
 
-\paragraph{Candidate 2: compute the offset from the query batch (BPO).}
-Give up stored optima entirely and read the only current-model logits an
-admissible rule may touch --- the query batch's own. Section~\ref{sec:bpo} states
-the rule and reports it. It gains $+4.40$~pp over the global offset, and its own
-pre-registered control shows the gain is an artefact of our class-balanced
-evaluation split rather than a property of the rule.
-
-\paragraph{The query-batch row is where we spent the most effort, and it is empty.}
-Three separately pre-registered rules occupy this row, and all three fail. BPO
-fails its own control, as above. A separation-gated invariant offset (SIO), built
-to remove the dependence of batch calibration on the batch's class marginal, fails
-every one of its six frozen criteria on real logits: the two-component structure it
-fits is absent, since the class margin $s=z_1-z_0$ is unimodal with a median
-separation of $0.89$ standard deviations, and the gate abstains on $78.6\%$ of
-batches. A variance-gated rule (VGC), built after inspecting $210$ stored batches
-and gated on $\mathrm{sd}(s)$, passes its criteria on the development seed and then
-reverses on held-out seeds: worst-case gain $-9.38$~pp against a floor of $-3.0$,
-median gain $0.00$~pp, and a within-task rank correlation whose median flips sign.
-A third rule (SCG) gates batch calibration on the magnitude of the correction it
-proposes rather than on any property of the batch, and it fails its worst-case
-criterion by $1.34$~pp on $2$ of $350$ held-out batches ($-2.34$ against a $-1.0$~pp
-floor) while passing its mean-gain and non-vacuity criteria.
-
-What survives all four attempts is a measured asymmetry plus one confirmed
-mechanism, neither of which is a rule. The asymmetry: batch calibration gains
-$+5.40$~pp on average over the raw predictor but loses up to $14.84$~pp, and it loses
-precisely on the batches where the oracle offset has almost nothing to gain
-($2.34$~pp of headroom against $9.38$~pp elsewhere). The mechanism, pre-registered
-and tested on five seeds used to fit nothing: within each task, the gain batch
-calibration realises is predicted by the magnitude of its own proposed correction,
-with a median rank correlation of $+0.72$ that is positive in $8$ of $8$ tasks. A
-single global threshold on that magnitude is nonetheless not enough to make the rule
-safe out of sample. So the row is a negative result about an admissible
-\emph{source} --- one whose failure we can now attribute, which is more than we could
-say of it before.
-
-\paragraph{Generalisation to $m>1$, and why nothing rests on it.}
+\paragraph{More than one centre per scope buys nothing here.}
 Allowing $m$ centres per scope replaces the Chebyshev centre with a minimax
-$m$-centre codebook of radius $q_m(S)$ and requires a task-free router to pick a
-centre. We implement it and report it for candidate 1, using the honest prototype
-router (nearest stored class-mean in encoder state, no task index). Two caveats,
-both recorded before the run: the router needs per-task state that
-Equation~\eqref{eq:cost} does not cover, and we report that separately rather
-than folding it into the cost; and Section~\ref{sec:gap-real}'s finding that the
-$m$-centre codebook bought exactly $0.0000$ over $m=1$ makes us expect $m>1$ to
-buy nothing here either. It did not: $+0.52$~pp with a CI spanning zero. Every
-primary number in this paper is an $m=1$ number, which needs no router at all.
+$m$-centre codebook of radius $q_m(S)$ and needs a task-free router. We implement
+it for the stored-optima source with an honest prototype router (nearest stored
+class-mean in encoder state, no task index): it buys $+0.52$~pp with a CI spanning
+zero, matching Section~\ref{sec:gap-real}'s finding that the codebook gained
+$0.0000$ over $m=1$. Every primary number in this paper is an $m=1$ number, which
+needs no router at all.

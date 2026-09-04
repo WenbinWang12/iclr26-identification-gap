@@ -1,0 +1,254 @@
+{
+  "shared": {
+    "rows": [
+      {
+        "task": "MNLI",
+        "group": "inference",
+        "regime": "shared",
+        "R_none": 0.4791666666666667,
+        "R_stored": 0.3541666666666667,
+        "R_refit": 0.5625,
+        "n_audit": 96,
+        "K": 3
+      },
+      {
+        "task": "WiC",
+        "group": "semantic_match",
+        "regime": "shared",
+        "R_none": 0.515625,
+        "R_stored": 0.546875,
+        "R_refit": 0.515625,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "COPA",
+        "group": "inference",
+        "regime": "shared",
+        "R_none": 0.5,
+        "R_stored": 0.5,
+        "R_refit": 0.53125,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "QQP",
+        "group": "semantic_match",
+        "regime": "shared",
+        "R_none": 0.59375,
+        "R_stored": 0.640625,
+        "R_refit": 0.796875,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "BoolQA",
+        "group": "inference",
+        "regime": "shared",
+        "R_none": 0.625,
+        "R_stored": 0.625,
+        "R_refit": 0.703125,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "RTE",
+        "group": "inference",
+        "regime": "shared",
+        "R_none": 0.53125,
+        "R_stored": 0.515625,
+        "R_refit": 0.859375,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "IMDB",
+        "group": "sentiment",
+        "regime": "shared",
+        "R_none": 0.90625,
+        "R_stored": 0.921875,
+        "R_refit": 0.921875,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "SST-2",
+        "group": "sentiment",
+        "regime": "shared",
+        "R_none": 0.765625,
+        "R_stored": 0.890625,
+        "R_refit": 0.890625,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "DBpedia",
+        "group": "topic",
+        "regime": "shared",
+        "R_none": 0.984375,
+        "R_stored": 0.8325892857142857,
+        "R_refit": 0.9821428571428571,
+        "n_audit": 448,
+        "K": 14
+      },
+      {
+        "task": "AGNews",
+        "group": "topic",
+        "regime": "shared",
+        "R_none": 0.7734375,
+        "R_stored": 0.703125,
+        "R_refit": 0.8828125,
+        "n_audit": 128,
+        "K": 4
+      },
+      {
+        "task": "MultiRC",
+        "group": "inference",
+        "regime": "shared",
+        "R_none": 0.625,
+        "R_stored": 0.6875,
+        "R_refit": 0.78125,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "Yahoo",
+        "group": "topic",
+        "regime": "shared",
+        "R_none": 0.703125,
+        "R_stored": 0.71875,
+        "R_refit": 0.71875,
+        "n_audit": 320,
+        "K": 10
+      }
+    ],
+    "stored_floats": 35,
+    "n_entries": 12
+  },
+  "grouped": {
+    "rows": [
+      {
+        "task": "MNLI",
+        "group": "inference",
+        "regime": "grouped",
+        "R_none": 0.5625,
+        "R_stored": 0.6666666666666666,
+        "R_refit": 0.75,
+        "n_audit": 96,
+        "K": 3
+      },
+      {
+        "task": "WiC",
+        "group": "semantic_match",
+        "regime": "grouped",
+        "R_none": 0.5,
+        "R_stored": 0.5,
+        "R_refit": 0.5,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "COPA",
+        "group": "inference",
+        "regime": "grouped",
+        "R_none": 0.5,
+        "R_stored": 0.5,
+        "R_refit": 0.5625,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "QQP",
+        "group": "semantic_match",
+        "regime": "grouped",
+        "R_none": 0.875,
+        "R_stored": 0.890625,
+        "R_refit": 0.859375,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "BoolQA",
+        "group": "inference",
+        "regime": "grouped",
+        "R_none": 0.84375,
+        "R_stored": 0.828125,
+        "R_refit": 0.671875,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "RTE",
+        "group": "inference",
+        "regime": "grouped",
+        "R_none": 0.890625,
+        "R_stored": 0.890625,
+        "R_refit": 0.875,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "IMDB",
+        "group": "sentiment",
+        "regime": "grouped",
+        "R_none": 0.890625,
+        "R_stored": 0.875,
+        "R_refit": 0.859375,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "SST-2",
+        "group": "sentiment",
+        "regime": "grouped",
+        "R_none": 0.984375,
+        "R_stored": 0.96875,
+        "R_refit": 0.96875,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "DBpedia",
+        "group": "topic",
+        "regime": "grouped",
+        "R_none": 0.7924107142857143,
+        "R_stored": 0.7209821428571429,
+        "R_refit": 0.9776785714285714,
+        "n_audit": 448,
+        "K": 14
+      },
+      {
+        "task": "AGNews",
+        "group": "topic",
+        "regime": "grouped",
+        "R_none": 0.78125,
+        "R_stored": 0.6171875,
+        "R_refit": 0.8984375,
+        "n_audit": 128,
+        "K": 4
+      },
+      {
+        "task": "MultiRC",
+        "group": "inference",
+        "regime": "grouped",
+        "R_none": 0.71875,
+        "R_stored": 0.6875,
+        "R_refit": 0.6875,
+        "n_audit": 64,
+        "K": 2
+      },
+      {
+        "task": "Yahoo",
+        "group": "topic",
+        "regime": "grouped",
+        "R_none": 0.71875,
+        "R_stored": 0.7125,
+        "R_refit": 0.7125,
+        "n_audit": 320,
+        "K": 10
+      }
+    ],
+    "stored_floats": 35,
+    "n_entries": 12
+  }
+}
