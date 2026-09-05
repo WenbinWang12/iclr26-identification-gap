@@ -2,24 +2,31 @@
 
 **Operator:** external collaborator (not the babel cluster of the committed sweeps)
 **Hardware:** 1 × NVIDIA H200 (143 GB), GPU 6, node DSO-H200-01
-**Started:** 2026-09-04 16:38 local  ·  **Finished:** 2026-09-04 22:00 local
+**Started:** 2026-09-04 16:38 local  ·  **Finished:** 2026-09-05 09:46 local (~17 h)
 **Project root:** `/node1/sjingxuan/iclr26-identification-gap/`
 **Upstream:** https://github.com/WenbinWang12/iclr26-identification-gap.git
 
-> **Status: COMPLETE.** All four axes ran; 11 result JSONs produced. Every number
-> below traces to a committed `*_s1.json` via the repo's own `analyze_*.py`
-> (§10 reproduces them). Nothing here was estimated or computed by hand.
+> **Status: COMPLETE — RUNBOOK §2 and §3A–3D, all at seeds 1, 2, 3.** 44 result JSONs
+> from 40+ runs, **zero OOM degradations, zero failures**. Every number traces to a
+> `*_s{seed}.json` via the repo's own `analyze_*.py` (§10 reproduces them). Nothing
+> here was estimated or computed by hand.
 >
-> **Read §0 and §3 before quoting anything.** The micro-batch equivalence check
-> **FAILED**, and the diagnostic that followed uncovered a harness defect —
-> **`--seed` does not control LoRA init or dropout**, so runs are not reproducible
-> at a fixed seed and effects below ~2 pp are unresolvable at n = 1.
+> **Headline — §3A closes the paper's first upper bound.** The task-free NCM router
+> reaches **98.61 %** family accuracy at a routing cost of **+0.14 pp** — free — and
+> the **deployable end-to-end gain is +6.98 pp, positive on every seed**. The paper's
+> self-declared "first measurement we owe" is answered.
 >
-> **Headline:** the task-free router is **free** (−0.03 pp vs oracle, 98.4 % family
-> accuracy), closing the paper's first upper bound. But the deployable gain is carried
-> **entirely by grouping** (+9.11 pp); the per-scope offset — the paper's
-> identification-gap contribution — is **−0.26 pp** when deployed.
-> Three defects in the harness are reported in §3, §5 and §7.
+> **Three qualifications the extra seeds produced:**
+> 1. **`group_alone` is order-dependent** — +8.71 (reverse) down to **+1.16
+>    (shuffleB, null on all 3 seeds)**. The two moves trade off by order (§5).
+> 2. **De-staling is real but ~56 % of published size**, and its "all seeds" claim
+>    does not reproduce (§3.5).
+> 3. **Three §3B effects FLIP** on the decoder-only cell — which runs near chance (§5).
+>
+> **Three harness defects found**, the worst being that **`--seed` does not control
+> LoRA init or dropout**: identical invocations differ by ~4 pp per task, so effects
+> below ~2 pp are unresolvable and single-seed results on this harness are unreliable
+> (§3, §5, §7).
 
 ---
 
@@ -34,19 +41,31 @@ was appended, not edited in, and changed no success criterion.
 | # | Deviation | Frozen value | This run | Status |
 |---|---|---|---|---|
 | D1 | micro-batch | `--batch-size 4 --grad-accum 16` | `--batch-size 16 --grad-accum 4` | ❌ **FAILED**, see §3 |
-| D2 | seeds | `-a 1-3` (seeds 1,2,3) | **seed 1 only** | accepted, consequence below |
+| D2 | seeds | `-a 1-3` (seeds 1,2,3) | **seeds 1,2,3 — RESOLVED** | ✅ lifted, see below |
 
 **Effective batch is 64 in both cases** — D1 changes only how the 64 examples are
 split into forward/backward passes.
 
-### D2 consequence — the wording this run is NOT allowed to use
+### D2 — RESOLVED. Seeds 2 and 3 were run; sign-consistency claims are now available.
 
-Every analyzer in `phase2z_task_grouping/` reports its verdict as *sign consistency
-across seeds*. At n = 1 that evidence does not exist. No result from this run may be
-quoted as **"positive on every seed"**, **"SIGN-ROBUST"**, or **"all-seed"**. Each
-number here is a single observation and is labelled `n=1, seed 1`. Seeds 2–3 remain
-additive later (`--seed 2/3`; the analyzers discover them automatically), and the
-sign-consistency verdicts only become meaningful once they exist.
+This run initially executed seed 1 only, and every result was labelled `n=1` with
+sign-consistency claims forbidden. **Seeds 2 and 3 were subsequently run for RUNBOOK
+§2 and §3A–3D**, so those verdicts are now genuine. Where a section still rests on
+fewer than three seeds it says so explicitly.
+
+The n=1 phase was not wasted, but it was **misleading three times over**, and those
+corrections are kept visible in this document rather than edited away:
+
+| seed-1 claim | status at 3 seeds |
+|---|---|
+| "de-staling fails to reproduce" | **overstated** — 2 of 3 reproduce; directional effect is real at ~56 % of published size (§3.5) |
+| "both continual-learning baselines lose to `seqft`" | **half wrong** — EWC ties `seqft`; only O-LoRA holds (§7) |
+| "grouping is null on shuffleB" | **confirmed** at both seeds (§5) |
+| "§3A router is free, deployable e2e > 0" | **confirmed** on all three seeds (§4) |
+
+That is the practical case for the RUNBOOK's 3-seed requirement on this harness, and
+it is sharpened by the unseeded-RNG defect in §3: single runs here are not
+informative about anything smaller than ~2 pp.
 
 ### Inherited caveats that still apply (from README, do not drop)
 
@@ -292,6 +311,118 @@ torch.initial_seed() = 13225869047397825160   first lora_A checksum = 91.6117553
 at the top of each phase2z runner's `main()`, exactly as `run_probe.main()` already
 does. The repo file was **not modified**.
 
+### Which claims survive the defect — paired differences do, absolute values don't
+
+The committed three-seed results corroborate the defect and show what it does and does
+not damage:
+
+| quantity | mean | per-seed values | spread |
+|---|---|---|---|
+| `R_sh` (absolute arm value) | 68.68 | 70.89 / 68.87 / 66.27 | **4.62 pp** |
+| `offset_alone` (cross-arm, same run) | +6.58 | +3.76 / +5.29 / +10.68 | **6.92 pp** |
+| `e2e` (cross-arm, same run) | +11.76 | +10.58 / +11.18 / +13.51 | 2.93 pp |
+| **"grouping shrinks staleness by"** (difference of differences, same run) | +6.27 | +6.82 / +6.20 / +5.80 | **1.02 pp** |
+
+That ordering is exactly the signature of per-run init/dropout noise: it is common to
+both arms **within** a run, so it cancels in a paired difference and does not cancel
+across runs. The consequence for reading this project:
+
+- **Robust *in the committed data*:** paired, within-run difference-of-differences —
+  notably the de-staling claim (`+6.27 pp`, spread 1.02 pp across the three committed
+  runs). ⚠ **But see §3.5: an independent rerun of `run_destale.py` did not reproduce
+  it and flipped its sign.** An earlier draft of this document called de-staling "the
+  paper's best-supported quantitative claim" on the strength of that tight committed
+  spread alone. That was premature and is **retracted** — tightness across three runs
+  from one environment is not the same as reproducibility in another.
+- **Fragile:** any absolute arm value (`R_sh` moves 4.62 pp), and single-arm
+  comparisons whose true effect is small — `offset_alone` swings 3.76 → 10.68 pp,
+  a 2.8× range, which is why the offset's true magnitude remains genuinely uncertain.
+
+This also explains why §4's stored-offset numbers land where they do: our
+`−0.26 pp` (grouped) and `−1.33 pp` (shared) sit inside the committed per-seed ranges
+of `+0.14 / −1.67 / +0.02` and `−2.77 / −0.55 / −2.53`. Our run is a fourth draw from
+the same distribution, not a contradiction of it.
+
+## 3.5 RUNBOOK §2 reproduction — 2 of 3 reproduce, **de-staling does not**
+
+RUNBOOK §2 ("do this BEFORE extending anything") was run at seed 1 after the fact.
+Outputs went to `reproduction/` because `results_s*.json`, `combined_s*.json` and
+`destale_s*.json` are **tracked files** — writing them into the repo directory would
+have overwritten the author's committed results. All three logs clean (A1 passed).
+
+| script | quantity | ours (fresh) | committed s1 | Δ | verdict |
+|---|---|---|---|---|---|
+| `run_combined.py` | e2e | +13.07 | +10.58 | +2.50 | ✅ |
+| | repr | +7.55 | +6.82 | +0.73 | ✅ |
+| | group_alone | +9.27 | +9.01 | +0.27 | ✅ |
+| | offset_alone | +5.52 | +3.76 | +1.77 | ✅ |
+| `run_grouping.py` | grouping gain | +7.52 | +9.63 | −2.11 | ✅ |
+| | `R_grouped_orc` | 78.96 | 78.93 | +0.04 | ✅ |
+| **`run_destale.py`** | **grouping shrinks staleness** | **−0.20** | **+6.82** | **−7.02** | ❌ **SIGN FLIP** |
+
+The 2×2 and the grouping gain reproduce comfortably inside the noise floor. **The
+de-staling result does not.**
+
+### Where the de-staling discrepancy lives
+
+| arm | quantity | ours | committed s1 |
+|---|---|---|---|
+| shared | `none` | 72.16 | 72.01 |
+| shared | **`stored`** | **74.52** | **69.24** |
+| shared | `refit` | 78.12 | 77.22 |
+| shared | staleness (`refit − stored`) | **+3.60** | **+7.98** |
+| grouped | staleness | **+3.80** | **+1.16** |
+
+`none` and `refit` agree to within 0.9 pp. **The entire 7.02 pp discrepancy is the
+`stored` value on the shared arm** — 74.52 vs 69.24. In our run the stored offset
+*helped* the shared arm (+2.36 pp); in the committed run it *hurt* it (−2.77 pp).
+
+That quantity is exactly the one §3 identified as unresolvable: our own two runs
+disagree on its sign — `run_router.py` gave **−1.33 pp** and `run_destale.py` gave
+**+2.36 pp** at the same seed. Across all available runs it spans −2.77 → +2.36 pp,
+i.e. it straddles zero. The de-staling claim is a difference of differences built on
+top of it, which is why it is the one §2 quantity that failed to survive an
+independent rerun.
+
+### FINAL VERDICT (3 independent runs vs the author's 3): directionally real, magnitude overstated, sign-consistency not reproduced
+
+| | run 1 | run 2 | run 3 | mean | spread | sign |
+|---|---|---|---|---|---|---|
+| **author (committed)** | +6.82 | +6.20 | +5.80 | **+6.27** | **1.02 pp** | all + |
+| **ours (independent)** | **−0.20** | +5.86 | +4.86 | **+3.51** | **6.06 pp** | **MIXED** |
+
+*(Earlier drafts of this section reported the seed-1 flip first as a refutation, then
+as an outlier after seed 2. Both were premature; this 3-run verdict supersedes them.)*
+
+**What reproduces:** the direction. Grouping reduces offset staleness in **5 of the 6
+runs** available (their 3, our runs 2 and 3). The underlying quantity also agrees on
+average — `stored − none` on the shared arm is −1.95 pp for them, −1.20 pp for us.
+
+**What does not:**
+
+1. **Magnitude.** Our mean shrink is **+3.51 pp against their +6.27 pp — 56 % of the
+   published effect.** The README's headline framing, `staleness drops from
+   8.22 pp → 1.95 pp`, is our `6.49 pp → 3.00 pp`: a smaller drop from a lower start
+   to a higher floor.
+2. **Sign-consistency.** The README says "all three seeds". Our run 1 gives
+   **−0.20 pp**. The claim as worded — positive on every seed — **does not survive
+   independent replication**.
+
+**The unexplained anomaly, and the most useful thing here for the author.** Our three
+runs spread **6.06 pp**; theirs spread **1.02 pp** — a six-fold difference on the same
+quantity, same script, same arguments. Our spread is exactly what the unseeded RNG
+(§3) predicts. **Their tightness is not**, and it cannot be explained by the mechanism
+we identified. Three possibilities, none testable from the committed artifacts:
+their environment was accidentally more deterministic (different torch/CUDA version);
+something correlates the three runs that the seed does not control; or three draws
+happened to cluster. Whichever it is, the reported ±0.5 pp seed-consistency on this
+claim understates its true variability, and the fix in §3 (seed torch properly) is a
+prerequisite for settling it.
+
+**Bottom line for the paper:** de-staling should be reported as a directional effect
+of roughly half the stated size, without the "all seeds" sign-consistency claim, until
+the RNG is seeded and it is re-measured.
+
 ## 4. §3A — deployable router + stored offset — **COMPLETE (seed 1)**
 
 Closes the paper's two upper bounds (oracle scope routing; offset refit on the final
@@ -327,6 +458,19 @@ oracle). Routing is not where the difficulty lies.
 oracle. This is noise, not a real effect — at 98.4 % accuracy the few misroutes
 happened to land favourably (MultiRC `gap = −1.56 pp`). It should be read as "routing
 is free", **never** as "routing beats the oracle".
+
+### Stored-offset 2×2 next to refit (RUNBOOK §3A reporting requirement)
+
+| corner | no offset | **+ stored** (deployable) | + refit (upper bound) |
+|---|---|---|---|
+| shared | 68.78 | 67.44 | 76.81 |
+| grouped (oracle) | 77.87 | 77.58 | 80.00 |
+| grouped (routed) | 77.89 | 77.63 | 79.79 |
+
+The stored/refit split is the whole story: refitting the offset against the final
+model buys **+8.03 pp** on the shared arm, while the deployable stored offset costs
+**−1.34 pp** there. The offset's value is real but is not currently reachable by a
+deployable rule.
 
 ### But the offset contributes nothing deployable — and that is the honest headline
 
@@ -376,302 +520,261 @@ by this run. The +9.11 pp grouping effect is comfortably outside that band; the 
 results are not. This is stated as observed evidence, and is **not** used to loosen
 the D1 criterion in §3, which was frozen in advance.
 
-## 5. §3B — generality across orders × backbones — **COMPLETE: 5 cells + 1 blocked**
+## 5. §3B — generality across orders × backbones — **COMPLETE (6 cells × 3 seeds = 18)**
 
-9-cell design reduced to 6 at seed 1: orders `{canonical, reverse, shuffleA, shuffleB}`
-× `t5-large`, plus `canonical` × `{pythia-1.4b, t5-3b}`.
-Analyzer: `analyze_generality.py`. All logs **0 OOM degradations** (A1 passed).
+Orders `{canonical, reverse, shuffleA, shuffleB}` × `t5-large`, plus `canonical` ×
+`{t5-3b, gpt2-large}`. Analyzer: `analyze_generality.py` (discovers all 18 files).
+All logs clean (A1 passed). The pythia cell is blocked by a harness defect (below).
 
-### ✅ Anchor cell PASSES the falsifier — Phase-3 proceeds
+### Verdict: only the offset effect is sign-robust; three effects FLIP on the decoder-only cell
 
-The protocol declared `canonical / t5-large` a **falsifier**: if it fails to reproduce
-the committed result, Phase-3 stops and is reconciled before anything downstream is
-reported. The correct comparison is against the committed **seed-1** value
-(**+10.58 pp**), not the README's +11.76 pp, which is a 3-seed mean.
-
-| effect | ours (micro 16) | committed seed 1 (micro 4) | Δ |
+| effect | verdict | mean (n = 18) | flipping cell |
 |---|---|---|---|
-| **e2e** | **+10.85** | **+10.58** | **+0.27** |
-| repr | +5.33 | +6.82 | −1.49 |
-| group_alone | +7.66 | +9.01 | −1.35 |
-| offset_alone | +5.52 | +3.76 | +1.76 |
+| `offset_alone` | **SIGN-ROBUST(+)** | +4.48 | — |
+| `e2e` | **FLIPS** | +7.83 | canonical / gpt2-large |
+| `repr` | **FLIPS** | +3.35 | canonical / gpt2-large |
+| `group_alone` | **FLIPS** | +4.18 | canonical / gpt2-large |
 
-All four effects positive in both; every delta sits inside the ~2.1 pp noise floor
-documented in §4. **Reproduced.**
+⚠ *At 1 seed and again at 2 seeds this table read `SIGN-ROBUST(+)` on all four effects.
+The third seed flipped three of them. Both earlier drafts are superseded.*
 
-### Cells so far
+### Where it flips, and what that is worth
 
-| order | backbone | R_sh | R_sh_off | R_gp | R_gp_off | e2e | repr | group_alone | offset_alone |
-|---|---|---|---|---|---|---|---|---|---|
-| canonical | t5-large | 70.14 | 75.66 | 77.80 | 80.99 | +10.85 | +5.33 | +7.66 | +5.52 |
-| reverse | t5-large | 70.73 | 76.24 | 77.96 | 83.18 | +12.45 | +6.94 | +7.22 | +5.51 |
-| shuffleA | t5-large | 71.86 | 75.79 | 79.61 | 81.28 | +9.43 | +5.49 | +7.75 | +3.94 |
-| shuffleB | t5-large | 76.84 | 80.56 | 77.79 | 82.93 | +6.09 | +2.37 | **+0.94** | +3.72 |
-| canonical | t5-3b | 71.93 | 78.13 | 80.02 | 82.17 | +10.24 | +4.04 | +8.09 | +6.20 |
-| canonical | gpt2-large *(subst.)* | 45.18 | 48.50 | 47.62 | 50.98 | +5.80 | +2.48 | +2.44 | +3.32 |
-| canonical | **pythia-1.4b** | **BLOCKED — harness defect, see below** | | | | | | | |
+| gpt2-large (decoder-only) | R_sh | e2e | repr | group_alone | offset_alone |
+|---|---|---|---|---|---|
+| seed 1 | 45.18 | +5.80 | +2.48 | +2.44 | +3.32 |
+| seed 2 | 45.06 | +7.20 | +6.39 | +2.95 | +0.81 |
+| **seed 3** | 49.32 | **−0.39** | **−0.61** | **−0.67** | +0.22 |
 
-### Verdict: SIGN-ROBUST(+) on all four effects across all 5 cells
+The flip is small (−0.39 … −0.67 pp, well inside the noise floor) and occurs on the
+cell that operates **near chance**: `R_sh` of 45–49 against a ~39.6 chance rate for
+this task mix, versus ~70 for t5-large. At seed 3 the shared arm happened to score
+higher (49.32), leaving nothing for either move to recover. Per RUNBOOK §3B this is
+**reported as a finding, not hidden** — but it is better read as "the decoder-only cell
+is too weak to measure anything" than as "the method fails on decoder-only LMs".
 
-| effect | verdict | mean (n = 5 cells) |
+### Encoder-decoder backbones: effects hold everywhere
+
+| cell | e2e (3 seeds) | group_alone (3 seeds) |
 |---|---|---|
-| e2e | **SIGN-ROBUST(+)** | +9.14 pp |
-| repr | **SIGN-ROBUST(+)** | +4.44 pp |
-| group_alone | **SIGN-ROBUST(+)** | +5.68 pp |
-| offset_alone | **SIGN-ROBUST(+)** | +4.70 pp |
+| reverse / t5-large | **+13.18** (+12.5 / +12.3 / +14.8) | **+8.71** (+7.2 / +8.0 / +10.9) |
+| canonical / t5-large | +9.79 (+10.9 / +8.8 / +9.7) | +5.83 (+7.7 / +4.6 / +5.3) |
+| shuffleA / t5-large | +7.13 (+9.4 / +5.2 / +6.8) | +3.94 (+7.7 / +2.1 / +1.9) |
+| shuffleB / t5-large | +5.43 (+6.1 / +4.8 / +5.4) | **+1.16** (+0.9 / +1.5 / +1.0) |
+| canonical / t5-3b | +7.23 (+10.2 / +4.9 / +6.5) | +3.84 (+8.1 / +1.4 / +2.1) |
 
-No cell flips a sign. This is robustness **across cells** — which is what §3B tests —
-and **not** seed-wise robustness (D2).
+**All 15 encoder-decoder cell×seed combinations are positive on e2e.** Scale generality
+holds: t5-3b (3.7× larger) reproduces the effect on every seed.
 
-### Three caveats that qualify the verdict
+### The order-dependence finding — the substantive qualification of the paper
 
-1. **`group_alone` on `shuffleB` is +0.94 pp, which is not resolvable.** Against a
-   ~2 pp aggregate noise floor (§3), that cell's grouping effect is **statistically
-   indistinguishable from zero**, not a positive result. The other four cells give
-   +7.66 / +7.22 / +7.75 / +8.09, so shuffleB is a genuine outlier: on this order,
-   grouping alone buys nothing. `shuffleB` also starts from a much stronger shared
-   baseline (R_sh = 76.84 vs 70–72 elsewhere), i.e. that order is simply easier for a
-   single shared adapter, leaving less for grouping to recover. **The honest reading
-   is 4 clear positives and one null**, not 5 positives.
-2. **The gpt2-large cell runs at near-chance accuracy.** `R_sh = 45.18` against a
-   mean chance rate of ~39.6 pp over this task mix (1/K averaged over K = 2,3,4,10,14)
-   — only ~5.6 pp above chance, versus ~30 pp for t5-large. The decoder-only backbone
-   barely learned the stream, so its `+5.80 pp` e2e is an effect measured on a model
-   that mostly did not work. It supports "the sign holds" only weakly, and should not
-   be quoted as evidence the method transfers to decoder-only LMs.
-3. **The decoder-only claim rests on one architecture family** (GPT-2), because the
-   pythia cell is blocked by the defect below.
+`group_alone` — the paper's representation-layer mechanism — ranges from **+8.71
+(reverse) to +1.16 (shuffleB)** purely as a function of task order. **shuffleB's null
+is confirmed on all three seeds** (+0.9 / +1.5 / +1.0, every value below the ~2 pp
+floor) — one of the most consistent results in this study.
 
-**What does hold well:** `t5-3b` (+10.24 e2e, +8.09 group_alone) is a clean,
-strong replication on a 3.7×-larger backbone, and the three non-shuffleB orders agree
-closely. Scale generality is the best-supported part of §3B.
+The two moves **trade off by order**: on `reverse`, grouping carries the gain
+(+8.71 of +13.18); on `shuffleB`, grouping does essentially nothing and the whole
++5.43 comes from the offset. The paper reports a single order and attributes the
+representation-layer fix to grouping. **That attribution is order-dependent, and on at
+least one order grouping contributes nothing** — while the offset keeps working. This
+does not contradict the headline (e2e stays positive on every encoder-decoder cell),
+but it does mean "grouping relieves the representation constraint" is not a
+stream-independent claim.
 
-### ⚠ Defect found in `backbones.py` — the pythia cell cannot run (reported, not patched)
+### Anchor cell — reproduces in sign, 83 % of the published magnitude
 
-The `canonical × EleutherAI/pythia-1.4b` cell **failed at adapter construction**:
+| | seed 1 | seed 2 | seed 3 | mean |
+|---|---|---|---|---|
+| ours | +10.85 | +8.79 | +9.74 | **+9.79** |
+| committed | +10.58 | +11.18 | +13.51 | **+11.76** (README headline) |
 
-```
-ValueError: Target modules {'v_proj', 'q_proj'} not found in the base model.
-```
+Both all-positive, so the falsifier passes. Our mean is **1.96 pp lower** and the
+per-seed ranges barely overlap. Together with the de-staling result (§3.5, 56 % of
+published), **two independent quantities came in below the committed values** — a weak
+but repeated signal of an environment difference (torch 2.9.1 / transformers 4.57.6
+here) rather than chance. The unseeded RNG (§3) makes the cause impossible to isolate
+from the committed artifacts.
 
-`resolve_family()` maps `pythia`/`neox` to the `"llama"` LoRA key, whose targets are
-`["q_proj", "v_proj"]`. GPT-NeoX exposes a **fused** `query_key_value` projection
-instead — verified directly: pythia-1.4b's attention submodules are `query_key_value`
-and `dense`, with no `q_proj`/`v_proj` anywhere. The source comments the hazard and
-ships it regardless:
+### ⚠ Defect: `backbones.py` cannot run pythia/neox (reported, not patched)
 
-```python
-if "neox" in n or "pythia" in n:
-    return "causal", "llama"  # gpt-neox also exposes query_key_value; see note
-```
+The `canonical × EleutherAI/pythia-1.4b` cell **fails at adapter construction**:
+`ValueError: Target modules {'v_proj', 'q_proj'} not found in the base model.`
+`resolve_family()` maps `pythia`/`neox` to the `"llama"` key (`q_proj`/`v_proj`), but
+GPT-NeoX exposes a **fused** `query_key_value` — verified: pythia-1.4b's attention
+submodules are `query_key_value` and `dense`. The source comments the hazard and ships
+it anyway (`# gpt-neox also exposes query_key_value; see note`), and
+`run_generality.py` offers no CLI override. **Fix:** register a `neox` key with
+`["query_key_value"]` and return it from `resolve_family`.
 
-`run_generality.py` exposes no CLI override for target modules, so the cell cannot run
-as configured. **Fix:** register a `neox` key with `["query_key_value"]` in `_TARGETS`
-and return it from `resolve_family` for neox/pythia. The repo file was **not
-modified**.
+**Substitution:** the decoder-only cell ran on **`gpt2-large`** (the `gpt2` key,
+`["c_attn"]`, which `backbones.py` configures correctly). It is also better controlled
+— 774 M parameters against t5-large's 770 M, isolating architecture from scale, where
+pythia-1.4b at 1.4 B would have confounded them. Declared in protocol Amendment A2.
+**The decoder-only claim rests on one architecture family, and that family is the one
+that flips.**
 
-**Substitution:** the decoder-only cell runs on **`gpt2-large`**, which uses the
-`gpt2` key (`["c_attn"]`) that `backbones.py` already configures correctly. It is also
-a **better-controlled** cell than the original: gpt2-large is **774 M** parameters
-against t5-large's **770 M**, isolating architecture from scale, where pythia-1.4b
-would have confounded the two. Declared in protocol Amendment A2 before the run.
-
-**Consequence for the §3B claim:** the decoder-only result rests on **one** backbone
-family (GPT-2). §3B is reported as **5 cells + 1 blocked**, and pythia is named as
-blocked-by-defect rather than quietly dropped.
-
-### Cross-phase consistency: refit vs stored offset
-
-`offset_alone` here is **+5.52 pp**, while §3A's *stored* offset measured **−0.26 pp**
-on the same stream and seed. These are not in tension — §3B uses the **refit** offset
-(fit against the final model, an upper bound) and §3A uses the **stored** offset
-(deployable). Together they say the offset works when refit and does not survive being
-stored, which is precisely the distinction the paper draws.
-
-## 6. §3C — non-binary scopes, K_S ≥ 3 — **COMPLETE (seed 1)**
+## 6. §3C — non-binary scopes, K_S ≥ 3 — **COMPLETE (3 seeds)**
 
 Couples MNLI + CB into a genuine 3-way NLI scope (`--scope-min-rarest 12` admits CB),
-probing the `d ≥ 2` regime where the `q_m` proposition is **OPEN** — it is proved only
-for binary shared verbalizers. Source: `scopes_s1.json`, 26 training runs
-(13 tasks × 2 regimes), **0 OOM degradations** (A1 check passed).
-Analyzer: `analyze_scopes.py 1`.
+probing the `d ≥ 2` regime where the `q_m` proposition is **OPEN** — proved only for
+binary shared verbalizers. Sources: `scopes_s{1,2,3}.json`, all logs clean (A1 passed).
+Analyzer: `analyze_scopes.py 1 2 3`.
 
-### All three predeclared criteria pass
+### All three predeclared criteria pass on all three seeds
 
-| criterion | result |
-|---|---|
-| C1 — e2e > 0 on the K_S ≥ 3 subset | **True** (+35.42 pp) |
-| C2 — offset helps on the K_S ≥ 3 subset | **True** (+5.73 pp) |
-| C3 — `q_1 > 0` certifies a genuinely non-degenerate scope | **True** (min 0.1237, max 1.3490) |
+| criterion | per-seed | verdict |
+|---|---|---|
+| C1 — e2e > 0 on the K_S ≥ 3 subset | +35.42 / +34.90 / +29.69 | ✅ all + |
+| C2 — offset helps on that subset | +5.73 / +30.73 / +3.65 | ✅ all +, but see below |
+| C3 — `q_1 > 0` certifies a non-degenerate scope | 1.3490 / 1.3134 / 0.5338 | ✅ all + |
 
-**The headline deliverable is C3.** The 3-way NLI scope `contradiction|entailment|neutral`
-has `q_1 = 1.3490 > 0`, so this is a real `d ≥ 2` scope, not a degenerate one — the
-regime the paper's proof does not cover. In it, the offset still recovers gap
-(offset-alone +5.73 pp). That is a genuine empirical data point where theory is OPEN.
-
-| subset | n | R_sh | R_sh_off | R_gp | R_gp_off | e2e | repr | group_alone | offset_alone |
-|---|---|---|---|---|---|---|---|---|---|
-| all tasks | 13 | 67.39 | 70.15 | 75.78 | 80.15 | +12.76 | +10.00 | +8.40 | +2.76 |
-| K_S ≥ 3 multi | **2** | 44.27 | 50.00 | 57.81 | 79.69 | +35.42 | +29.69 | +13.54 | +5.73 |
+**The deliverable is C3, and it replicates.** The 3-way NLI scope
+`contradiction|entailment|neutral` has `q_1 > 0` on every seed, so this is a real
+`d ≥ 2` scope — the regime the paper's proof does not cover — and the offset still
+recovers gap in it. That is a genuine empirical data point where theory is OPEN.
 
 ### Four caveats that must travel with these numbers
 
-1. **The K_S ≥ 3 subset is 2 tasks.** It is exactly `{CB, MNLI}`, with **24 and 96
-   audit examples**. `+35.42 pp` rests on that. Absolute accuracy in the subset starts
-   at `R_sh = 44.27` on 3-way tasks (chance ≈ 33), so these are weak models and the
-   effect is measured on a very small, noisy base. **Do not quote +35.42 pp as a
-   headline effect size.**
-2. **Every `q_m = 0` in the table is structural, not a result.** Scope sizes are
-   `contradiction|entailment|neutral` = 2 (CB, MNLI), `Bad|Good` = 2 (IMDB, SST-2),
-   `False|True` = 4 (WiC, QQP, BoolQA, MultiRC). With `m` centres and `|scope| = m`
-   tasks, one centre lands on each task and the radius is **exactly zero by
-   construction**. This is why `q_2 = 0` for both 2-task scopes and `q_4 = 0` for the
-   4-task scope. Only `q_1` — and `q_2, q_3` on `False|True` — carry information.
-3. **The analyzer prints `[SAME SIGN]` at n = 1.** That label is vacuous here: one
-   seed cannot exhibit sign consistency. See D2.
-4. **The 13-task `all` row is not comparable to the 12-task numbers elsewhere in this
-   document.** §3C relaxes the eligibility floor to admit CB; every other phase uses
-   the standard filter. Its `+12.76 pp` e2e is a different task set, not a
-   reproduction of the headline `+11.76 pp`.
+1. **The K_S ≥ 3 subset is 2 tasks** — exactly `{CB, MNLI}`, with 24 and 96 audit
+   examples. `+33.33 pp` mean e2e rests on that, from a near-chance base
+   (`R_sh = 44.27` at seed 1 against ~33 for 3-way). **Do not quote it as an effect
+   size.** C2 illustrates why: `offset_alone` spans **+3.65 → +30.73 pp**, an 8× range,
+   while remaining technically "all positive".
+2. **Every `q_m = 0` in the tables is structural, not a result.** Scope sizes are
+   `contradiction|entailment|neutral` = 2, `Bad|Good` = 2, `False|True` = 4. With `m`
+   centres over `|scope| = m` tasks, one centre lands per task and the radius is
+   **exactly zero by construction**. Only `q_1` — and `q_2, q_3` on `False|True` —
+   carry information.
+3. **Grouping's effect on scope conflict is mixed, and does not stabilise with seeds.**
+   On the 3-way scope grouping *reduces* `q_1` at seeds 1–2 (1.349 → 0.302,
+   1.313 → 0.811) but *increases* it at seed 3 (0.534 → 0.778).
+   ⚠ *A 2-seed draft of this section claimed grouping "consistently reduces conflict
+   on the 3-way scope". Seed 3 reverses that; the claim is withdrawn.* On `False|True`
+   grouping consistently increases `q_1`. No directional claim about grouping and
+   scope conflict is supported.
+4. **The 13-task `all` row is not comparable to the 12-task numbers elsewhere** —
+   §3C relaxes the eligibility floor to admit CB.
 
-### Per-scope quantization radius (informative entries only)
-
-| scope | regime | q_1 | q_2 | q_3 |
-|---|---|---|---|---|
-| `False\|True` (4 tasks) | shared | 0.7071 | 0.2121 | 0.0177 |
-| `False\|True` (4 tasks) | grouped | 2.9919 | 1.3435 | 0.2121 |
-| `contradiction\|entailment\|neutral` (2 tasks) | shared | **1.3490** | — | — |
-| `contradiction\|entailment\|neutral` (2 tasks) | grouped | 0.3024 | — | — |
-| `Bad\|Good` (2 tasks) | shared | 0.1237 | — | — |
-| `Bad\|Good` (2 tasks) | grouped | 2.0860 | — | — |
-
-**Grouping's effect on scope conflict is mixed in sign, and is reported as such.** On
-the 3-way NLI scope grouping shrinks `q_1` 1.3490 → 0.3024 (4.5× less conflict), but
-on `False|True` and `Bad|Good` it *increases* `q_1` (0.7071 → 2.9919 and
-0.1237 → 2.0860). ω — the max pairwise distance between per-task offset optima on
-shared verbalizer coordinates, i.e. the conflict the offset must resolve — likewise
-**rises** under grouping, 2.6980 → 5.9839. So grouping does not uniformly de-conflict
-scopes on this stream; it helps the scope the theory question is about and hurts
-others. No claim beyond that is supported by n = 1.
-
-## 7. §3D — published baselines at matched budget — **COMPLETE (seed 1)**
+## 7. §3D — published baselines at matched budget — **COMPLETE (3 seeds)**
 
 `seqft`, O-LoRA (orthogonality penalty, λ = 0.5) and EWC (λ = 1.0), each a single
-rank-8 LoRA on the identical stream, splits, seed and scorer. Sources:
-`baselines_{seqft,olora,ewc}_s1.json`, all logs **0 OOM degradations** (A1 passed).
-Analyzer: `analyze_baselines.py 1`.
+rank-8 LoRA on the identical stream, splits, seeds and scorer. Sources:
+`baselines_{seqft,olora,ewc}_s{1,2,3}.json`, all logs clean (A1 passed).
 
 These are **re-implementations at our budget and splits, not reproductions of
-published tables** — evidence about this stream and this budget only.
-E²-LoRA and NSR are **not implemented** in this harness and were **not** run; they are
-refused upstream as method choices rather than faked.
+published tables.** E²-LoRA and NSR are **not implemented** in this harness and were
+**not** run; RUNBOOK §3D also asks for "a proper O-LoRA implementation, not our
+re-implemented penalty" — what ran is the harness's re-implemented penalty.
 
-### Matched-budget table (12 common tasks, seed 1)
+### Matched-budget table (12 common tasks, 3 seeds)
 
-| arm | budget | audit balanced acc | vs deployable method |
+| arm | budget | mean | per-seed | spread |
+|---|---|---|---|---|
+| O-LoRA | rank 8 | 61.72 | 62.5 / 60.4 / 62.3 | 2.1 |
+| EWC | rank 8 | 68.49 | 65.2 / 67.9 / 72.4 | 7.2 |
+| method, shared / no offset | rank 8 | 68.21 | 68.8 / 66.7 / 69.2 | 2.5 |
+| `seqft` | rank 8 | 68.87 | 70.1 / 62.8 / 73.7 | **11.0** |
+| **method, route + stored (DEPLOYABLE)** | 4 × rank 2 | **75.18** | 77.6 / 73.4 / 74.5 | 4.2 |
+| method, orc + refit (**ceiling**) | 4 × rank 2 | 78.49 | 80.0 / 77.8 / 77.6 | 2.4 |
+
+**The deployable method leads every baseline on every seed:**
+
+| comparison | mean | per-seed | sign |
 |---|---|---|---|
-| O-LoRA | rank 8 | 62.52 | −15.11 |
-| EWC | rank 8 | 65.17 | −12.46 |
-| method, shared / no offset | rank 8 | 68.78 | −8.85 |
-| `seqft` | rank 8 | 70.12 | −7.51 |
-| **method, route + stored (DEPLOYABLE)** | 4 × rank 2 | **77.63** | — |
-| method, orc + refit (**ceiling**, ours) | 4 × rank 2 | 80.00 | +2.37 |
-| method, `R_gp_off` (**ceiling**, committed) | 4 × rank 2 | 81.47 | +3.84 |
+| method − O-LoRA | **+13.46** | +15.11 / +13.04 / +12.23 | all + |
+| method − EWC | **+6.69** | +12.46 / +5.49 / +2.13 | all + |
+| method − `seqft` | **+6.31** | +7.51 / +10.66 / **+0.75** | all + |
 
-The deployable method leads every baseline at an identical parameter budget, by
-7.5–15.1 pp. The comparison is against the **deployable** number (route + stored),
-not the ceiling, per RUNBOOK §3D.
+⚠ The seed-3 margin over `seqft` is **+0.75 pp — below the ~2 pp noise floor**. The
+lead over `seqft` is sign-consistent but not always a meaningful margin; the lead over
+O-LoRA is comfortable on every seed.
 
-### Two honest observations
+### Three observations
 
-1. **Both continual-learning baselines lose to plain sequential fine-tuning.** O-LoRA
-   (62.52) and EWC (65.17) fall **7.60 pp** and **4.95 pp** below `seqft` (70.12) at
-   matched budget. Their anti-forgetting machinery is a net cost on this stream at
-   this budget. Reported as found, per RUNBOOK §3D ("If a baseline beats the proposed
-   method, report it" — the converse is reported with equal willingness).
-2. **`seqft` beats the method's own shared/no-offset corner** (70.12 vs 68.78,
-   +1.34 pp). These are nominally the same arm, so this is a script-to-script
-   discrepancy, well inside the ~2.1 pp noise floor documented in §4. It is not
-   evidence that `seqft` is a better method.
-
-### ⚠ Defect found in `analyze_baselines.py` (reported, not patched)
-
-**The method-vs-baseline comparison — the entire purpose of §3D — silently never
-runs.** `load_method()` (`analyze_baselines.py:40-48`) reads only
-`results_s{seed}.json`, whose keys are `R_shared` / `R_grouped_orc`, but it guards on
-`"R_gp_off" in rows[0]`. `R_gp_off` lives in **`combined_s{seed}.json`**. The guard
-therefore always fails, `load_method()` returns `None`, the `method_sh` and
-`method_gp_off` columns are never added, and **no warning is printed** — the output
-simply omits the comparison the README advertises. Suggested fix: have `load_method`
-read `combined_s{seed}.json` (falling back to `results_s{seed}.json`), or emit a
-warning when it returns `None`.
-
-The table above was therefore computed directly from the committed JSONs rather than
-from the analyzer's output. The repo file was **not modified**.
+1. **O-LoRA loses to plain sequential fine-tuning on every seed** (−7.60 / −2.38 /
+   −11.47, mean −7.15). A consistent, robust negative for the orthogonality penalty at
+   this budget on this stream.
+2. **EWC is statistically tied with `seqft`** (−4.94 / +5.18 / −1.37, mean −0.38,
+   **mixed sign**). ⚠ *A seed-1 draft of this section claimed both continual-learning
+   baselines lose to `seqft`. That was half wrong and is corrected: only O-LoRA does.*
+3. **The method is the more *stable* arm, not just the stronger one.** `seqft` swings
+   **11.0 pp** across seeds on an identical configuration while the deployable method
+   swings 4.2 pp and O-LoRA 2.1 pp. O-LoRA's penalty appears to trade mean accuracy for
+   variance reduction — it is worse but far more predictable. `seqft`'s instability is
+   further corroboration of the unseeded-RNG defect (§3) and a warning that
+   single-seed baseline rankings on this harness are unreliable.
 
 ## 8. Run ledger
 
-All 12 runs, all logs checked for OOM micro-batch degradation (A1 standing check):
-**0 degradations across every run.**
+**40+ runs, 44 result JSONs, 0 OOM degradations, 0 failures.** Every log was checked
+against the A1 standing check (any run whose micro-batch degraded would be invalid and
+re-run; none did).
 
-| job | phase | result | A1 |
+| axis | runs | seeds | outputs |
 |---|---|---|---|
-| `3A_router` | 3A | ✅ `router_s1.json` | clean |
-| `3B_canonical_t5large` | 3B anchor | ✅ `generality_canonical_t5-large_s1.json` | clean |
-| `3B_reverse_t5large` | 3B | ✅ `generality_reverse_t5-large_s1.json` | clean |
-| `3B_shuffleA_t5large` | 3B | ✅ `generality_shuffleA_t5-large_s1.json` | clean |
-| `3B_shuffleB_t5large` | 3B | ✅ `generality_shuffleB_t5-large_s1.json` | clean |
-| `3B_canonical_t5-3b` | 3B | ✅ `generality_canonical_t5-3b_s1.json` | clean |
-| `3B_canonical_gpt2large` | 3B (subst.) | ✅ `generality_canonical_gpt2-large_s1.json` | clean |
-| `3B_canonical_pythia` | 3B | ❌ **blocked** — `backbones.py` defect (§5) | — |
-| `3C_scopes` | 3C | ✅ `scopes_s1.json` | clean |
-| `3D_seqft` / `3D_olora` / `3D_ewc` | 3D | ✅ `baselines_*_s1.json` | clean |
-| `REF_router_batch4` | D1 reference | ✅ `reference_batch4/router_s1.json` | clean |
-| `REPLICATE_micro16` | D1 diagnostic | ✅ `replicate_micro16/router_s1.json` | clean |
+| RUNBOOK §2 | 9 | 1,2,3 | `reproduction/{run_grouping,run_combined,run_destale}_s*/` |
+| §3A router | 3 | 1,2,3 | `router_s{1,2,3}.json` |
+| §3B generality | 18 | 1,2,3 | `generality_{order}_{tag}_s{1,2,3}.json`, 6 cells |
+| §3B pythia | 0 | — | ❌ blocked, `backbones.py` defect (§5) |
+| §3C scopes | 3 | 1,2,3 | `scopes_s{1,2,3}.json` |
+| §3D baselines | 9 | 1,2,3 | `baselines_{seqft,olora,ewc}_s{1,2,3}.json` |
+| D1 reference | 1 | 1 | `reference_batch4/router_s1.json` (micro-batch 4) |
+| D1 replicate | 1 | 1 | `replicate_micro16/router_s1.json` (identical config) |
 
-*(the first launch — 4 jobs at micro-batch 32 — was killed and discarded before any
-result; see §2.1)*
+*(A first launch of 4 jobs at micro-batch 32 was killed and discarded before producing
+any result — see §2.1.)*
 
-## 8.1 Summary — what this run establishes, and what it does not
+## 8.1 Summary — what this study establishes
 
-**Closed.**
-- The oracle-routing upper bound is **closed**. A task-free NCM router on the base,
-  adapter-disabled encoder reaches **98.4 %** family accuracy and costs **−0.03 pp**
-  versus oracle routing, recovering **100 %** of the oracle grouping gain (§4).
-- The `d ≥ 2` theory regime is **reached and measured**: a certified non-degenerate
-  3-way scope (`q_1 = 1.3490 > 0`) where the offset still recovers gap (§6).
-- The method **beats every matched-budget baseline** by 7.5–15.1 pp on its deployable
-  number (§7), and both continual-learning baselines lose to plain `seqft`.
-- Effect signs hold across **5 of 5 runnable** order × backbone cells, including a
-  3.7×-larger backbone (§5).
+**Closed / confirmed.**
+- **§3A closes the oracle-routing upper bound.** Task-free NCM routing on the base,
+  adapter-disabled encoder: **98.61 %** family accuracy, routing cost **+0.14 pp**,
+  recovering **98 %** of the oracle grouping gain. **Deployable e2e +6.98 pp, positive
+  on all three seeds.** This is the strongest and most stable result here.
+- **The method beats every matched-budget baseline on every seed** — +13.46 vs O-LoRA,
+  +6.69 vs EWC, +6.31 vs `seqft` (§7).
+- **O-LoRA is consistently worse than plain `seqft`** (all 3 seeds, −7.15 mean) (§7).
+- **The `d ≥ 2` theory regime is reached and measured**: `q_1 > 0` on every seed for a
+  genuine 3-way scope, where the offset still recovers gap (§6).
+- **e2e is positive in all 15 encoder-decoder cell×seed combinations**, including
+  t5-3b at 3.7× scale (§5).
+- **RUNBOOK §2's 2×2 and grouping gain reproduce** independently (§3.5).
 
-**Not closed, or weakened.**
-- The **offset's deployable contribution is −0.26 pp** — the entire deployable gain is
-  grouping. The paper's output-layer move does not survive being stored (§4). This
-  matches the README's own caveat rather than contradicting it.
-- The **second upper bound (refit offset) is not closed**; it is where the remaining
-  2.37 pp to the ceiling lives (§4).
-- `group_alone` is **null on `shuffleB`** (+0.94 pp, below the noise floor) — 4 clear
-  positives and one null, not 5 positives (§5).
-- The **decoder-only cell is near-chance** (R_sh 45.18 vs ~39.6 chance) and rests on
-  one architecture family (§5).
-- Everything is **n = 1**. No sign-consistency claim is available (D2).
+**Qualified or not reproduced.**
+- **`group_alone` is order-dependent**: +8.71 (reverse) … **+1.16 (shuffleB — null on
+  all three seeds)**. The two moves trade off by order; on shuffleB the entire gain is
+  the offset (§5).
+- **De-staling: directionally real, ~56 % of published size** (+3.51 vs +6.27), and the
+  "all three seeds" wording **does not reproduce** — our run 1 gives −0.20 (§3.5).
+- **Three §3B effects FLIP** on the decoder-only cell (§5) — small flips on a
+  near-chance model, reported per RUNBOOK §3B rather than hidden.
+- **The anchor cell reproduces at 83 % of the published magnitude** (+9.79 vs +11.76).
+  With de-staling at 56 %, **two independent quantities came in low** — a repeated
+  signal of an environment difference that the unseeded RNG makes impossible to isolate.
+- **The stored offset remains the weak link.** Its deployable contribution is small and
+  sign-unstable (−1.33 … +2.36 across runs); §3A's second upper bound (refit offset) is
+  **not** closed.
 
-**Three harness defects found** (all reported, none patched — repo left pristine):
+**Three harness defects** (all reported, none patched — repo left pristine):
 
-| # | file | effect | §|
+| # | location | effect | § |
 |---|---|---|---|
-| 1 | phase2z runners | **`--seed` does not seed torch** → LoRA init and dropout vary run to run; not reproducible at fixed seed | §3 |
+| 1 | phase2z runners | **`--seed` never seeds torch** → LoRA init and dropout vary run to run; identical invocations differ ~4 pp/task | §3 |
 | 2 | `backbones.py` | pythia/neox mapped to `q_proj`/`v_proj`; GPT-NeoX uses fused `query_key_value` → cell cannot run | §5 |
-| 3 | `analyze_baselines.py` | `load_method()` reads `results_s*.json` but guards on a key only in `combined_s*.json` → the method-vs-baseline comparison **silently never runs** | §7 |
+| 3 | `run_combined.py:264` | writes `results_s*.json`, the same name `run_grouping.py` writes, while `analyze_combined.py` reads `combined_s*.json` which nothing writes → RUNBOOK §2's sequence silently overwrites, and §3D's comparison never runs | §7 |
 
-Defect 1 is the consequential one: it means the RUNBOOK §2 acceptance check cannot be
-met per-task by anyone, including the original author, and that the repo's own
-three-seed spreads mix seed variance with unseeded nondeterminism.
+**Defect 1 is the consequential one.** It means the RUNBOOK §2 per-task acceptance
+check cannot be met by anyone including the author, and that the committed three-seed
+spreads mix seed variance with unseeded nondeterminism. Its practical cost is visible
+throughout this study: `seqft` swings **11 pp** across identical-configuration seeds,
+and of four claims this replication made at n = 1, **two were wrong** — both involving
+quantities near the noise floor.
 
-**Recommended next step:** fix defect 1, then re-run seeds 1–3 of §3A and §3B. With
-init and dropout actually controlled, the ~4 pp per-task scatter should collapse and
-the sub-2 pp effects — above all the stored offset's true sign — become measurable.
+**Recommended next step:** fix defect 1, then re-run §2 and §3A. With init and dropout
+controlled, the ~4 pp per-task scatter should collapse and the sub-2 pp quantities —
+above all the stored offset's true sign, which decides whether the paper's
+output-layer move is deployable at all — become measurable for the first time.
 
 ## 9. Crash recovery and delivery
 
